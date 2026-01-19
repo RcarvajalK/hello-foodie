@@ -71,6 +71,10 @@ export default function MapPage() {
     }, []);
 
 
+    if (typeof google === 'undefined') {
+        return <div className="h-screen w-full flex items-center justify-center bg-slate-50 font-black text-brand-orange animate-pulse">CONNECTING TO GOOGLE MAPS...</div>;
+    }
+
     return (
         <div className="h-screen w-full relative">
             <header className="absolute top-0 left-0 right-0 z-10 p-5 pt-12 pointer-events-none">

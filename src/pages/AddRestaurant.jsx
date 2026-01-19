@@ -92,20 +92,16 @@ export default function AddRestaurant() {
                     <div className="mb-8">
                         <div className="relative group">
                             <label className="text-[10px] font-black uppercase text-gray-400 ml-4 tracking-widest block mb-2">Search with Google Places</label>
-                            {isLoaded ? (
-                                <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            placeholder="Start typing restaurant name..."
-                                            className="w-full bg-white border-2 border-brand-orange/10 p-5 pl-14 rounded-[2rem] text-brand-dark font-black shadow-xl shadow-brand-orange/5 focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all placeholder:text-gray-300"
-                                        />
-                                        <Search size={22} className="absolute left-6 top-1/2 -translate-y-1/2 text-brand-orange" />
-                                    </div>
-                                </Autocomplete>
-                            ) : (
-                                <div className="w-full h-16 bg-gray-100 animate-pulse rounded-[2rem]"></div>
-                            )}
+                            <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Start typing restaurant name..."
+                                        className="w-full bg-white border-2 border-brand-orange/10 p-5 pl-14 rounded-[2rem] text-brand-dark font-black shadow-xl shadow-brand-orange/5 focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all placeholder:text-gray-300"
+                                    />
+                                    <Search size={22} className="absolute left-6 top-1/2 -translate-y-1/2 text-brand-orange" />
+                                </div>
+                            </Autocomplete>
                         </div>
                     </div>
 
