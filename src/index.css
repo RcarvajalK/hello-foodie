@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-orange: #FF6B6B;
+  --color-brand-green: #4ECDC4;
+  --color-brand-yellow: #FFE66D;
+  --color-brand-dark: #2B2D42;
+
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+}
