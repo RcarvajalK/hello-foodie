@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { LayoutGrid, Map as MapIcon, Users, BarChart3, Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import BrandLogo from './BrandLogo';
 

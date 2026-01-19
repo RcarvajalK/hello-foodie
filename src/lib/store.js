@@ -17,7 +17,16 @@ export const useStore = create((set, get) => ({
             .select('*')
             .order('date_added', { ascending: false });
 
-        if (!error) set({ restaurants: data || [] });
+        if (!error) {
+            const parsedData = (data || []).map(r => {
+                if (typeof r.coordinates === 'string' && r.coordinates.includes('(')) {
+                    const [lng, lat] = r.coordinates.replace(/[()]/g, '').split(',').map(Number);
+                    return { ...r, coordinates: { x: lat, y: lng } };
+                }
+                return r;
+            });
+            set({ restaurants: parsedData });
+        }
         set({ loading: false });
     },
 
@@ -36,20 +45,43 @@ export const useStore = create((set, get) => ({
 
     // Add new restaurant to Supabase
     addRestaurant: async (restaurantData) => {
+        set({ loading: true });
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) {
+            console.error("No user found for addRestaurant");
+            set({ loading: false });
+            return null;
+        }
+
+        // Format coordinates for Postgres 'point' type: (lng, lat)
+        // Note: Google Places uses lat() and lng(), we should probably map to (lng, lat)
+        const coords = restaurantData.coordinates;
+        const formattedCoords = coords ? `(${coords.y}, ${coords.x})` : null;
+
+        const payload = {
+            ...restaurantData,
+            user_id: user.id,
+            coordinates: formattedCoords,
+            date_added: new Date().toISOString()
+        };
 
         const { data, error } = await supabase
             .from('restaurants')
-            .insert([{ ...restaurantData, user_id: user.id }])
+            .insert([payload])
             .select()
             .single();
 
-        if (!error) {
-            set((state) => ({ restaurants: [data, ...state.restaurants] }));
-            return data;
+        if (error) {
+            console.error("Supabase Add Error:", error.message, error.details);
+            set({ loading: false });
+            return null;
         }
-        return null;
+
+        set((state) => ({
+            restaurants: [data, ...state.restaurants],
+            loading: false
+        }));
+        return data;
     },
 
     // Toggle visited status in DB

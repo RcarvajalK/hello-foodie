@@ -1,105 +1,107 @@
-import { Star, Award, History, Users, CreditCard, ChevronRight, LogOut } from 'lucide-react';
 import { useStore } from '../lib/store';
-import { supabase } from '../lib/supabase';
+import { BADGE_LEVELS, getBadgeForVisitCount } from '../lib/badges';
 import { motion } from 'framer-motion';
+import { LogOut, Trophy, MapPin, Star, Settings } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import BrandLogo from '../components/BrandLogo';
 
 export default function Profile() {
     const profile = useStore(state => state.profile);
     const restaurants = useStore(state => state.restaurants);
+    const navigate = useNavigate();
+
     const visitedCount = restaurants.filter(r => r.is_visited).length;
+    const currentBadge = getBadgeForVisitCount(visitedCount);
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
+        navigate('/auth');
     };
-
-    const badges = [
-        { title: 'Local Guide', icon: Star, color: 'bg-brand-orange', unlocked: visitedCount >= 3 },
-        { title: 'Early Adopter', icon: Award, color: 'bg-brand-green', unlocked: true },
-        { title: 'Social Foodie', icon: Users, color: 'bg-brand-yellow', unlocked: false },
-    ];
 
     return (
         <div className="pb-24 bg-slate-50 min-h-screen">
-            <header className="bg-brand-orange p-10 pt-20 rounded-b-[3.5rem] text-white text-center shadow-xl relative overflow-hidden">
-                <div className="relative z-10">
-                    <div className="w-24 h-24 bg-white rounded-[2rem] mx-auto mb-4 flex items-center justify-center text-5xl font-black text-brand-orange shadow-inner">
-                        {profile?.full_name?.charAt(0) || 'U'}
-                    </div>
-                    <h1 className="text-2xl font-black tracking-tight uppercase">{profile?.full_name || 'Foodie Traveler'}</h1>
-                    <p className="text-sm font-bold opacity-80 uppercase tracking-widest mt-1">{profile?.ranking || '#--- Ranking'}</p>
+            <header className="bg-white p-6 pt-12 rounded-b-[3rem] shadow-sm border-b border-gray-100">
+                <div className="flex justify-between items-center mb-6">
+                    <BrandLogo size={40} animate={false} />
+                    <button onClick={handleLogout} className="p-3 bg-red-50 text-red-500 rounded-2xl active:scale-95 transition-all">
+                        <LogOut size={20} />
+                    </button>
                 </div>
-                <div className="absolute top-[-20px] left-[-20px] w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+
+                <div className="flex flex-col items-center text-center">
+                    <div className="relative mb-4">
+                        <div className="w-24 h-24 bg-slate-100 rounded-[2rem] flex items-center justify-center text-3xl font-black text-brand-orange border-4 border-white shadow-xl">
+                            {profile?.full_name?.charAt(0) || 'U'}
+                        </div>
+                        <div className="absolute -bottom-2 -right-2 bg-brand-orange text-white w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg border-4 border-white">
+                            <Trophy size={18} />
+                        </div>
+                    </div>
+                    <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">{profile?.full_name || 'Foodie Explorer'}</h2>
+                    <div className={`mt-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-sm ${currentBadge.color}`}>
+                        Level {currentBadge.level}: {currentBadge.name}
+                    </div>
+                </div>
             </header>
 
-            <div className="px-5 -mt-10 mb-8 relative z-20">
-                <div className="bg-white rounded-3xl p-6 shadow-lg border border-gray-50 flex justify-around">
-                    <div className="text-center">
-                        <p className="text-2xl font-black text-brand-dark">{visitedCount}</p>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Visited</p>
-                    </div>
-                    <p className="w-px h-10 bg-gray-100 self-center"></p>
-                    <div className="text-center">
-                        <p className="text-2xl font-black text-brand-dark">{profile?.badges_count || 0}</p>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Badges</p>
-                    </div>
-                    <p className="w-px h-10 bg-gray-100 self-center"></p>
-                    <div className="text-center">
-                        <p className="text-2xl font-black text-brand-dark">#42</p>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Global</p>
+            <div className="p-6">
+                <h3 className="text-xs font-black uppercase text-gray-400 tracking-[0.25em] mb-4 ml-2">My Badge Collection</h3>
+                <div className="grid grid-cols-2 gap-4">
+                    {BADGE_LEVELS.map((badge) => {
+                        const isUnlocked = visitedCount >= badge.minVisits;
+                        return (
+                            <motion.div
+                                key={badge.level}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className={`p-6 rounded-[2.5rem] border flex flex-col items-center text-center relative overflow-hidden transition-all ${isUnlocked ? 'bg-white shadow-lg border-gray-100' : 'bg-gray-100 border-transparent grayscale opacity-40'
+                                    }`}
+                            >
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-4 shadow-inner ${isUnlocked ? 'bg-slate-50' : 'bg-gray-200'
+                                    }`}>
+                                    {badge.icon}
+                                </div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-brand-dark">{badge.name}</p>
+                                <p className="text-[8px] font-bold text-gray-400 uppercase mt-1 leading-tight">{badge.minVisits} Visits</p>
+
+                                {isUnlocked && (
+                                    <div className="absolute top-3 right-3 text-brand-green">
+                                        <Star size={12} fill="currentColor" />
+                                    </div>
+                                )}
+                            </motion.div>
+                        );
+                    })}
+                </div>
+
+                <div className="mt-8 bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-gray-50">
+                    <h3 className="text-sm font-black text-brand-dark uppercase tracking-widest mb-6 flex items-center gap-3">
+                        <Trophy size={18} className="text-brand-orange" />
+                        Culinary Statistics
+                    </h3>
+                    <div className="grid grid-cols-2 gap-8">
+                        <div className="space-y-1">
+                            <p className="text-2xl font-black text-brand-dark tabular-nums">{visitedCount}</p>
+                            <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest px-1">Total Visits</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-2xl font-black text-brand-dark tabular-nums">{restaurants.length}</p>
+                            <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest px-1">Saved Places</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-2xl font-black text-brand-dark tabular-nums">{profile?.ranking || '#---'}</p>
+                            <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest px-1">Global Rank</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-2xl font-black text-brand-dark tabular-nums">
+                                {Math.round((visitedCount / (restaurants.length || 1)) * 100)}%
+                            </p>
+                            <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest px-1">Completion</p>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <div className="px-5 mb-8">
-                <h3 className="font-black text-lg mb-4 text-brand-dark uppercase tracking-tight ml-2">My Achievement Badges</h3>
-                <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-                    {badges.map((badge) => (
-                        <motion.div
-                            key={badge.title}
-                            whileTap={{ scale: 0.95 }}
-                            className={`flex-shrink-0 w-32 p-5 rounded-[2rem] text-center shadow-md border border-gray-50 ${badge.unlocked ? 'bg-white' : 'bg-gray-100 grayscale opacity-50'}`}
-                        >
-                            <div className={`w-12 h-12 ${badge.color} rounded-2xl flex items-center justify-center mx-auto mb-3 text-white shadow-lg`}>
-                                <badge.icon size={24} />
-                            </div>
-                            <p className="text-[10px] font-black text-brand-dark uppercase leading-tight">{badge.title}</p>
-                        </motion.div>
-                    ))}
-                </div>
-            </div>
-
-            <div className="px-5 space-y-3">
-                {[
-                    { icon: History, label: 'Visit History', color: 'text-brand-orange' },
-                    { icon: Users, label: 'Foodie Groups', color: 'text-brand-green' },
-                    { icon: CreditCard, label: 'Premium Membership', color: 'text-brand-yellow' },
-                ].map((item) => (
-                    <button key={item.label} className="w-full bg-white p-5 rounded-[1.5rem] flex items-center justify-between shadow-sm border border-gray-50 active:bg-gray-50 transition-colors">
-                        <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 bg-slate-50 ${item.color} rounded-xl flex items-center justify-center`}>
-                                <item.icon size={20} />
-                            </div>
-                            <span className="font-black text-sm text-brand-dark uppercase tracking-tight">{item.label}</span>
-                        </div>
-                        <ChevronRight size={18} className="text-gray-300" />
-                    </button>
-                ))}
-
-                <button
-                    onClick={handleLogout}
-                    className="w-full bg-white p-5 rounded-[1.5rem] flex items-center justify-between shadow-sm border border-red-50 text-red-500 mt-6 active:bg-red-50 transition-colors group"
-                >
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
-                            <LogOut size={20} />
-                        </div>
-                        <span className="font-black text-sm uppercase tracking-tight group-hover:translate-x-1 transition-transform">Logout Session</span>
-                    </div>
-                    <ChevronRight size={18} className="text-red-200" />
-                </button>
-            </div>
-
-            <p className="text-center text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] mt-10 pb-10">Hello Foodie! v2.0</p>
         </div>
     );
 }

@@ -1,5 +1,6 @@
 import { BarChart3, TrendingUp, MapPin, Award, PieChart, Sparkles } from 'lucide-react';
 import { useStore } from '../lib/store';
+import { getBadgeForVisitCount } from '../lib/badges';
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
 
@@ -11,6 +12,7 @@ export default function Stats() {
 
     const visitedCount = restaurants.filter(r => r.is_visited).length;
     const explorationPercent = restaurants.length > 0 ? Math.round((visitedCount / restaurants.length) * 100) : 0;
+    const currentBadge = getBadgeForVisitCount(visitedCount);
 
     useEffect(() => {
         fetchRestaurants();
@@ -19,8 +21,8 @@ export default function Stats() {
 
     const stats = [
         { label: 'Exploration %', value: `${explorationPercent}%`, icon: TrendingUp, color: 'text-brand-orange', bg: 'bg-brand-orange/10' },
-        { label: 'Top Zone', value: restaurants[0]?.zone || '---', icon: MapPin, color: 'text-brand-green', bg: 'bg-brand-green/10' },
-        { label: 'Level', value: profile?.ranking?.split(' ')[1] || 'Newbie', icon: Award, color: 'text-brand-yellow', bg: 'bg-brand-yellow/10' },
+        { label: 'Top Zone', value: restaurants[0]?.zone || 'Explore', icon: MapPin, color: 'text-brand-green', bg: 'bg-brand-green/10' },
+        { label: 'Level', value: currentBadge.name, icon: Award, color: 'text-brand-dark', bg: 'bg-brand-yellow/30' },
     ];
 
     return (
