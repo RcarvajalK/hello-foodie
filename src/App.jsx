@@ -23,10 +23,18 @@ export default function App() {
     }, 2500);
 
     // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    try {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session);
+        setLoading(false);
+      }).catch(err => {
+        console.error("Supabase Session Error:", err);
+        setLoading(false);
+      });
+    } catch (e) {
+      console.error("Supabase Init Error:", e);
       setLoading(false);
-    });
+    }
 
     // Listen for changes on auth state
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {

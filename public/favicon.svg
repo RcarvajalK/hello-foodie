@@ -1,0 +1,22 @@
+<svg width="32" height="32" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pinGradient" x1="50" y1="5" x2="50" y2="115" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#FFB347" />
+      <stop offset="100%" stopColor="#FF6B6B" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M50 5C27.9 5 10 22.9 10 45C10 75 50 115 50 115C50 115 90 75 90 45C90 22.9 72.1 5 50 5Z"
+    fill="url(#pinGradient)"
+  />
+  <path
+    d="M38 30V42M42 30V42M34 30V42M34 42C34 46 37 49 41 49V65H38V67H44V65H41V49C45 49 48 46 48 42V30H38Z"
+    fill="white"
+    transform="translate(-2, 0)"
+  />
+  <path
+    d="M62 30C58 30 55 33 55 38C55 43 58 46 62 46H64V65H61V67H67V65H64V46C68 46 71 43 71 38C71 33 68 30 64 30H62Z"
+    fill="white"
+    transform="translate(2, 0)"
+  />
+</svg>
