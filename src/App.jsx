@@ -9,12 +9,19 @@ import Stats from './pages/Stats';
 import AddRestaurant from './pages/AddRestaurant';
 import RestaurantDetails from './pages/RestaurantDetails';
 import Auth from './pages/Auth';
+import SplashScreen from './components/SplashScreen';
 
 export default function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
+    // Splash screen timer
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2500);
+
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -26,25 +33,31 @@ export default function App() {
       setSession(session);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timer);
+      subscription.unsubscribe();
+    };
   }, []);
 
-  if (loading) return null; // Or a loading spinner
+  if (loading && showSplash) return <SplashScreen isVisible={true} />;
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/auth" element={!session ? <Auth /> : <Navigate to="/" />} />
+    <>
+      <SplashScreen isVisible={showSplash} />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/auth" element={!session ? <Auth /> : <Navigate to="/" />} />
 
-        <Route path="/" element={session ? <Layout /> : <Navigate to="/auth" />}>
-          <Route index element={<Home />} />
-          <Route path="map" element={<MapPage />} />
-          <Route path="add" element={<AddRestaurant />} />
-          <Route path="clubs" element={<Clubs />} />
-          <Route path="stats" element={<Stats />} />
-          <Route path="restaurant/:id" element={<RestaurantDetails />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+          <Route path="/" element={session ? <Layout /> : <Navigate to="/auth" />}>
+            <Route index element={<Home />} />
+            <Route path="map" element={<MapPage />} />
+            <Route path="add" element={<AddRestaurant />} />
+            <Route path="clubs" element={<Clubs />} />
+            <Route path="stats" element={<Stats />} />
+            <Route path="restaurant/:id" element={<RestaurantDetails />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 }

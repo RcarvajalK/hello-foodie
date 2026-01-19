@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
-import { Mail, Lock, LogIn, UserPlus, Star } from 'lucide-react';
+import { Mail, Lock, LogIn, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import BrandLogo from '../components/BrandLogo';
 
 export default function Auth() {
     const [loading, setLoading] = useState(false);
@@ -35,64 +36,80 @@ export default function Auth() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col justify-center p-6 pb-20">
+        <div className="min-h-screen bg-slate-50 flex flex-col justify-center p-6 pb-20 relative overflow-hidden">
+            {/* Decorative Blurs */}
+            <div className="absolute top-[-100px] left-[-100px] w-80 h-80 bg-brand-orange/10 rounded-full blur-[100px]"></div>
+            <div className="absolute bottom-[-100px] right-[-100px] w-80 h-80 bg-brand-green/10 rounded-full blur-[100px]"></div>
+
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="max-w-md w-full mx-auto bg-white rounded-[3rem] shadow-xl overflow-hidden"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="max-w-md w-full mx-auto bg-white rounded-[3.5rem] shadow-2xl overflow-hidden relative z-10 border border-white"
             >
-                <div className="bg-brand-orange p-10 text-white text-center rounded-b-[3rem]">
-                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-brand-orange mx-auto mb-4 shadow-lg">
-                        <Star size={32} fill="currentColor" />
+                <div className="bg-brand-orange p-10 py-14 text-white text-center rounded-b-[3.5rem] relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
+                    <div className="w-20 h-20 bg-white rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-2xl relative z-10 transition-transform hover:rotate-6">
+                        <BrandLogo size={48} />
                     </div>
-                    <h1 className="text-2xl font-black tracking-tight uppercase">Hello Foodie!</h1>
-                    <p className="text-sm font-bold opacity-80 mt-1">Start your culinary journey</p>
+                    <h1 className="text-3xl font-black tracking-tighter uppercase relative z-10">Hello Foodie!</h1>
+                    <p className="text-xs font-black uppercase tracking-[0.2em] opacity-80 mt-2 relative z-10">Your personal culinary hub</p>
                 </div>
 
-                <div className="p-8 pt-10">
-                    <form onSubmit={handleAuth} className="space-y-4">
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-black uppercase text-gray-400 ml-4 tracking-widest">Email Address</label>
+                <div className="p-8 pt-12">
+                    <form onSubmit={handleAuth} className="space-y-5">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-gray-400 ml-5 tracking-[0.2em]">Email Address</label>
                             <div className="relative">
                                 <input
                                     type="email"
                                     placeholder="name@example.com"
-                                    className="w-full bg-slate-50 border border-gray-100 p-4 pl-12 rounded-2xl text-brand-dark font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+                                    className="w-full bg-slate-50 border border-gray-100 p-5 pl-14 rounded-2xl text-brand-dark font-bold text-sm focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
                                 />
-                                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
+                                <Mail size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-brand-orange/40" />
                             </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-black uppercase text-gray-400 ml-4 tracking-widest">Password</label>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-gray-400 ml-5 tracking-[0.2em]">Password</label>
                             <div className="relative">
                                 <input
                                     type="password"
                                     placeholder="••••••••"
-                                    className="w-full bg-slate-50 border border-gray-100 p-4 pl-12 rounded-2xl text-brand-dark font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+                                    className="w-full bg-slate-50 border border-gray-100 p-5 pl-14 rounded-2xl text-brand-dark font-bold text-sm focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                 />
-                                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
+                                <Lock size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-brand-orange/40" />
                             </div>
                         </div>
 
-                        {message && (
-                            <p className="text-xs text-brand-orange font-bold text-center px-4">{message}</p>
-                        )}
+                        <AnimatePresence>
+                            {message && (
+                                <motion.p
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="text-xs text-brand-orange font-black text-center px-4 bg-brand-orange/5 py-3 rounded-xl border border-brand-orange/10"
+                                >
+                                    {message}
+                                </motion.p>
+                            )}
+                        </AnimatePresence>
 
                         <button
                             disabled={loading}
-                            className="w-full bg-brand-orange text-white font-black py-4 rounded-2xl shadow-lg shadow-brand-orange/30 active:scale-95 transition-all flex items-center justify-center gap-2 mt-4"
+                            className="w-full bg-brand-orange text-white font-black py-5 rounded-[1.8rem] shadow-xl shadow-brand-orange/30 active:scale-[0.97] transition-all flex items-center justify-center gap-3 mt-4 group"
                         >
-                            {loading ? 'Processing...' : (
+                            {loading ? (
+                                <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            ) : (
                                 <>
-                                    {isSignUp ? <UserPlus size={20} /> : <LogIn size={20} />}
-                                    {isSignUp ? 'Create Account' : 'Sign In'}
+                                    {isSignUp ? <UserPlus size={22} /> : <LogIn size={22} />}
+                                    <span className="uppercase tracking-widest">{isSignUp ? 'Join the Community' : 'Sign In Now'}</span>
                                 </>
                             )}
                         </button>
@@ -100,12 +117,14 @@ export default function Auth() {
 
                     <button
                         onClick={() => setIsSignUp(!isSignUp)}
-                        className="w-full text-center text-xs font-bold text-gray-400 mt-6 hover:text-brand-orange transition-colors"
+                        className="w-full text-center text-[10px] font-black text-gray-400 mt-8 uppercase tracking-[0.1em] hover:text-brand-orange transition-colors"
                     >
-                        {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+                        {isSignUp ? 'Already a foodie? Sign In' : "New here? Create your profile"}
                     </button>
                 </div>
             </motion.div>
+
+            <p className="text-center text-[9px] font-black text-gray-300 uppercase tracking-[0.3em] mt-8">Secure by Supabase Technology</p>
         </div>
     );
 }
