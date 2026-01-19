@@ -1,23 +1,43 @@
 @import "tailwindcss";
 
 @theme {
-  /* Institutional Brand Palette */
+  /* Official Hello Foodie! Brand Palette */
   --color-brand-orange: #FF6B6B;
-  /* Delicious Orange */
+  /* Main Reddish-Orange */
+  --color-brand-orange-light: #FFB347;
+  /* Yellowish-Orange Highlight */
   --color-brand-green: #4ECDC4;
-  /* Fresh Green */
+  /* Minty Accent */
   --color-brand-yellow: #FFE66D;
-  /* Warm Yellow */
-  --color-brand-dark: #2B2D42;
-  /* Deep Contrast */
-  --color-brand-light: #F8F9FA;
-  /* Clean Background */
+  /* Warning/Highlight Yellow */
+  --color-brand-dark: #111827;
+  /* Deep Slate for text */
+  --color-brand-light: #F9FAFB;
+  /* Light Slate for backgrounds */
 
   --font-sans: "Inter", system-ui, sans-serif;
 }
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply bg-brand-light text-brand-dark antialiased;
   }
+}
+
+/* Custom Scrollbar for a premium feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 107, 107, 0.2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 107, 107, 0.4);
 }

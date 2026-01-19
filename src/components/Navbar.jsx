@@ -13,7 +13,7 @@ export default function Navbar() {
     ];
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-100 flex justify-around items-center px-4 pb-8 pt-3 z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
+        <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-2xl border-t border-gray-100 flex justify-around items-center px-4 pb-8 pt-4 z-[60] shadow-[0_-10px_40px_rgba(0,0,0,0.04)]">
             {navItems.map((item) => (
                 <NavLink
                     key={item.path}
@@ -22,23 +22,24 @@ export default function Navbar() {
                         clsx(
                             "flex flex-col items-center gap-1.5 transition-all duration-300 relative",
                             item.special
-                                ? "bg-brand-orange text-white p-4 rounded-[2rem] -mt-12 shadow-xl shadow-brand-orange/30 active:scale-90"
-                                : isActive ? "text-brand-orange" : "text-gray-300 hover:text-gray-400"
+                                ? "bg-brand-orange text-white p-4 rounded-[2.2rem] -mt-14 shadow-2xl shadow-brand-orange/40 active:scale-90 border-4 border-white"
+                                : isActive ? "text-brand-orange scale-110" : "text-gray-300 hover:text-gray-500"
                         )
                     }
                 >
                     {({ isActive }) => (
                         <>
                             {item.special ? (
-                                <div className="flex items-center justify-center">
-                                    <Plus size={28} strokeWidth={3} />
-                                </div>
+                                <Plus size={30} strokeWidth={3} />
                             ) : (
                                 <>
-                                    <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-                                    <span className="text-[9px] font-black uppercase tracking-widest">{item.label}</span>
-                                    {isActive && !item.special && (
-                                        <div className="absolute -bottom-2 w-1 h-1 bg-brand-orange rounded-full"></div>
+                                    <item.icon size={22} strokeWidth={isActive ? 3 : 2} />
+                                    <span className="text-[9px] font-black uppercase tracking-[0.15em] mb-1">{item.label}</span>
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="navTab"
+                                            className="absolute -bottom-1 w-1 h-1 bg-brand-orange rounded-full"
+                                        />
                                     )}
                                 </>
                             )}
