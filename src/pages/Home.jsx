@@ -1,6 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, List, LayoutGrid, Image as ImageIcon, ChevronDown, Star } from 'lucide-react';
-import { mockRestaurants } from '../lib/data';
 import { useStore } from '../lib/store';
 import RestaurantCard from '../components/RestaurantCard';
 import clsx from 'clsx';
@@ -8,54 +7,50 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
     const [searchQuery, setSearchQuery] = useState('');
-    const [viewMode, setViewMode] = useState('list-photos'); // 'list', 'list-photos', 'gallery'
-    const [sortBy, setSortBy] = useState('date'); // 'nearby', 'zone', 'date', 'club', 'recommender'
+    const [viewMode, setViewMode] = useState('list-photos');
+    const [sortBy, setSortBy] = useState('date');
 
-    const savedIds = useStore(state => state.savedIds);
-    const visitedIds = useStore(state => state.visitedIds);
-    const userInfo = useStore(state => state.userInfo);
+    const restaurants = useStore(state => state.restaurants);
+    const profile = useStore(state => state.profile);
+    const loading = useStore(state => state.loading);
+    const fetchRestaurants = useStore(state => state.fetchRestaurants);
+    const fetchProfile = useStore(state => state.fetchProfile);
 
-    // Filter restaurants that are in the user's list (saved or visited)
+    useEffect(() => {
+        fetchRestaurants();
+        fetchProfile();
+    }, []);
+
     const myRestaurants = useMemo(() => {
-        // For this prototype hub, we show ALL restaurants but highlight they are in the "list"
-        // However, the prompt says "hub principal, punto central de MI lista", so I will filter
-        const allIds = Array.from(new Set([...savedIds, ...visitedIds]));
+        let list = [...restaurants];
 
-        // If list is empty in prototype, we show everything as "Suggestions" but let's stick to the prompt
-        // and show the user's list. I'll include all mock data if list is empty for better demo, 
-        // but the logic should be based on existence in list.
-        let list = mockRestaurants.filter(r => allIds.length === 0 || allIds.includes(r.id));
-
-        // Search filter
         if (searchQuery) {
             list = list.filter(r =>
                 r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                r.cuisine.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                r.cuisine?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 r.zone?.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
 
-        // Sorting logic
         list.sort((a, b) => {
-            if (sortBy === 'date') return new Date(b.dateAdded) - new Date(a.dateAdded);
+            if (sortBy === 'date') return new Date(b.date_added) - new Date(a.date_added);
             if (sortBy === 'zone') return (a.zone || '').localeCompare(b.zone || '');
-            if (sortBy === 'recommender') return (a.recommendedBy || '').localeCompare(b.recommendedBy || '');
-            if (sortBy === 'club') return (a.club || '').localeCompare(b.club || '');
+            if (sortBy === 'recommender') return (a.recommended_by || '').localeCompare(b.recommended_by || '');
+            if (sortBy === 'club') return (a.club_name || '').localeCompare(b.club_name || '');
             return 0;
         });
 
         return list;
-    }, [savedIds, visitedIds, searchQuery, sortBy]);
+    }, [restaurants, searchQuery, sortBy]);
 
     const stats = [
-        { label: 'To Visit', count: savedIds.length, color: 'bg-brand-orange' },
-        { label: 'Visited', count: visitedIds.length, color: 'bg-brand-green' },
-        { label: 'Badges', count: userInfo.stats.badges, color: 'bg-brand-yellow' },
+        { label: 'To Visit', count: restaurants.filter(r => !r.is_visited).length, color: 'bg-brand-orange' },
+        { label: 'Visited', count: restaurants.filter(r => r.is_visited).length, color: 'bg-brand-green' },
+        { label: 'Badges', count: profile?.badges_count || 0, color: 'bg-brand-yellow' },
     ];
 
     return (
         <div className="pb-24 bg-slate-50 min-h-screen">
-            {/* Header Section */}
             <header className="bg-brand-orange p-5 pt-12 rounded-b-[2.5rem] shadow-lg text-white">
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center gap-2">
@@ -66,11 +61,11 @@ export default function Home() {
                     </div>
                     <div className="flex items-center gap-3 bg-white/20 backdrop-blur-md p-1.5 pr-4 rounded-full border border-white/30">
                         <div className="w-8 h-8 bg-white text-brand-orange rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
-                            {userInfo.name.charAt(0)}
+                            {profile?.full_name?.charAt(0) || 'U'}
                         </div>
                         <div>
                             <p className="text-[10px] font-bold opacity-80 leading-none">RANKING</p>
-                            <p className="text-xs font-black">#42 Foodie</p>
+                            <p className="text-xs font-black">{profile?.ranking || '#---'}</p>
                         </div>
                     </div>
                 </div>
@@ -87,7 +82,6 @@ export default function Home() {
                 </div>
             </header>
 
-            {/* Stats Cards */}
             <div className="px-5 -mt-8 grid grid-cols-3 gap-3 mb-8">
                 {stats.map((stat) => (
                     <div key={stat.label} className="bg-white p-4 rounded-2xl shadow-md border border-gray-50 flex flex-col items-center text-center">
@@ -98,27 +92,22 @@ export default function Home() {
                 ))}
             </div>
 
-            {/* Controls: View Modes & Sorting */}
             <div className="px-5 mb-6 flex justify-between items-center">
                 <div className="flex bg-gray-200/50 p-1 rounded-2xl">
-                    <button
-                        onClick={() => setViewMode('list')}
-                        className={clsx("p-2.5 rounded-xl transition-all", viewMode === 'list' ? "bg-white text-brand-orange shadow-sm scale-105" : "text-gray-400")}
-                    >
-                        <List size={20} />
-                    </button>
-                    <button
-                        onClick={() => setViewMode('list-photos')}
-                        className={clsx("p-2.5 rounded-xl transition-all", viewMode === 'list-photos' ? "bg-white text-brand-orange shadow-sm scale-105" : "text-gray-400")}
-                    >
-                        <LayoutGrid size={20} />
-                    </button>
-                    <button
-                        onClick={() => setViewMode('gallery')}
-                        className={clsx("p-2.5 rounded-xl transition-all", viewMode === 'gallery' ? "bg-white text-brand-orange shadow-sm scale-105" : "text-gray-400")}
-                    >
-                        <ImageIcon size={20} />
-                    </button>
+                    {['list', 'list-photos', 'gallery'].map(mode => (
+                        <button
+                            key={mode}
+                            onClick={() => setViewMode(mode)}
+                            className={clsx(
+                                "p-2.5 rounded-xl transition-all",
+                                viewMode === mode ? "bg-white text-brand-orange shadow-sm scale-105" : "text-gray-400"
+                            )}
+                        >
+                            {mode === 'list' && <List size={20} />}
+                            {mode === 'list-photos' && <LayoutGrid size={20} />}
+                            {mode === 'gallery' && <ImageIcon size={20} />}
+                        </button>
+                    ))}
                 </div>
 
                 <div className="relative">
@@ -137,13 +126,14 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* Restaurant List */}
             <div className={clsx(
                 "px-5 pb-10 transition-all duration-300",
                 viewMode === 'gallery' ? "grid grid-cols-2 gap-4" : "flex flex-col gap-4"
             )}>
                 <AnimatePresence mode="popLayout" initial={false}>
-                    {myRestaurants.length > 0 ? (
+                    {loading ? (
+                        <div className="col-span-full py-20 text-center text-gray-400 font-bold">Loading your foodie world...</div>
+                    ) : myRestaurants.length > 0 ? (
                         myRestaurants.map((restaurant) => (
                             <motion.div
                                 key={restaurant.id}
@@ -153,10 +143,7 @@ export default function Home() {
                                 exit={{ opacity: 0, scale: 0.95 }}
                                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             >
-                                <RestaurantCard
-                                    restaurant={restaurant}
-                                    variant={viewMode}
-                                />
+                                <RestaurantCard restaurant={restaurant} variant={viewMode} />
                             </motion.div>
                         ))
                     ) : (
