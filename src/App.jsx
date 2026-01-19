@@ -10,6 +10,9 @@ import AddRestaurant from './pages/AddRestaurant';
 import RestaurantDetails from './pages/RestaurantDetails';
 import Auth from './pages/Auth';
 import SplashScreen from './components/SplashScreen';
+import { LoadScriptNext } from '@react-google-maps/api';
+
+const libraries = ['places'];
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -53,18 +56,23 @@ export default function App() {
     <>
       <SplashScreen isVisible={showSplash} />
       <BrowserRouter>
-        <Routes>
-          <Route path="/auth" element={!session ? <Auth /> : <Navigate to="/" />} />
+        <LoadScriptNext
+          googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+          libraries={libraries}
+        >
+          <Routes>
+            <Route path="/auth" element={!session ? <Auth /> : <Navigate to="/" />} />
 
-          <Route path="/" element={session ? <Layout /> : <Navigate to="/auth" />}>
-            <Route index element={<Home />} />
-            <Route path="map" element={<MapPage />} />
-            <Route path="add" element={<AddRestaurant />} />
-            <Route path="clubs" element={<Clubs />} />
-            <Route path="stats" element={<Stats />} />
-            <Route path="restaurant/:id" element={<RestaurantDetails />} />
-          </Route>
-        </Routes>
+            <Route path="/" element={session ? <Layout /> : <Navigate to="/auth" />}>
+              <Route index element={<Home />} />
+              <Route path="map" element={<MapPage />} />
+              <Route path="add" element={<AddRestaurant />} />
+              <Route path="clubs" element={<Clubs />} />
+              <Route path="stats" element={<Stats />} />
+              <Route path="restaurant/:id" element={<RestaurantDetails />} />
+            </Route>
+          </Routes>
+        </LoadScriptNext>
       </BrowserRouter>
     </>
   );

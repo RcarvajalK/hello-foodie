@@ -5,15 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../lib/store';
 import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 
-const libraries = ['places'];
-
 export default function AddRestaurant() {
-    const { isLoaded } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-        libraries
-    });
-
     const navigate = useNavigate();
     const addRestaurant = useStore(state => state.addRestaurant);
     const [loading, setLoading] = useState(false);
@@ -72,6 +64,18 @@ export default function AddRestaurant() {
             navigate('/');
         }
     };
+
+    if (loading) return <div className="p-20 text-center animate-pulse uppercase font-black text-brand-orange">Adding...</div>;
+
+    // Safety check for Google Maps script
+    if (typeof google === 'undefined') {
+        return (
+            <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 gap-4">
+                <div className="w-12 h-12 border-4 border-brand-orange border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Initializing Places...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="pb-24 bg-slate-50 min-h-screen">

@@ -52,11 +52,6 @@ const mapOptions = {
 };
 
 export default function MapPage() {
-    const { isLoaded } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-    });
-
     const restaurants = useStore((state) => state.restaurants);
     const fetchRestaurants = useStore((state) => state.fetchRestaurants);
     const [selected, setSelected] = useState(null);
@@ -75,7 +70,6 @@ export default function MapPage() {
         setMap(null);
     }, []);
 
-    if (!isLoaded) return <div className="h-screen w-full flex items-center justify-center bg-slate-50 font-black text-brand-orange animate-pulse">LOADING MAP...</div>;
 
     return (
         <div className="h-screen w-full relative">
