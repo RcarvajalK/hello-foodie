@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, List, LayoutGrid, Image as ImageIcon, ChevronDown } from 'lucide-react';
 import { useStore } from '../lib/store';
 import RestaurantCard from '../components/RestaurantCard';
@@ -8,8 +9,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
     const [searchQuery, setSearchQuery] = useState('');
-    const [viewMode, setViewMode] = useState('list-photos');
+    const [viewMode, setViewMode] = useState('list');
     const [sortBy, setSortBy] = useState('date');
+    const [filterCuisine, setFilterCuisine] = useState('All');
+    const [userCoords, setUserCoords] = useState(null);
+    const navigate = useNavigate();
 
     const restaurants = useStore(state => state.restaurants);
     const profile = useStore(state => state.profile);
@@ -20,10 +24,29 @@ export default function Home() {
     useEffect(() => {
         fetchRestaurants();
         fetchProfile();
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            (err) => console.log('Geolocation error', err)
+        );
     }, []);
+
+    const calculateDistance = (r) => {
+        if (!userCoords || !r.coordinates) return Infinity;
+        // Simple distance calculation (not accounting for curvature but fine for local)
+        const dx = (r.coordinates.x || 0) - userCoords.lat;
+        const dy = (r.coordinates.y || 0) - userCoords.lng;
+        return Math.sqrt(dx * dx + dy * dy);
+    };
 
     const myRestaurants = useMemo(() => {
         let list = [...restaurants];
+        list = list.filter(r => !r.is_visited);
+
+        if (filterCuisine !== 'All') {
+            list = list.filter(r => r.cuisine?.toLowerCase().includes(filterCuisine.toLowerCase()));
+        }
+
         if (searchQuery) {
             list = list.filter(r =>
                 r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -31,21 +54,33 @@ export default function Home() {
                 r.zone?.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
+
         list.sort((a, b) => {
             if (sortBy === 'date') return new Date(b.date_added) - new Date(a.date_added);
+            if (sortBy === 'distance') return calculateDistance(a) - calculateDistance(b);
             if (sortBy === 'zone') return (a.zone || '').localeCompare(b.zone || '');
             if (sortBy === 'recommender') return (a.recommended_by || '').localeCompare(b.recommended_by || '');
             if (sortBy === 'club') return (a.club_name || '').localeCompare(b.club_name || '');
             return 0;
         });
         return list;
-    }, [restaurants, searchQuery, sortBy]);
+    }, [restaurants, searchQuery, sortBy, filterCuisine, userCoords]);
+
+    const recommended = useMemo(() => {
+        if (!profile?.favorite_cuisines?.length) return null;
+        // Find saved restaurants that match user's favorite cuisines
+        return restaurants
+            .filter(r => !r.is_visited && profile.favorite_cuisines.some(c => r.cuisine?.toLowerCase().includes(c.toLowerCase())))
+            .slice(0, 3);
+    }, [restaurants, profile]);
 
     const stats = [
-        { label: 'To Visit', count: restaurants.filter(r => !r.is_visited).length, color: 'bg-brand-orange' },
-        { label: 'Visited', count: restaurants.filter(r => r.is_visited).length, color: 'bg-brand-green' },
-        { label: 'Badges', count: profile?.badges_count || 0, color: 'bg-brand-yellow' },
+        { label: 'To Visit', count: restaurants.filter(r => !r.is_visited).length, color: 'bg-brand-orange', link: '/' },
+        { label: 'Visited', count: restaurants.filter(r => r.is_visited).length, color: 'bg-brand-green', link: '/visited' },
+        { label: 'Badges', count: profile?.badges_count || 0, color: 'bg-brand-yellow', link: '/badges' },
     ];
+
+    const cuisines = ['All', ...new Set(restaurants.map(r => r.cuisine).filter(Boolean))];
 
     return (
         <div className="pb-24 bg-brand-light min-h-screen">
@@ -58,8 +93,8 @@ export default function Home() {
                             <p className="text-[9px] font-black uppercase tracking-[0.35em] text-gray-300 mt-1">Culinary Journey Log</p>
                         </div>
                     </div>
-                    <div className="relative group">
-                        <div className="w-12 h-12 bg-slate-50 border-2 border-brand-orange/20 rounded-[1.2rem] flex items-center justify-center font-black text-brand-orange shadow-inner group-hover:scale-110 transition-transform">
+                    <div className="relative group" onClick={() => navigate('/profile')}>
+                        <div className="w-12 h-12 bg-slate-50 border-2 border-brand-orange/20 rounded-[1.2rem] flex items-center justify-center font-black text-brand-orange shadow-inner group-hover:scale-110 transition-transform cursor-pointer">
                             {profile?.full_name?.charAt(0) || 'U'}
                         </div>
                     </div>
@@ -77,10 +112,14 @@ export default function Home() {
                 </div>
             </header>
 
-            {/* Stats Section with subtle style */}
+            {/* Stats Section */}
             <div className="px-6 -mt-8 grid grid-cols-3 gap-4 mb-8 relative z-20">
                 {stats.map((stat) => (
-                    <div key={stat.label} className="bg-white p-5 rounded-3xl shadow-xl shadow-slate-200/40 border border-gray-50 flex flex-col items-center text-center">
+                    <div
+                        key={stat.label}
+                        onClick={() => stat.link && navigate(stat.link)}
+                        className="bg-white p-5 rounded-3xl shadow-xl shadow-slate-200/40 border border-gray-50 flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform"
+                    >
                         <span className={clsx("w-2 h-2 rounded-full mb-2.5", stat.color)}></span>
                         <span className="text-2xl font-black text-brand-dark tabular-nums">{stat.count}</span>
                         <span className="text-[9px] font-black text-gray-400 uppercase mt-1.5 tracking-widest">{stat.label}</span>
@@ -88,36 +127,79 @@ export default function Home() {
                 ))}
             </div>
 
-            <div className="px-6 mb-8 flex justify-between items-center">
-                <div className="flex bg-slate-200/40 p-1.5 rounded-[1.5rem] backdrop-blur-sm border border-slate-100">
-                    {['list', 'list-photos', 'gallery'].map(mode => (
+            {/* Recommendations Section */}
+            {recommended?.length > 0 && (
+                <div className="px-6 mb-8">
+                    <div className="flex items-center justify-between mb-4 px-2">
+                        <h3 className="text-xs font-black uppercase text-brand-dark tracking-widest">Recommended for you</h3>
+                    </div>
+                    <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+                        {recommended.map(r => (
+                            <div key={r.id} onClick={() => navigate(`/restaurant/${r.id}`)} className="flex-shrink-0 w-48 bg-white p-3 rounded-[2rem] shadow-lg border border-gray-50 active:scale-95 transition-all">
+                                <div className="h-32 rounded-[1.5rem] overflow-hidden mb-3">
+                                    <img src={r.image_url || r.image} className="w-full h-full object-cover" />
+                                </div>
+                                <h4 className="font-black text-[10px] text-brand-dark uppercase truncate px-1">{r.name}</h4>
+                                <p className="text-[8px] font-bold text-gray-400 uppercase px-1">{r.cuisine}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <div className="px-6 mb-8 flex flex-col gap-4">
+                <div className="flex overflow-x-auto gap-2 no-scrollbar py-1">
+                    {cuisines.map(c => (
                         <button
-                            key={mode}
-                            onClick={() => setViewMode(mode)}
+                            key={c}
+                            onClick={() => setFilterCuisine(c)}
                             className={clsx(
-                                "p-2.5 rounded-2xl transition-all",
-                                viewMode === mode ? "bg-white text-brand-orange shadow-lg scale-110" : "text-gray-400"
+                                "px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm",
+                                filterCuisine === c ? "bg-brand-orange text-white" : "bg-white text-gray-400 border border-gray-100"
                             )}
                         >
-                            {mode === 'list' && <List size={22} />}
-                            {mode === 'list-photos' && <LayoutGrid size={22} />}
-                            {mode === 'gallery' && <ImageIcon size={22} />}
+                            {c}
                         </button>
                     ))}
                 </div>
 
-                <div className="relative">
-                    <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        className="appearance-none bg-white border border-gray-100 rounded-2xl px-5 py-3 pr-11 text-[10px] font-black text-brand-dark shadow-sm focus:outline-none ring-4 ring-slate-50 cursor-pointer uppercase tracking-widest"
-                    >
-                        <option value="date">Added Date</option>
-                        <option value="zone">Zone/City</option>
-                        <option value="club">By Club</option>
-                        <option value="recommender">Rec by</option>
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-orange pointer-events-none" size={16} />
+                <div className="flex justify-between items-center">
+                    <div className="flex bg-slate-200/40 p-1.5 rounded-[1.5rem] backdrop-blur-sm border border-slate-100">
+                        {[
+                            { id: 'list', icon: List },
+                            { id: 'list-photos', icon: LayoutGrid },
+                            { id: 'gallery', icon: ImageIcon }
+                        ].map(modeItem => {
+                            const Icon = modeItem.icon;
+                            return (
+                                <button
+                                    key={modeItem.id}
+                                    onClick={() => setViewMode(modeItem.id)}
+                                    className={clsx(
+                                        "p-2.5 rounded-2xl transition-all",
+                                        viewMode === modeItem.id ? "bg-white text-brand-orange shadow-lg scale-110" : "text-gray-400"
+                                    )}
+                                >
+                                    <Icon size={22} />
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <div className="relative">
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="appearance-none bg-white border border-gray-100 rounded-2xl px-5 py-3 pr-11 text-[10px] font-black text-brand-dark shadow-sm focus:outline-none ring-4 ring-slate-50 cursor-pointer uppercase tracking-widest"
+                        >
+                            <option value="date">Added Date</option>
+                            <option value="distance">Nearest</option>
+                            <option value="zone">Zone/City</option>
+                            <option value="club">By Club</option>
+                            <option value="recommender">Rec by</option>
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-orange pointer-events-none" size={16} />
+                    </div>
                 </div>
             </div>
 

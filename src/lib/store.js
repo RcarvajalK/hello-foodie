@@ -5,7 +5,12 @@ export const useStore = create((set, get) => ({
     restaurants: [],
     profile: null,
     loading: false,
-
+    notificationPreferences: {
+        nearby: true,
+        lunch: true,
+        dinner: true
+    },
+    setRestaurants: (restaurants) => set({ restaurants }),
     // Fetch all restaurants for the current user
     fetchRestaurants: async () => {
         set({ loading: true });
@@ -29,6 +34,11 @@ export const useStore = create((set, get) => ({
         }
         set({ loading: false });
     },
+
+    setProfile: (profile) => set({ profile }),
+    setNotificationPreferences: (prefs) => set((state) => ({
+        notificationPreferences: { ...state.notificationPreferences, ...prefs }
+    })),
 
     // Fetch user profile
     fetchProfile: async () => {
@@ -84,20 +94,59 @@ export const useStore = create((set, get) => ({
         return data;
     },
 
-    // Toggle visited status in DB
-    toggleVisited: async (id, currentStatus) => {
+    // Toggle visited status in DB with optional review
+    toggleVisited: async (id, currentStatus, review = null) => {
+        const updateData = { is_visited: !currentStatus };
+        if (review) {
+            updateData.rating = review.rating;
+            updateData.review_comment = review.comment;
+            updateData.visited_at = new Date().toISOString();
+        }
+
         const { error } = await supabase
             .from('restaurants')
-            .update({ is_visited: !currentStatus })
+            .update(updateData)
             .eq('id', id);
 
         if (!error) {
             set((state) => ({
                 restaurants: state.restaurants.map((r) =>
-                    r.id === id ? { ...r, is_visited: !currentStatus } : r
+                    r.id === id ? { ...r, ...updateData } : r
                 )
             }));
         }
+    },
+
+    // Update restaurant details
+    updateRestaurant: async (id, updates) => {
+        const { error } = await supabase
+            .from('restaurants')
+            .update(updates)
+            .eq('id', id);
+
+        if (!error) {
+            set((state) => ({
+                restaurants: state.restaurants.map((r) =>
+                    r.id === id ? { ...r, ...updates } : r
+                )
+            }));
+        }
+    },
+
+    // Update user profile
+    updateProfile: async (profileUpdates) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+            .from('profiles')
+            .update(profileUpdates)
+            .eq('id', user.id)
+            .select()
+            .single();
+
+        if (!error) set({ profile: data });
+        return { data, error };
     },
 
     // Delete restaurant

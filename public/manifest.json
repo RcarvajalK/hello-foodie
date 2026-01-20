@@ -1,0 +1,15 @@
+{
+    "short_name": "Hello Foodie!",
+    "name": "Hello Foodie! | My Culinary Journey",
+    "icons": [
+        {
+            "src": "/favicon.svg",
+            "type": "image/svg+xml",
+            "sizes": "any"
+        }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#FB923C",
+    "background_color": "#ffffff"
+}

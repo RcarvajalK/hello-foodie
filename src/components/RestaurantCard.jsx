@@ -1,17 +1,38 @@
 import { Link } from 'react-router-dom';
-import { Star, MapPin, Calendar, User, Users, CheckCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Star, MapPin, Calendar, User, Users, CheckCircle, Edit3, X, Save } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { useStore } from '../lib/store';
 import clsx from 'clsx';
 import BrandLogo from './BrandLogo';
 
 export default function RestaurantCard({ restaurant, variant = 'list-photos' }) {
     const isVisited = restaurant.is_visited;
+    const updateRestaurant = useStore(state => state.updateRestaurant);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editData, setEditData] = useState({ cuisine: restaurant.cuisine, price: restaurant.price });
+
+    const handleSave = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await updateRestaurant(restaurant.id, editData);
+        setIsEditing(false);
+    };
 
     // Official logo tag
     const BrandTag = () => (
         <div className="bg-white p-1 rounded-lg shadow-sm border border-gray-100 flex items-center justify-center">
             <BrandLogo size={12} animate={false} />
         </div>
+    );
+
+    const EditButton = () => (
+        <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEditing(true); }}
+            className="p-2 bg-slate-50 text-gray-400 rounded-xl hover:text-brand-orange transition-colors"
+        >
+            <Edit3 size={14} />
+        </button>
     );
 
     if (variant === 'list') {
@@ -29,15 +50,19 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos' }) 
                             <h3 className="font-black text-brand-dark text-sm truncate uppercase tracking-tight">{restaurant.name}</h3>
                             {isVisited && <BrandTag />}
                         </div>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">{restaurant.zone || 'No Zone'} • {restaurant.cuisine}</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                            {restaurant.zone || 'No Zone'} • {restaurant.cuisine}
+                        </p>
                     </div>
                     <div className="flex flex-col items-end gap-1.5 px-2">
                         <div className="flex items-center gap-1.5 text-brand-orange bg-brand-orange/5 px-2.5 py-1 rounded-full">
                             <Star size={10} fill="currentColor" />
                             <span className="text-[11px] font-black tabular-nums">{restaurant.rating || '---'}</span>
                         </div>
+                        <EditButton />
                     </div>
                 </Link>
+                <QuickEditModal isVisible={isEditing} onClose={() => setIsEditing(false)} data={editData} setData={setEditData} onSave={handleSave} />
             </motion.div>
         );
     }
@@ -69,57 +94,127 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos' }) 
     // default: list-photos
     return (
         <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} whileTap={{ scale: 0.98 }}>
-            <Link
-                to={`/restaurant/${restaurant.id}`}
-                className="block bg-white rounded-[3.5rem] overflow-hidden shadow-xl shadow-slate-200/40 border border-gray-50 transition-all hover:shadow-2xl relative"
-            >
-                <div className="relative h-64">
-                    <img src={restaurant.image_url || restaurant.image} alt={restaurant.name} className="w-full h-full object-cover" />
-                    <div className="absolute top-6 right-6 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-[1.5rem] flex items-center shadow-2xl border border-white/50">
-                        <Star size={18} className="text-brand-orange fill-brand-orange mr-2" />
-                        <span className="text-base font-black text-brand-dark tabular-nums">{restaurant.rating || '---'}</span>
-                    </div>
-                    <div className="absolute bottom-6 left-6 bg-brand-dark/40 backdrop-blur-md text-white px-5 py-2.5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl border border-white/10">
-                        {restaurant.cuisine}
-                    </div>
-                </div>
-
-                <div className="p-8">
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <h3 className="text-2xl font-black text-brand-dark leading-tight uppercase tracking-tighter">{restaurant.name}</h3>
-                                {isVisited && (
-                                    <div className="bg-brand-orange/10 p-1.5 rounded-xl border border-brand-orange/5">
-                                        <BrandLogo size={18} animate={false} />
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex items-center text-gray-400 text-[10px] gap-4 font-black uppercase tracking-widest">
-                                <span className="flex items-center gap-2"><MapPin size={14} className="text-brand-orange" /> {restaurant.zone || 'Explore City'}</span>
-                                <span className="flex items-center gap-2 h-1.5 w-1.5 bg-brand-orange/20 rounded-full"></span>
-                                <span className="flex items-center gap-2"><Calendar size={14} /> {new Date(restaurant.date_added).toLocaleDateString()}</span>
-                            </div>
+            <div className="relative">
+                <Link
+                    to={`/restaurant/${restaurant.id}`}
+                    className="block bg-white rounded-[3.5rem] overflow-hidden shadow-xl shadow-slate-200/40 border border-gray-50 transition-all hover:shadow-2xl relative"
+                >
+                    <div className="relative h-64">
+                        <img src={restaurant.image_url || restaurant.image} alt={restaurant.name} className="w-full h-full object-cover" />
+                        <div className="absolute top-6 right-6 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-[1.5rem] flex items-center shadow-2xl border border-white/50">
+                            <Star size={18} className="text-brand-orange fill-brand-orange mr-2" />
+                            <span className="text-base font-black text-brand-dark tabular-nums">{restaurant.rating || '---'}</span>
                         </div>
-                        <span className="text-xl font-black text-brand-orange drop-shadow-sm">{restaurant.price}</span>
+                        <div className="absolute bottom-6 left-6 bg-brand-dark/40 backdrop-blur-md text-white px-5 py-2.5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl border border-white/10 flex items-center gap-3">
+                            {restaurant.cuisine}
+                            {restaurant.meal_type && (
+                                <span className="bg-brand-orange text-white px-2 py-0.5 rounded-lg text-[8px]">{restaurant.meal_type}</span>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-6 border-t border-slate-50 mt-2">
-                        <div className="flex items-center gap-3 text-[10px] text-gray-400 font-black uppercase tracking-[0.25em]">
-                            <div className="w-8 h-8 bg-brand-orange/5 rounded-2xl flex items-center justify-center text-brand-orange">
-                                <User size={14} />
+                    <div className="p-8">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <div className="flex items-center gap-3 mb-2">
+                                    <h3 className="text-2xl font-black text-brand-dark leading-tight uppercase tracking-tighter">{restaurant.name}</h3>
+                                    {isVisited && (
+                                        <div className="bg-brand-orange/10 p-1.5 rounded-xl border border-brand-orange/5">
+                                            <BrandLogo size={18} animate={false} />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex items-center text-gray-400 text-[10px] gap-4 font-black uppercase tracking-widest">
+                                    <span className="flex items-center gap-2"><MapPin size={14} className="text-brand-orange" /> {restaurant.zone || 'Explore City'}</span>
+                                    <span className="flex items-center gap-2 h-1.5 w-1.5 bg-brand-orange/20 rounded-full"></span>
+                                    <span className="flex items-center gap-2"><Calendar size={14} /> {new Date(restaurant.date_added).toLocaleDateString()}</span>
+                                </div>
                             </div>
-                            <span>Rec by: <span className="text-brand-dark">{restaurant.recommended_by || 'Me'}</span></span>
+                            <div className="flex flex-col items-end gap-2">
+                                <span className="text-xl font-black text-brand-orange drop-shadow-sm">{restaurant.price}</span>
+                                <EditButton />
+                            </div>
                         </div>
-                        {restaurant.club_name && (
-                            <div className="flex bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 flex items-center gap-3 text-[10px] text-brand-dark font-black uppercase tracking-widest">
-                                <Users size={14} className="text-brand-orange" />
-                                <span>{restaurant.club_name}</span>
+
+                        <div className="flex items-center justify-between pt-6 border-t border-slate-100 mt-2">
+                            <div className="flex items-center gap-3 text-[10px] text-gray-400 font-black uppercase tracking-[0.25em]">
+                                <div className="w-8 h-8 bg-brand-orange/5 rounded-2xl flex items-center justify-center text-brand-orange">
+                                    <User size={14} />
+                                </div>
+                                <span>Rec by: <span className="text-brand-dark">{restaurant.recommended_by || 'Me'}</span></span>
                             </div>
-                        )}
+                            {restaurant.club_name && (
+                                <div className="flex bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 flex items-center gap-3 text-[10px] text-brand-dark font-black uppercase tracking-widest">
+                                    <Users size={14} className="text-brand-orange" />
+                                    <span>{restaurant.club_name}</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
-            </Link>
+                </Link>
+            </div>
+            <QuickEditModal isVisible={isEditing} onClose={() => setIsEditing(false)} data={editData} setData={setEditData} onSave={handleSave} />
         </motion.div>
+    );
+}
+
+function QuickEditModal({ isVisible, onClose, data, setData, onSave }) {
+    return (
+        <AnimatePresence>
+            {isVisible && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-brand-dark/40 backdrop-blur-sm" onClick={onClose}
+                    />
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                        className="relative bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl overflow-hidden"
+                    >
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="font-black text-brand-dark uppercase tracking-tight">Quick Edit</h3>
+                            <button onClick={onClose} className="p-2 text-gray-300"><X size={20} /></button>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-3">Cuisine / Type</label>
+                                <input
+                                    className="w-full bg-slate-50 p-4 rounded-xl font-bold text-brand-dark border-2 border-slate-100 focus:border-brand-orange/20 focus:outline-none transition-all"
+                                    value={data.cuisine}
+                                    onChange={(e) => setData({ ...data, cuisine: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-3">Price Level</label>
+                                <div className="flex gap-2">
+                                    {['$', '$$', '$$$', '$$$$'].map(p => (
+                                        <button
+                                            key={p}
+                                            onClick={() => setData({ ...data, price: p })}
+                                            className={clsx(
+                                                "flex-1 py-3 rounded-xl font-black transition-all",
+                                                data.price === p ? "bg-brand-orange text-white shadow-lg" : "bg-slate-50 text-gray-400"
+                                            )}
+                                        >
+                                            {p}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={onSave}
+                                className="w-full bg-brand-dark text-white font-black py-4 rounded-[1.5rem] flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all"
+                            >
+                                <Save size={18} />
+                                Update Place
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
     );
 }
