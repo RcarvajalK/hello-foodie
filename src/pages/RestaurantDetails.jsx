@@ -13,8 +13,32 @@ export default function RestaurantDetails() {
     const deleteRestaurant = useStore(state => state.deleteRestaurant);
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [showReviewModal, setShowReviewModal] = useState(false);
     const [showComparison, setShowComparison] = useState(false);
-    const [review, setReview] = useState({ rating: 5, comment: '', personal_price: restaurant.price });
+
+    const restaurant = restaurants.find(r => r.id === id);
+
+    const [review, setReview] = useState({
+        rating: 5,
+        comment: '',
+        personal_price: restaurant?.price || '$$'
+    });
+
+    if (!restaurant) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-white p-6">
+                <div className="text-center">
+                    <h2 className="text-xl font-black text-brand-dark mb-4 uppercase">Restaurant Not Found</h2>
+                    <button
+                        onClick={() => navigate('/')}
+                        className="bg-brand-orange text-white px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-brand-orange/20"
+                    >
+                        Go Back Home
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     const handleToggleVisited = () => {
         if (!restaurant.is_visited) {
