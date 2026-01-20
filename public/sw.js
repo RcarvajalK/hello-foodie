@@ -1,5 +1,5 @@
 // Service Worker for Hello Foodie!
-const CACHE_NAME = 'hello-foodie-v3';
+const CACHE_NAME = 'hello-foodie-v4';
 const ASSETS = [
     '/',
     '/index.html',

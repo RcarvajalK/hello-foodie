@@ -3,6 +3,10 @@
 
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#FB923C" />
   <title>Hello Foodie!</title>
@@ -31,17 +35,8 @@
       showError('Promise Rejected: ' + event.reason, event.reason ? event.reason.stack : '');
     };
   </script>
-  <div id="root">
-    <div
-      style="height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: sans-serif; background: #FB923C; color: white;">
-      <h1 style="margin: 0;">Hello Foodie!</h1>
-      <p style="opacity: 0.8;">Cargando experiencia gastronómica...</p>
-    </div>
-  </div>
+  <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
-  <div
-    style="position: fixed; bottom: 0; right: 0; background: black; color: white; font-size: 8px; padding: 2px; opacity: 0.5; pointer-events: none; z-index: 100000;">
-    v1.0.4-DEBUG</div>
 </body>
 
 </html>
