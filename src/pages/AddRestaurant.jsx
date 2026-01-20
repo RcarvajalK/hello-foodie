@@ -85,6 +85,7 @@ export default function AddRestaurant() {
         setLoading(false);
 
         if (result) {
+            // Success! Head back to your list
             navigate('/');
         }
     };

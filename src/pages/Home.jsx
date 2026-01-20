@@ -129,18 +129,36 @@ export default function Home() {
 
             {/* Recommendations Section */}
             {recommended?.length > 0 && (
-                <div className="px-6 mb-8">
-                    <div className="flex items-center justify-between mb-4 px-2">
-                        <h3 className="text-xs font-black uppercase text-brand-dark tracking-widest">Recommended for you</h3>
+                <div className="px-6 mb-10">
+                    <div className="flex items-center justify-between mb-5 px-1">
+                        <h3 className="text-[10px] font-black uppercase text-brand-dark tracking-[0.25em]">Recommended for you</h3>
+                        <div className="flex gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-brand-orange"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-slate-200"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-slate-200"></div>
+                        </div>
                     </div>
-                    <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+                    <div className="flex gap-5 overflow-x-auto pb-6 no-scrollbar snap-x snap-mandatory">
                         {recommended.map(r => (
-                            <div key={r.id} onClick={() => navigate(`/restaurant/${r.id}`)} className="flex-shrink-0 w-48 bg-white p-3 rounded-[2rem] shadow-lg border border-gray-50 active:scale-95 transition-all">
-                                <div className="h-32 rounded-[1.5rem] overflow-hidden mb-3">
+                            <div
+                                key={r.id}
+                                onClick={() => navigate(`/restaurant/${r.id}`)}
+                                className="flex-shrink-0 w-[80vw] bg-white p-4 rounded-[2.5rem] shadow-2xl shadow-slate-200/40 border border-gray-50 active:scale-95 transition-all snap-center relative overflow-hidden"
+                            >
+                                <div className="h-48 rounded-[2rem] overflow-hidden mb-4 relative">
                                     <img src={r.image_url || r.image} className="w-full h-full object-cover" />
+                                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center shadow-lg">
+                                        <Star size={12} className="text-brand-orange fill-brand-orange mr-1" />
+                                        <span className="text-[10px] font-black text-brand-dark">{r.rating || '---'}</span>
+                                    </div>
                                 </div>
-                                <h4 className="font-black text-[10px] text-brand-dark uppercase truncate px-1">{r.name}</h4>
-                                <p className="text-[8px] font-bold text-gray-400 uppercase px-1">{r.cuisine}</p>
+                                <div className="px-2">
+                                    <h4 className="font-black text-sm text-brand-dark uppercase truncate mb-1 tracking-tight">{r.name}</h4>
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{r.cuisine}</p>
+                                        <span className="text-xs font-black text-brand-orange">{r.price}</span>
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>

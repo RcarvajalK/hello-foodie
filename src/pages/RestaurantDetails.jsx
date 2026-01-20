@@ -12,24 +12,24 @@ export default function RestaurantDetails() {
     const toggleVisited = useStore(state => state.toggleVisited);
     const deleteRestaurant = useStore(state => state.deleteRestaurant);
 
-    const [showReviewModal, setShowReviewModal] = useState(false);
-    const [review, setReview] = useState({ rating: 5, comment: '' });
-
-    const restaurant = restaurants.find(r => r.id === id);
-
-    if (!restaurant) return <div className="p-10 text-center font-bold text-brand-orange mt-20">Restaurant not found or loading...</div>;
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [showComparison, setShowComparison] = useState(false);
+    const [review, setReview] = useState({ rating: 5, comment: '', personal_price: restaurant.price });
 
     const handleToggleVisited = () => {
         if (!restaurant.is_visited) {
-            setShowReviewModal(true);
+            setShowConfirmModal(true);
         } else {
             toggleVisited(restaurant.id, restaurant.is_visited);
         }
     };
 
-    const submitReview = () => {
-        toggleVisited(restaurant.id, false, review);
-        setShowReviewModal(false);
+    const submitReview = async () => {
+        const success = await toggleVisited(restaurant.id, false, review);
+        if (success) {
+            setShowReviewModal(false);
+            setShowComparison(true);
+        }
     };
 
     const handleDelete = () => {
@@ -138,17 +138,43 @@ export default function RestaurantDetails() {
                     </div>
                 </div>
 
-                {restaurant.review_comment && (
+                {(restaurant.review_comment || showComparison) && (
                     <div className="mb-10 bg-brand-green/5 p-6 rounded-[2rem] border border-brand-green/10">
                         <h3 className="font-black text-sm text-brand-green uppercase tracking-widest mb-3 flex items-center gap-2">
-                            <CheckCircle size={16} /> My Review
+                            <CheckCircle size={16} /> {showComparison ? 'Comparison' : 'My Review'}
                         </h3>
-                        <div className="flex gap-1 mb-3">
-                            {[...Array(5)].map((_, i) => (
-                                <Star key={i} size={14} className={i < restaurant.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-200"} />
-                            ))}
+
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div className="p-3 bg-white rounded-xl">
+                                <p className="text-[8px] font-black text-gray-400 uppercase mb-1">Original (Places)</p>
+                                <div className="flex items-center gap-1 mb-1">
+                                    <Star size={10} className="text-yellow-400 fill-yellow-400" />
+                                    <span className="text-xs font-black">{restaurant.rating || '---'}</span>
+                                </div>
+                                <span className="text-xs font-black text-brand-orange">{restaurant.price}</span>
+                            </div>
+                            <div className="p-3 bg-brand-green/10 rounded-xl border border-brand-green/10">
+                                <p className="text-[8px] font-black text-brand-green uppercase mb-1">Your Rating</p>
+                                <div className="flex items-center gap-1 mb-1">
+                                    <Star size={10} className="text-brand-green fill-brand-green" />
+                                    <span className="text-xs font-black">{review.rating}</span>
+                                </div>
+                                <span className="text-xs font-black text-brand-green">{review.personal_price || restaurant.price}</span>
+                            </div>
                         </div>
-                        <p className="text-sm text-brand-dark font-medium leading-relaxed">{restaurant.review_comment}</p>
+
+                        {restaurant.review_comment && (
+                            <p className="text-sm text-brand-dark font-medium leading-relaxed italic">"{restaurant.review_comment}"</p>
+                        )}
+
+                        {showComparison && (
+                            <button
+                                onClick={() => navigate('/visited')}
+                                className="mt-4 w-full bg-brand-green text-white font-black py-3 rounded-xl text-[10px] uppercase tracking-widest"
+                            >
+                                Go to Visited List
+                            </button>
+                        )}
                     </div>
                 )}
 
@@ -172,9 +198,29 @@ export default function RestaurantDetails() {
                 </button>
             </div>
 
+            {/* Confirmation Modal */}
+            <AnimatePresence>
+                {showConfirmModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-brand-dark/60 backdrop-blur-sm" onClick={() => setShowConfirmModal(false)} />
+                        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl text-center">
+                            <div className="w-20 h-20 bg-brand-orange/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <CheckCircle size={40} className="text-brand-orange" />
+                            </div>
+                            <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight mb-2">Final Confirmation</h2>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-8">Have you finished your meal at {restaurant.name}?</p>
+                            <div className="flex gap-4">
+                                <button onClick={() => setShowConfirmModal(false)} className="flex-1 py-4 rounded-2xl font-black text-gray-400 uppercase text-[10px] tracking-widest">Cancel</button>
+                                <button onClick={() => { setShowConfirmModal(false); setShowReviewModal(true); }} className="flex-1 bg-brand-orange text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-brand-orange/20">Yes, it was great!</button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             {/* Review Modal */}
             {showReviewModal && (
-                <div className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-12 sm:items-center sm:p-0">
+                <div className="fixed inset-0 z-[100] flex items-end justify-center px-4 pb-12 sm:items-center sm:p-0">
                     <div className="fixed inset-0 bg-brand-dark/60 backdrop-blur-sm transition-opacity" onClick={() => setShowReviewModal(false)}></div>
                     <motion.div
                         initial={{ y: "100%" }}
@@ -193,14 +239,34 @@ export default function RestaurantDetails() {
                             ))}
                         </div>
 
-                        <div className="space-y-4 mb-8">
-                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-4 block">Comments (Optional)</label>
-                            <textarea
-                                className="w-full bg-slate-50 border-2 border-slate-100 p-5 rounded-[2rem] text-brand-dark font-bold focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all resize-none min-h-[120px]"
-                                placeholder="What did you love? Any tips?"
-                                value={review.comment}
-                                onChange={(e) => setReview({ ...review, comment: e.target.value })}
-                            />
+                        <div className="space-y-6 mb-8">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-4 block">Price Spent</label>
+                                <div className="flex gap-2">
+                                    {['$', '$$', '$$$', '$$$$'].map(p => (
+                                        <button
+                                            key={p}
+                                            onClick={() => setReview({ ...review, personal_price: p })}
+                                            className={clsx(
+                                                "flex-1 py-3 rounded-xl font-black transition-all",
+                                                review.personal_price === p ? "bg-brand-orange text-white shadow-lg" : "bg-slate-50 text-gray-400"
+                                            )}
+                                        >
+                                            {p}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-4 block">Comments (Optional)</label>
+                                <textarea
+                                    className="w-full bg-slate-50 border-2 border-slate-100 p-5 rounded-[2rem] text-brand-dark font-bold focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all resize-none min-h-[120px]"
+                                    placeholder="What did you love? Any tips?"
+                                    value={review.comment}
+                                    onChange={(e) => setReview({ ...review, comment: e.target.value })}
+                                />
+                            </div>
                         </div>
 
                         <button
