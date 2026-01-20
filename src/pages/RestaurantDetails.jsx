@@ -1,7 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { ArrowLeft, Star, Clock, MapPin, Globe, Phone, Share2, Heart, CheckCircle, Trash2 } from 'lucide-react';
 import { useStore } from '../lib/store';
 import clsx from 'clsx';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function RestaurantDetails() {
     const { id } = useParams();
