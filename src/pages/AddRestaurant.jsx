@@ -78,7 +78,14 @@ export default function AddRestaurant() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.name || !formData.coordinates) return;
+        if (!formData.name) {
+            alert("Please enter a restaurant name.");
+            return;
+        }
+        if (!formData.coordinates) {
+            alert("Please select a restaurant from the Google suggestions to get its location.");
+            return;
+        }
 
         setLoading(true);
         const result = await addRestaurant(formData);

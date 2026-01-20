@@ -40,11 +40,12 @@ export default function RestaurantDetails() {
         );
     }
 
-    const handleToggleVisited = () => {
+    const handleToggleVisited = async () => {
         if (!restaurant.is_visited) {
-            setShowConfirmModal(true);
+            setShowReviewModal(true);
         } else {
-            toggleVisited(restaurant.id, restaurant.is_visited);
+            const success = await toggleVisited(restaurant.id, restaurant.is_visited);
+            if (!success) alert("Failed to update status.");
         }
     };
 
@@ -53,6 +54,8 @@ export default function RestaurantDetails() {
         if (success) {
             setShowReviewModal(false);
             setShowComparison(true);
+        } else {
+            alert("Error: Could not save your review. Please try again.");
         }
     };
 
@@ -222,25 +225,6 @@ export default function RestaurantDetails() {
                 </button>
             </div>
 
-            {/* Confirmation Modal */}
-            <AnimatePresence>
-                {showConfirmModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-brand-dark/60 backdrop-blur-sm" onClick={() => setShowConfirmModal(false)} />
-                        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl text-center">
-                            <div className="w-20 h-20 bg-brand-orange/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <CheckCircle size={40} className="text-brand-orange" />
-                            </div>
-                            <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight mb-2">Final Confirmation</h2>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-8">Have you finished your meal at {restaurant.name}?</p>
-                            <div className="flex gap-4">
-                                <button onClick={() => setShowConfirmModal(false)} className="flex-1 py-4 rounded-2xl font-black text-gray-400 uppercase text-[10px] tracking-widest">Cancel</button>
-                                <button onClick={() => { setShowConfirmModal(false); setShowReviewModal(true); }} className="flex-1 bg-brand-orange text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-brand-orange/20">Yes, it was great!</button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
 
             {/* Review Modal */}
             {showReviewModal && (
@@ -297,7 +281,7 @@ export default function RestaurantDetails() {
                             onClick={submitReview}
                             className="w-full bg-brand-orange text-white font-black py-5 rounded-[1.8rem] shadow-xl shadow-brand-orange/20 active:scale-95 transition-all"
                         >
-                            Save Review & Mark Visited
+                            Confirm Visit & Save Review
                         </button>
                     </motion.div>
                 </div>
