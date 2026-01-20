@@ -1,22 +1,36 @@
 <svg width="32" height="32" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="pinGradient" x1="50" y1="5" x2="50" y2="115" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stopColor="#FFB347" />
-      <stop offset="100%" stopColor="#FF6B6B" />
+    <linearGradient id="logoGradient" x1="50" y1="5" x2="50" y2="115" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#FB923C" />
+      <stop offset="100%" stopColor="#F43F5E" />
     </linearGradient>
+    <filter id="logoShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+      <feOffset dx="0" dy="3" result="offsetblur" />
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.15" />
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
   </defs>
   <path
     d="M50 5C27.9 5 10 22.9 10 45C10 75 50 115 50 115C50 115 90 75 90 45C90 22.9 72.1 5 50 5Z"
-    fill="url(#pinGradient)"
+    fill="url(#logoGradient)"
+    filter="url(#logoShadow)"
   />
   <path
-    d="M38 30V42M42 30V42M34 30V42M34 42C34 46 37 49 41 49V65H38V67H44V65H41V49C45 49 48 46 48 42V30H38Z"
+    d="M50 5C68 5 85 20 85 45C85 68 50 105 50 105C50 105 52 75 52 45C52 25 50 5 50 5Z"
     fill="white"
-    transform="translate(-2, 0)"
+    fillOpacity="0.12"
   />
-  <path
-    d="M62 30C58 30 55 33 55 38C55 43 58 46 62 46H64V65H61V67H67V65H64V46C68 46 71 43 71 38C71 33 68 30 64 30H62Z"
-    fill="white"
-    transform="translate(2, 0)"
-  />
+  <g transform="translate(28, 32) scale(0.9)">
+    <path d="M12 25V42H16V25C20 25 22 22 22 18V5H19V18H17V5H14V18H12V5H9V18H7V5H4V18C4 22 6 25 10 25H12Z" fill="white" />
+  </g>
+  <g transform="translate(56, 32) scale(0.9)">
+    <ellipse cx="8" cy="14" rx="8" ry="11" fill="white" />
+    <rect x="6" y="24" width="4" height="18" rx="2" fill="white" />
+  </g>
 </svg>

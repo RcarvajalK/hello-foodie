@@ -1,10 +1,12 @@
 // Service Worker for Hello Foodie!
-const CACHE_NAME = 'hello-foodie-v4';
+const CACHE_NAME = 'hello-foodie-v7';
 const ASSETS = [
     '/',
     '/index.html',
     '/manifest.json',
-    '/favicon.svg'
+    '/favicon.svg',
+    '/icon-192-v2.png',
+    '/icon-512-v2.png'
 ];
 
 self.addEventListener('install', (event) => {
