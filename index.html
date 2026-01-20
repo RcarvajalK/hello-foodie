@@ -11,6 +11,14 @@
 </head>
 
 <body>
+  <script>
+    window.onerror = function (msg, url, line, col, error) {
+      var div = document.createElement('div');
+      div.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:red;color:white;z-index:9999;padding:10px;font-size:12px;font-family:sans-serif;word-break:break-all';
+      div.innerHTML = '<strong>CRASH DETECTED:</strong><br>' + msg + '<br><small>' + (error && error.stack ? error.stack : 'No stack trace available') + '</small>';
+      document.body.appendChild(div);
+    };
+  </script>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
