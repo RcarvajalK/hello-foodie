@@ -3,6 +3,7 @@ import { Users, Plus, ChevronRight, Globe, Lock, Star, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../lib/store';
 import { motion, AnimatePresence } from 'framer-motion';
+import clsx from 'clsx';
 
 export default function Clubs() {
     const navigate = useNavigate();
