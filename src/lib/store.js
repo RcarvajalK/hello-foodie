@@ -88,22 +88,22 @@ export const useStore = create((set, get) => ({
         if (error) {
             console.error("Supabase Add Error:", error);
             set({ loading: false });
-            return null;
+            return { success: false, error: error.message };
         }
 
         console.log("Supabase Add Success:", data);
+        let newData = data;
 
-        const newData = data;
         if (typeof newData.coordinates === 'string' && newData.coordinates.includes('(')) {
             const [lng, lat] = newData.coordinates.replace(/[()]/g, '').split(',').map(Number);
-            newData.coordinates = { x: lat, y: lng };
+            newData = { ...newData, coordinates: { x: lat, y: lng } };
         }
 
         set((state) => ({
             restaurants: [newData, ...state.restaurants],
             loading: false
         }));
-        return newData;
+        return { success: true, data: newData };
     },
 
     // Toggle visited status in DB with optional review
@@ -134,10 +134,12 @@ export const useStore = create((set, get) => ({
                     r.id === id ? { ...r, ...updateData } : r
                 )
             }));
-            return true;
+            return { success: true };
         }
-        if (error) console.error("Supabase Update Error:", error);
-        return false;
+
+        const errorMsg = error ? error.message : "No rows updated. (Check RLS policies)";
+        console.error("Supabase Update Error:", error || errorMsg);
+        return { success: false, error: errorMsg };
     },
 
     // Update restaurant details

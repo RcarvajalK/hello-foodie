@@ -44,18 +44,18 @@ export default function RestaurantDetails() {
         if (!restaurant.is_visited) {
             setShowReviewModal(true);
         } else {
-            const success = await toggleVisited(restaurant.id, restaurant.is_visited);
-            if (!success) alert("Failed to update status.");
+            const result = await toggleVisited(restaurant.id, restaurant.is_visited);
+            if (!result.success) alert(`Failed to update status: ${result.error}`);
         }
     };
 
     const submitReview = async () => {
-        const success = await toggleVisited(restaurant.id, false, review);
-        if (success) {
+        const result = await toggleVisited(restaurant.id, false, review);
+        if (result.success) {
             setShowReviewModal(false);
             setShowComparison(true);
         } else {
-            alert("Error: Could not save your review. Please try again.");
+            alert(`Error: ${result.error}`);
         }
     };
 

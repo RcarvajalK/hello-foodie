@@ -91,11 +91,11 @@ export default function AddRestaurant() {
         const result = await addRestaurant(formData);
         setLoading(false);
 
-        if (result) {
+        if (result.success) {
             // Success! Head back to your list
             navigate('/');
         } else {
-            alert("Error: Could not add restaurant. Please check your connection or permissions.");
+            alert(`Error: ${result.error}`);
         }
     };
 
