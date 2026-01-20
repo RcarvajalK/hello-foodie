@@ -77,6 +77,8 @@ export const useStore = create((set, get) => ({
             date_added: new Date().toISOString()
         };
 
+        console.log("Adding Restaurant payload:", payload);
+
         const { data, error } = await supabase
             .from('restaurants')
             .insert([payload])
@@ -84,10 +86,12 @@ export const useStore = create((set, get) => ({
             .single();
 
         if (error) {
-            console.error("Supabase Add Error:", error.message, error.details);
+            console.error("Supabase Add Error:", error);
             set({ loading: false });
             return null;
         }
+
+        console.log("Supabase Add Success:", data);
 
         const newData = data;
         if (typeof newData.coordinates === 'string' && newData.coordinates.includes('(')) {
@@ -114,12 +118,17 @@ export const useStore = create((set, get) => ({
             }
         }
 
-        const { error } = await supabase
+        console.log("Toggling Visited:", { id, updateData });
+
+        const { data, error, count } = await supabase
             .from('restaurants')
             .update(updateData)
-            .eq('id', id);
+            .eq('id', id)
+            .select();
 
-        if (!error) {
+        console.log("Supabase Update Result:", { data, error, count });
+
+        if (!error && data?.length > 0) {
             set((state) => ({
                 restaurants: state.restaurants.map((r) =>
                     r.id === id ? { ...r, ...updateData } : r
@@ -127,6 +136,7 @@ export const useStore = create((set, get) => ({
             }));
             return true;
         }
+        if (error) console.error("Supabase Update Error:", error);
         return false;
     },
 

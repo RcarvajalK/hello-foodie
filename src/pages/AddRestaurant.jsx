@@ -94,6 +94,8 @@ export default function AddRestaurant() {
         if (result) {
             // Success! Head back to your list
             navigate('/');
+        } else {
+            alert("Error: Could not add restaurant. Please check your connection or permissions.");
         }
     };
 
