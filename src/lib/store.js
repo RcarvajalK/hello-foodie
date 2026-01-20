@@ -142,20 +142,26 @@ export const useStore = create((set, get) => ({
         return { success: false, error: errorMsg };
     },
 
-    // Update restaurant details
     updateRestaurant: async (id, updates) => {
-        const { error } = await supabase
+        console.log("Updating Restaurant:", { id, updates });
+        const { data, error } = await supabase
             .from('restaurants')
             .update(updates)
-            .eq('id', id);
+            .eq('id', id)
+            .select();
 
-        if (!error) {
+        console.log("Supabase Update Result:", { data, error });
+
+        if (!error && data?.length > 0) {
             set((state) => ({
                 restaurants: state.restaurants.map((r) =>
                     r.id === id ? { ...r, ...updates } : r
                 )
             }));
+            return { success: true, data: data[0] };
         }
+        const errorMsg = error ? error.message : "Update failed or no rows changed.";
+        return { success: false, error: errorMsg };
     },
 
     // Update user profile

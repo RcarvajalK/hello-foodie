@@ -28,7 +28,7 @@ export default function AddRestaurant() {
         price: '$$',
         rating: 0,
         recommended_by: '',
-        meal_type: '', // breakfast, lunch, dinner
+        meal_type: [], // array for multi-select
         notes: '',
         group_id: '',
         image_url: 'https://images.unsplash.com/photo-1517248135467-4c7ed9d42339?auto=format&fit=crop&q=80&w=1000',
@@ -88,7 +88,12 @@ export default function AddRestaurant() {
         }
 
         setLoading(true);
-        const result = await addRestaurant(formData);
+        // Convert array to comma-separated string for DB
+        const payload = {
+            ...formData,
+            meal_type: formData.meal_type.join(', ')
+        };
+        const result = await addRestaurant(payload);
         setLoading(false);
 
         if (result.success) {
@@ -193,21 +198,29 @@ export default function AddRestaurant() {
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[9px] font-black uppercase text-gray-400 ml-3 tracking-widest">Meal Type</label>
+                                        <label className="text-[9px] font-black uppercase text-gray-400 ml-3 tracking-widest">Meal Type (Select one or more)</label>
                                         <div className="flex gap-2">
-                                            {['Breakfast', 'Lunch', 'Dinner'].map(meal => (
-                                                <button
-                                                    key={meal}
-                                                    type="button"
-                                                    onClick={() => setFormData({ ...formData, meal_type: meal })}
-                                                    className={clsx(
-                                                        "flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                                                        formData.meal_type === meal ? "bg-brand-orange text-white" : "bg-slate-50 text-gray-400"
-                                                    )}
-                                                >
-                                                    {meal}
-                                                </button>
-                                            ))}
+                                            {['Breakfast', 'Lunch', 'Dinner'].map(meal => {
+                                                const isActive = formData.meal_type.includes(meal);
+                                                return (
+                                                    <button
+                                                        key={meal}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const newMeals = isActive
+                                                                ? formData.meal_type.filter(m => m !== meal)
+                                                                : [...formData.meal_type, meal];
+                                                            setFormData({ ...formData, meal_type: newMeals });
+                                                        }}
+                                                        className={clsx(
+                                                            "flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                                            isActive ? "bg-brand-orange text-white shadow-lg" : "bg-slate-50 text-gray-400"
+                                                        )}
+                                                    >
+                                                        {meal}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     </div>
 

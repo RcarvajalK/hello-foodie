@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { ArrowLeft, Star, Clock, MapPin, Globe, Phone, Share2, Heart, CheckCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Star, Clock, MapPin, Globe, Phone, Share2, Heart, CheckCircle, Trash2, Edit3, Save, X } from 'lucide-react';
 import { useStore } from '../lib/store';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,6 +11,7 @@ export default function RestaurantDetails() {
     const restaurants = useStore(state => state.restaurants);
     const toggleVisited = useStore(state => state.toggleVisited);
     const deleteRestaurant = useStore(state => state.deleteRestaurant);
+    const updateRestaurant = useStore(state => state.updateRestaurant);
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
@@ -23,6 +24,28 @@ export default function RestaurantDetails() {
         comment: '',
         personal_price: restaurant?.price || '$$'
     });
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [editData, setEditData] = useState({
+        name: restaurant?.name,
+        cuisine: restaurant?.cuisine,
+        zone: restaurant?.zone,
+        price: restaurant?.price,
+        meal_type: restaurant?.meal_type?.split(', ') || []
+    });
+
+    const handleSaveEdit = async () => {
+        const payload = {
+            ...editData,
+            meal_type: editData.meal_type.join(', ')
+        };
+        const result = await updateRestaurant(restaurant.id, payload);
+        if (result?.success) {
+            setIsEditing(false);
+        } else {
+            alert(`Error updating: ${result?.error || 'Unknown error'}`);
+        }
+    };
 
     if (!restaurant) {
         return (
@@ -100,6 +123,9 @@ export default function RestaurantDetails() {
                         </button>
                         <button onClick={handleDelete} className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white">
                             <Trash2 size={20} />
+                        </button>
+                        <button onClick={() => setIsEditing(true)} className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all">
+                            <Edit3 size={20} />
                         </button>
                         <button className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all">
                             <Heart size={20} />
@@ -286,6 +312,108 @@ export default function RestaurantDetails() {
                     </motion.div>
                 </div>
             )}
+
+            {/* Edit Modal */}
+            <AnimatePresence>
+                {isEditing && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-brand-dark/40 backdrop-blur-sm" onClick={() => setIsEditing(false)}
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                            className="relative bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl overflow-hidden"
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="font-black text-brand-dark uppercase tracking-tight text-lg">Edit Place</h3>
+                                <button onClick={() => setIsEditing(false)} className="p-2 text-gray-300"><X size={20} /></button>
+                            </div>
+
+                            <div className="space-y-5 max-h-[70vh] overflow-y-auto no-scrollbar px-1">
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-3">Name</label>
+                                    <input
+                                        className="w-full bg-slate-50 p-4 rounded-xl font-bold text-brand-dark border-2 border-slate-100 focus:border-brand-orange/20 focus:outline-none transition-all text-sm"
+                                        value={editData.name}
+                                        onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-3">Cuisine</label>
+                                    <input
+                                        className="w-full bg-slate-50 p-4 rounded-xl font-bold text-brand-dark border-2 border-slate-100 focus:border-brand-orange/20 focus:outline-none transition-all text-sm"
+                                        value={editData.cuisine}
+                                        onChange={(e) => setEditData({ ...editData, cuisine: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-3">Zone</label>
+                                    <input
+                                        className="w-full bg-slate-50 p-4 rounded-xl font-bold text-brand-dark border-2 border-slate-100 focus:border-brand-orange/20 focus:outline-none transition-all text-sm"
+                                        value={editData.zone}
+                                        onChange={(e) => setEditData({ ...editData, zone: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-3">Price Level</label>
+                                    <div className="flex gap-2">
+                                        {['$', '$$', '$$$', '$$$$'].map(p => (
+                                            <button
+                                                key={p}
+                                                onClick={() => setEditData({ ...editData, price: p })}
+                                                className={clsx(
+                                                    "flex-1 py-3 rounded-xl font-black text-[10px] transition-all",
+                                                    editData.price === p ? "bg-brand-orange text-white shadow-lg" : "bg-slate-50 text-gray-400"
+                                                )}
+                                            >
+                                                {p}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-3">Meal Types</label>
+                                    <div className="flex gap-2">
+                                        {['Breakfast', 'Lunch', 'Dinner'].map(meal => {
+                                            const isActive = editData.meal_type.includes(meal);
+                                            return (
+                                                <button
+                                                    key={meal}
+                                                    onClick={() => {
+                                                        const newMeals = isActive
+                                                            ? editData.meal_type.filter(m => m !== meal)
+                                                            : [...editData.meal_type, meal];
+                                                        setEditData({ ...editData, meal_type: newMeals });
+                                                    }}
+                                                    className={clsx(
+                                                        "flex-1 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all",
+                                                        isActive ? "bg-brand-orange text-white" : "bg-slate-50 text-gray-400"
+                                                    )}
+                                                >
+                                                    {meal}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={handleSaveEdit}
+                                    className="w-full bg-brand-dark text-white font-black py-4 rounded-[1.5rem] flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all mt-4"
+                                >
+                                    <Save size={18} />
+                                    Update Details
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
