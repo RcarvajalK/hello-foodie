@@ -58,7 +58,7 @@ export default function ClubDetails() {
             } else {
                 const clubData = result.data;
                 const userMember = clubData.members?.find(m => m.user_id === session?.user?.id);
-                setIsAdmin(userMember?.role === 'admin');
+                setIsAdmin(userMember?.role === 'admin' || clubData.created_by === session?.user?.id);
                 setEditForm({
                     name: clubData.name,
                     description: clubData.description,
@@ -228,7 +228,7 @@ export default function ClubDetails() {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="px-6 -mt-2 relative z-10 flex gap-2 overflow-x-auto no-scrollbar py-4">
+            <div className="px-5 -mt-2 relative z-10 flex gap-2 justify-between py-4">
                 {[
                     { id: 'list', label: 'Restaurants', icon: MapPin },
                     { id: 'members', label: 'Leaderboard', icon: Trophy },
@@ -238,13 +238,13 @@ export default function ClubDetails() {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={clsx(
-                            "flex items-center gap-2 px-6 py-4 rounded-3xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border-2",
+                            "flex items-center gap-1.5 px-3.5 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all border-2 flex-1 justify-center",
                             activeTab === tab.id
                                 ? "bg-brand-dark text-white border-brand-dark shadow-xl"
                                 : "bg-white text-gray-400 border-transparent shadow-sm"
                         )}
                     >
-                        <tab.icon size={14} />
+                        <tab.icon size={13} />
                         {tab.label}
                     </button>
                 ))}
