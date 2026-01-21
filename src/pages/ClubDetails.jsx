@@ -11,7 +11,8 @@ import {
     ExternalLink,
     MapPin,
     CheckCircle2,
-    Calendar
+    Calendar,
+    X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -27,17 +28,42 @@ export default function ClubDetails() {
 
     const [activeTab, setActiveTab] = useState('list'); // 'list', 'members', 'rules'
     const [isAddOpen, setIsAddOpen] = useState(false);
+    const [error, setError] = useState(null);
     const fetchRestaurants = useStore(state => state.fetchRestaurants);
 
     useEffect(() => {
-        fetchClubDetails(id);
+        const load = async () => {
+            const result = await fetchClubDetails(id);
+            if (!result.success) {
+                setError(result.error);
+            }
+        };
+        load();
         if (myRestaurants.length === 0) fetchRestaurants();
     }, [id, fetchClubDetails, fetchRestaurants, myRestaurants.length]);
 
-    if (loading || !club) {
+    if (loading) {
         return (
             <div className="min-h-screen bg-brand-light flex items-center justify-center">
                 <div className="w-12 h-12 border-4 border-brand-orange border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    if (error || !club) {
+        return (
+            <div className="min-h-screen bg-brand-light flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mb-6">
+                    <X size={40} />
+                </div>
+                <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight mb-2">Club not found</h2>
+                <p className="text-gray-400 text-sm mb-8">{error || "The club you're looking for doesn't exist or you don't have access."}</p>
+                <button
+                    onClick={() => navigate('/clubs')}
+                    className="bg-brand-orange text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-orange/30 active:scale-95 transition-all"
+                >
+                    Back to Clubs
+                </button>
             </div>
         );
     }
