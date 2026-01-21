@@ -363,6 +363,23 @@ export const useStore = create((set, get) => ({
         return { success: true };
     },
 
+    removeRestaurantFromClub: async (clubId, restaurantId) => {
+        const { error } = await supabase
+            .from('club_restaurants')
+            .delete()
+            .match({ club_id: clubId, restaurant_id: restaurantId });
+
+        if (error) return { success: false, error: error.message };
+
+        // Refresh details local state if viewing this club
+        const currentDetails = get().clubDetails;
+        if (currentDetails && currentDetails.id === clubId) {
+            get().fetchClubDetails(clubId);
+        }
+
+        return { success: true };
+    },
+
     addGooglePlaceToClub: async (clubId, place) => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) return { success: false, error: 'No session' };

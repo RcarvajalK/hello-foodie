@@ -20,6 +20,13 @@ export default function Home() {
     const loading = useStore(state => state.loading);
     const fetchRestaurants = useStore(state => state.fetchRestaurants);
     const fetchProfile = useStore(state => state.fetchProfile);
+    const deleteRestaurant = useStore(state => state.deleteRestaurant);
+
+    const handleDelete = async (id) => {
+        if (window.confirm('¿Borrar este restaurante de tu lista?')) {
+            await deleteRestaurant(id);
+        }
+    };
 
     useEffect(() => {
         fetchRestaurants();
@@ -238,7 +245,11 @@ export default function Home() {
                                 exit={{ opacity: 0, scale: 0.9 }}
                                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
                             >
-                                <RestaurantCard restaurant={restaurant} variant={viewMode} />
+                                <RestaurantCard
+                                    restaurant={restaurant}
+                                    variant={viewMode}
+                                    onDelete={handleDelete}
+                                />
                             </motion.div>
                         ))
                     ) : (

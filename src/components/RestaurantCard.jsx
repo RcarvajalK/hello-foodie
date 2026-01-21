@@ -1,12 +1,13 @@
-import { Link } from 'react-router-dom';
-import { Star, MapPin, Calendar, User, Users, CheckCircle, Edit3, X, Save } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Star, MapPin, Calendar, User, Users, CheckCircle, Edit3, X, Save, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { useStore } from '../lib/store';
 import clsx from 'clsx';
 import BrandLogo from './BrandLogo';
 
-export default function RestaurantCard({ restaurant, variant = 'list-photos' }) {
+export default function RestaurantCard({ restaurant, variant = 'list-photos', onDelete }) {
+    const navigate = useNavigate();
     const isVisited = restaurant.is_visited;
     const updateRestaurant = useStore(state => state.updateRestaurant);
     const [isEditing, setIsEditing] = useState(false);
@@ -35,33 +36,63 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos' }) 
         </button>
     );
 
+    const SwipeWrapper = ({ children, rounded = "rounded-[2rem]" }) => {
+        if (!onDelete) return children;
+
+        return (
+            <div className={clsx("relative overflow-hidden", rounded)}>
+                {/* Delete Action Background */}
+                <div
+                    className="absolute inset-0 bg-red-500 flex items-center justify-end px-12 text-white"
+                    onClick={(e) => { e.stopPropagation(); onDelete(restaurant.id); }}
+                >
+                    <div className="flex flex-col items-center gap-1">
+                        <Trash2 size={24} />
+                        <span className="text-[8px] font-black uppercase tracking-widest">Delete</span>
+                    </div>
+                </div>
+
+                <motion.div
+                    drag="x"
+                    dragConstraints={{ left: -120, right: 0 }}
+                    dragElastic={0.05}
+                    className="relative z-10"
+                >
+                    {children}
+                </motion.div>
+            </div>
+        );
+    };
+
     if (variant === 'list') {
         return (
             <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <Link
-                    to={`/restaurant/${restaurant.id}`}
-                    className="flex items-center gap-4 bg-white p-4 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden active:scale-98"
-                >
-                    <div className="w-16 h-16 rounded-2xl bg-slate-50 overflow-hidden flex-shrink-0 border border-slate-100">
-                        <img src={restaurant.image_url || restaurant.image} alt={restaurant.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                            <h3 className="font-black text-brand-dark text-sm truncate uppercase tracking-tight">{restaurant.name}</h3>
-                            {isVisited && <BrandTag />}
+                <SwipeWrapper>
+                    <div
+                        onClick={() => navigate(`/restaurant/${restaurant.id}`)}
+                        className="flex items-center gap-4 bg-white p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden active:scale-98 cursor-pointer"
+                    >
+                        <div className="w-16 h-16 rounded-2xl bg-slate-50 overflow-hidden flex-shrink-0 border border-slate-100">
+                            <img src={restaurant.image_url || restaurant.image} alt={restaurant.name} className="w-full h-full object-cover" />
                         </div>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
-                            {restaurant.zone || 'No Zone'} • {restaurant.cuisine}
-                        </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1.5 px-2">
-                        <div className="flex items-center gap-1.5 text-brand-orange bg-brand-orange/5 px-2.5 py-1 rounded-full">
-                            <Star size={10} fill="currentColor" />
-                            <span className="text-[11px] font-black tabular-nums">{restaurant.rating || '---'}</span>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-black text-brand-dark text-sm truncate uppercase tracking-tight">{restaurant.name}</h3>
+                                {isVisited && <BrandTag />}
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                                {restaurant.zone || 'No Zone'} • {restaurant.cuisine}
+                            </p>
                         </div>
-                        <EditButton />
+                        <div className="flex flex-col items-end gap-1.5 px-2">
+                            <div className="flex items-center gap-1.5 text-brand-orange bg-brand-orange/5 px-2.5 py-1 rounded-full">
+                                <Star size={10} fill="currentColor" />
+                                <span className="text-[11px] font-black tabular-nums">{restaurant.rating || '---'}</span>
+                            </div>
+                            <EditButton />
+                        </div>
                     </div>
-                </Link>
+                </SwipeWrapper>
                 <QuickEditModal isVisible={isEditing} onClose={() => setIsEditing(false)} data={editData} setData={setEditData} onSave={handleSave} />
             </motion.div>
         );
@@ -94,10 +125,10 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos' }) 
     // default: list-photos
     return (
         <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} whileTap={{ scale: 0.98 }}>
-            <div className="relative">
-                <Link
-                    to={`/restaurant/${restaurant.id}`}
-                    className="block bg-white rounded-[3.5rem] overflow-hidden shadow-xl shadow-slate-200/40 border border-gray-50 transition-all hover:shadow-2xl relative"
+            <SwipeWrapper rounded="rounded-[3.5rem]">
+                <div
+                    onClick={() => navigate(`/restaurant/${restaurant.id}`)}
+                    className="block bg-white border border-gray-50 transition-all hover:shadow-2xl relative cursor-pointer"
                 >
                     <div className="relative h-64">
                         <img src={restaurant.image_url || restaurant.image} alt={restaurant.name} className="w-full h-full object-cover" />
@@ -151,8 +182,8 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos' }) 
                             )}
                         </div>
                     </div>
-                </Link>
-            </div>
+                </div>
+            </SwipeWrapper>
             <QuickEditModal isVisible={isEditing} onClose={() => setIsEditing(false)} data={editData} setData={setEditData} onSave={handleSave} />
         </motion.div>
     );

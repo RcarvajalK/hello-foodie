@@ -30,6 +30,7 @@ export default function ClubDetails() {
     const club = useStore(state => state.clubDetails);
     const loading = useStore(state => state.loading);
     const addRestaurantToClub = useStore(state => state.addRestaurantToClub);
+    const removeRestaurantFromClub = useStore(state => state.removeRestaurantFromClub);
     const myRestaurants = useStore(state => state.restaurants);
     const updateClub = useStore(state => state.updateClub);
     const deleteClub = useStore(state => state.deleteClub);
@@ -143,6 +144,13 @@ export default function ClubDetails() {
             } else {
                 alert(`Error: ${result.error}`);
             }
+        }
+    };
+
+    const handleRemoveRestaurant = async (resId) => {
+        if (window.confirm('¿Quitar este restaurante del club?')) {
+            const result = await removeRestaurantFromClub(id, resId);
+            if (!result.success) alert(`Error: ${result.error}`);
         }
     };
 
@@ -260,6 +268,7 @@ export default function ClubDetails() {
                                         key={res.id}
                                         restaurant={res}
                                         variant="list"
+                                        onDelete={isAdmin ? handleRemoveRestaurant : undefined}
                                     />
                                 ))
                             ) : (

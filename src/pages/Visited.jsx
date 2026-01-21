@@ -12,6 +12,13 @@ export default function Visited() {
 
     const restaurants = useStore(state => state.restaurants);
     const fetchRestaurants = useStore(state => state.fetchRestaurants);
+    const deleteRestaurant = useStore(state => state.deleteRestaurant);
+
+    const handleDelete = async (id) => {
+        if (window.confirm('¿Borrar este restaurante de tu historial?')) {
+            await deleteRestaurant(id);
+        }
+    };
 
     useEffect(() => {
         fetchRestaurants();
@@ -71,7 +78,11 @@ export default function Visited() {
                                 exit={{ opacity: 0, scale: 0.9 }}
                                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
                             >
-                                <RestaurantCard restaurant={restaurant} variant="list" />
+                                <RestaurantCard
+                                    restaurant={restaurant}
+                                    variant="list"
+                                    onDelete={handleDelete}
+                                />
                             </motion.div>
                         ))
                     ) : (
