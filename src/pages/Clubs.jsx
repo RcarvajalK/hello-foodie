@@ -84,12 +84,19 @@ export default function Clubs() {
                                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                         <Users size={12} /> {club.club_members?.[0]?.count || 0} Members
                                     </p>
-                                    <button
-                                        onClick={() => handleJoin(club.id)}
-                                        className="mt-3 bg-slate-50 px-4 py-1.5 rounded-full text-[9px] font-black uppercase text-brand-orange border border-slate-100 active:scale-95 transition-all"
-                                    >
-                                        Join Community
-                                    </button>
+                                    {club.is_member ? (
+                                        <div className="mt-3 inline-flex items-center gap-1.5 bg-brand-green/10 px-4 py-1.5 rounded-full text-[9px] font-black uppercase text-brand-green border border-brand-green/20">
+                                            <Star size={10} fill="currentColor" />
+                                            Member
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleJoin(club.id)}
+                                            className="mt-3 bg-slate-50 px-4 py-1.5 rounded-full text-[9px] font-black uppercase text-brand-orange border border-slate-100 active:scale-95 transition-all"
+                                        >
+                                            Join Community
+                                        </button>
+                                    )}
                                 </div>
                                 <ChevronRight className="text-slate-200" size={24} />
                             </motion.div>

@@ -197,11 +197,40 @@ export const useStore = create((set, get) => ({
     // --- Clubs Functionality ---
     clubs: [],
     fetchClubs: async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+
         const { data, error } = await supabase
             .from('clubs')
+            .select(`
+                *,
+                club_members(count),
+                is_member:club_members!inner(user_id)
+            `)
+            .eq('club_members.user_id', session?.user?.id);
+
+        // The above query is tricky because !inner filters the parent. 
+        // Better approach: fetch all clubs and check membership separately or use a join.
+
+        const { data: allClubs, error: clubsError } = await supabase
+            .from('clubs')
             .select('*, club_members(count)');
-        if (!error) {
-            set({ clubs: data || [] });
+
+        if (clubsError) return;
+
+        if (session?.user) {
+            const { data: memberships } = await supabase
+                .from('club_members')
+                .select('club_id')
+                .eq('user_id', session.user.id);
+
+            const memberClubIds = new Set(memberships?.map(m => m.club_id) || []);
+            const clubsWithStatus = (allClubs || []).map(club => ({
+                ...club,
+                is_member: memberClubIds.has(club.id)
+            }));
+            set({ clubs: clubsWithStatus });
+        } else {
+            set({ clubs: allClubs || [] });
         }
     },
 
@@ -228,7 +257,7 @@ export const useStore = create((set, get) => ({
             // We still created the club, but joining failed. This is a partial success, but maybe better to report as issue.
         }
 
-        set(state => ({ clubs: [data, ...state.clubs] }));
+        set(state => ({ clubs: [{ ...data, is_member: true }, ...state.clubs] }));
         return { success: true, data };
     },
 
