@@ -11,8 +11,14 @@ export const useStore = create((set, get) => ({
         dinner: true
     },
 
-    uploadImage: async (file, path = 'uploads') => {
+    uploadImage: async (file, path = null) => {
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const userId = session?.user?.id;
+
+            // If no path is provided, use the userId as the folder (aligns with RLS)
+            const folder = path || userId || 'public';
+
             // 1. Compression logic
             const compressedFile = await new Promise((resolve) => {
                 const reader = new FileReader();
@@ -53,7 +59,7 @@ export const useStore = create((set, get) => ({
 
             // 2. Upload to Supabase
             const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
-            const filePath = `${path}/${fileName}`;
+            const filePath = `${folder}/${fileName}`;
 
             const { data, error } = await supabase.storage
                 .from('images')
