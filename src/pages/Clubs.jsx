@@ -15,7 +15,14 @@ export default function Clubs() {
     const profile = useStore(state => state.profile);
 
     const [isCreateOpen, setIsCreateOpen] = useState(false);
-    const [newClub, setNewClub] = useState({ name: '', description: '', type: 'public', image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400' });
+    const [createStep, setCreateStep] = useState(1); // 1: Form, 2: Shared Link
+    const [createdClubId, setCreatedClubId] = useState(null);
+    const [newClub, setNewClub] = useState({
+        name: '',
+        description: '',
+        type: 'public',
+        image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400'
+    });
 
     const [isCreating, setIsCreating] = useState(false);
 
@@ -46,11 +53,23 @@ export default function Clubs() {
         setIsCreating(false);
 
         if (result?.success) {
-            setIsCreateOpen(false);
-            setNewClub({ name: '', description: '', type: 'public', image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400' });
-            alert('¡Club creado exitosamente!');
+            setCreatedClubId(result.data.id);
+            setCreateStep(2);
+            fetchClubs();
         } else {
             alert(`Error al crear el club: ${result?.error || 'Unknown error'}`);
+        }
+    };
+
+    const handleShare = () => {
+        const url = `${window.location.origin}/join/${createdClubId}`;
+        const text = `Join my foodie club "${newClub.name}" on Hello Foodie! 🍔✨\n${url}`;
+
+        if (navigator.share) {
+            navigator.share({ title: newClub.name, text, url });
+        } else {
+            navigator.clipboard.writeText(text);
+            alert('¡Enlace copiado al portapapeles!');
         }
     };
 
@@ -72,7 +91,10 @@ export default function Clubs() {
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Connect with foodies</p>
                 </div>
                 <button
-                    onClick={() => setIsCreateOpen(true)}
+                    onClick={() => {
+                        setCreateStep(1);
+                        setIsCreateOpen(true);
+                    }}
                     className="w-12 h-12 bg-brand-orange text-white rounded-2xl flex items-center justify-center shadow-lg shadow-brand-orange/30 active:scale-90 transition-transform"
                 >
                     <Plus size={24} />
@@ -93,7 +115,7 @@ export default function Clubs() {
                                 onClick={() => navigate(`/clubs/${club.id}`)}
                                 className="bg-white rounded-[2.5rem] overflow-hidden shadow-xl shadow-slate-200/20 border border-gray-50 flex items-center p-4 gap-5 cursor-pointer active:scale-[0.98] transition-all"
                             >
-                                <img src={club.image || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400'} alt={club.name} className="w-20 h-20 rounded-[1.5rem] object-cover shadow-md" />
+                                <img src={club.image || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400'} alt={club.name} className="w-20 h-20 rounded-[1.5rem] object-cover shadow-md bg-slate-100" />
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
                                         <h3 className="font-black text-brand-dark truncate text-sm uppercase tracking-tight">{club.name}</h3>
@@ -109,7 +131,10 @@ export default function Clubs() {
                                         </div>
                                     ) : (
                                         <button
-                                            onClick={() => handleJoin(club.id)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleJoin(club.id);
+                                            }}
                                             className="mt-3 bg-slate-50 px-4 py-1.5 rounded-full text-[9px] font-black uppercase text-brand-orange border border-slate-100 active:scale-95 transition-all"
                                         >
                                             Join Community
@@ -147,51 +172,109 @@ export default function Clubs() {
                 {isCreateOpen && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-brand-dark/60 backdrop-blur-sm" onClick={() => setIsCreateOpen(false)} />
-                        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl">
-                            <div className="flex justify-between items-center mb-8">
-                                <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">New Club</h2>
+                        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl overflow-hidden">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">
+                                    {createStep === 1 ? 'New Club' : 'Invite Friends'}
+                                </h2>
                                 <button onClick={() => setIsCreateOpen(false)} className="p-2 text-gray-300"><X size={20} /></button>
                             </div>
 
-                            <form onSubmit={handleCreate} className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Club Name</label>
-                                    <input
-                                        type="text" required
-                                        className="w-full bg-slate-50 border-2 border-slate-100 p-5 rounded-[2rem] text-brand-dark font-black focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all"
-                                        placeholder="e.g. Sushi Stars"
-                                        value={newClub.name}
-                                        onChange={e => setNewClub({ ...newClub, name: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Type</label>
-                                    <div className="flex gap-3">
-                                        {['public', 'private'].map(t => (
-                                            <button
-                                                key={t} type="button"
-                                                onClick={() => setNewClub({ ...newClub, type: t })}
-                                                className={clsx(
-                                                    "flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
-                                                    newClub.type === t ? "bg-brand-orange text-white shadow-lg shadow-brand-orange/20" : "bg-slate-50 text-gray-400"
-                                                )}
-                                            >
-                                                {t}
-                                            </button>
-                                        ))}
+                            {createStep === 1 ? (
+                                <form onSubmit={handleCreate} className="space-y-5">
+                                    <div className="flex justify-center mb-4">
+                                        <div className="relative group w-24 h-24">
+                                            <img
+                                                src={newClub.image}
+                                                className="w-24 h-24 rounded-[2rem] object-cover shadow-lg border-2 border-white"
+                                                alt="Preview"
+                                                onError={(e) => e.target.src = 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400'}
+                                            />
+                                            <div className="absolute inset-0 bg-black/20 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                                <Star size={20} className="text-white" />
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Club Name</label>
+                                        <input
+                                            type="text" required
+                                            className="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-[1.5rem] text-brand-dark font-black focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all text-sm"
+                                            placeholder="e.g. Sushi Stars"
+                                            value={newClub.name}
+                                            onChange={e => setNewClub({ ...newClub, name: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Image URL</label>
+                                        <input
+                                            type="url"
+                                            className="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-[1.5rem] text-brand-dark font-black focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all text-[10px]"
+                                            placeholder="Paste image link here"
+                                            value={newClub.image}
+                                            onChange={e => setNewClub({ ...newClub, image: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Type</label>
+                                        <div className="flex gap-2">
+                                            {['public', 'private'].map(t => (
+                                                <button
+                                                    key={t} type="button"
+                                                    onClick={() => setNewClub({ ...newClub, type: t })}
+                                                    className={clsx(
+                                                        "flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                                                        newClub.type === t ? "bg-brand-dark text-white shadow-lg" : "bg-slate-50 text-gray-400"
+                                                    )}
+                                                >
+                                                    {t}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={isCreating}
+                                        className={clsx(
+                                            "w-full text-white font-black py-4 rounded-[1.5rem] shadow-xl transition-all mt-4",
+                                            isCreating ? "bg-gray-400 cursor-not-allowed" : "bg-brand-orange shadow-brand-orange/30 active:scale-95"
+                                        )}
+                                    >
+                                        {isCreating ? 'Creating...' : 'Create and Launch'}
+                                    </button>
+                                </form>
+                            ) : (
+                                <div className="text-center space-y-8 py-4">
+                                    <div className="w-20 h-20 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto text-brand-green mb-4">
+                                        <Star size={40} fill="currentColor" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-black text-brand-dark uppercase tracking-tight text-xl mb-2 italic">Ready to go!</h3>
+                                        <p className="text-xs text-gray-400 font-medium px-4">Your club is active. Share this link to start building your community.</p>
+                                    </div>
+
+                                    <button
+                                        onClick={handleShare}
+                                        className="w-full bg-brand-dark text-white py-5 rounded-[2rem] font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
+                                    >
+                                        Share Invite Link
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            setIsCreateOpen(false);
+                                            navigate(`/clubs/${createdClubId}`);
+                                        }}
+                                        className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] hover:text-brand-orange transition-colors"
+                                    >
+                                        Skip for now
+                                    </button>
                                 </div>
-                                <button
-                                    type="submit"
-                                    disabled={isCreating}
-                                    className={clsx(
-                                        "w-full text-white font-black py-5 rounded-[2rem] shadow-xl transition-all",
-                                        isCreating ? "bg-gray-400 cursor-not-allowed" : "bg-brand-orange shadow-brand-orange/30 active:scale-95"
-                                    )}
-                                >
-                                    {isCreating ? 'Creating...' : 'Create and Launch'}
-                                </button>
-                            </form>
+                            )}
                         </motion.div>
                     </div>
                 )}

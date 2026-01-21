@@ -12,9 +12,11 @@ import {
     MapPin,
     CheckCircle2,
     Calendar,
-    X
+    X,
+    Search
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Autocomplete } from '@react-google-maps/api';
 import clsx from 'clsx';
 
 export default function ClubDetails() {
@@ -28,8 +30,13 @@ export default function ClubDetails() {
 
     const [activeTab, setActiveTab] = useState('list'); // 'list', 'members', 'rules'
     const [isAddOpen, setIsAddOpen] = useState(false);
+    const [addSource, setAddSource] = useState('personal'); // 'personal' or 'google'
     const [error, setError] = useState(null);
+    const [autocomplete, setAutocomplete] = useState(null);
+    const [isLoadingPlace, setIsLoadingPlace] = useState(false);
+
     const fetchRestaurants = useStore(state => state.fetchRestaurants);
+    const addGooglePlaceToClub = useStore(state => state.addGooglePlaceToClub);
 
     useEffect(() => {
         const load = async () => {
@@ -75,6 +82,24 @@ export default function ClubDetails() {
             alert('Restaurante añadido al club');
         } else {
             alert(`Error: ${result.error}`);
+        }
+    };
+
+    const onPlaceChanged = async () => {
+        if (autocomplete !== null) {
+            const place = autocomplete.getPlace();
+            if (!place.geometry) return;
+
+            setIsLoadingPlace(true);
+            const result = await addGooglePlaceToClub(id, place);
+            setIsLoadingPlace(false);
+
+            if (result.success) {
+                setIsAddOpen(false);
+                alert('¡Lugar añadido exitosamente!');
+            } else {
+                alert(`Error: ${result.error}`);
+            }
         }
     };
 
@@ -307,38 +332,103 @@ export default function ClubDetails() {
                             exit={{ y: "100%" }}
                             className="relative bg-white w-full max-w-lg rounded-t-[3rem] sm:rounded-[3rem] p-8 shadow-2xl max-h-[85vh] flex flex-col"
                         >
-                            <div className="flex justify-between items-center mb-8">
+                            <div className="flex justify-between items-center mb-6">
                                 <div>
-                                    <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">Suggest a Spot</h2>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">From your personal list</p>
+                                    <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight italic">Suggest a Spot</h2>
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Enhance the club list</p>
                                 </div>
-                                <button onClick={() => setIsAddOpen(false)} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-gray-400"><Plus size={24} className="rotate-45" /></button>
+                                <button onClick={() => setIsAddOpen(false)} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-gray-400 active:scale-90 transition-transform">
+                                    <X size={20} />
+                                </button>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto pr-2 space-y-4 no-scrollbar">
-                                {myRestaurants.filter(r => !club.restaurants.some(cr => cr.id === r.id)).length > 0 ? (
-                                    myRestaurants
-                                        .filter(r => !club.restaurants.some(cr => cr.id === r.id))
-                                        .map(res => (
-                                            <div key={res.id} className="bg-slate-50 p-4 rounded-[2rem] flex items-center gap-4 group hover:bg-white hover:shadow-xl transition-all border border-transparent hover:border-slate-100">
-                                                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-200">
-                                                    {res.image_url && <img src={res.image_url} className="w-full h-full object-cover" />}
+                            {/* Source Selection Tabs */}
+                            <div className="flex gap-2 mb-6 bg-slate-50 p-1.5 rounded-2xl">
+                                {[
+                                    { id: 'personal', label: 'From My List', icon: MapPin },
+                                    { id: 'google', label: 'Find on Google', icon: Search }
+                                ].map(source => (
+                                    <button
+                                        key={source.id}
+                                        onClick={() => setAddSource(source.id)}
+                                        className={clsx(
+                                            "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                                            addSource === source.id ? "bg-white text-brand-orange shadow-sm" : "text-gray-400 hover:text-gray-500"
+                                        )}
+                                    >
+                                        <source.icon size={12} />
+                                        {source.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto pr-2 space-y-4 no-scrollbar min-h-[300px]">
+                                {addSource === 'personal' ? (
+                                    myRestaurants.filter(r => !club.restaurants.some(cr => cr.id === r.id)).length > 0 ? (
+                                        myRestaurants
+                                            .filter(r => !club.restaurants.some(cr => cr.id === r.id))
+                                            .map(res => (
+                                                <div key={res.id} className="bg-slate-50 p-4 rounded-[2rem] flex items-center gap-4 group hover:bg-white hover:shadow-xl transition-all border border-transparent hover:border-slate-100">
+                                                    <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-200">
+                                                        {res.image_url && <img src={res.image_url} className="w-full h-full object-cover" />}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="font-black text-brand-dark text-xs uppercase truncate">{res.name}</h4>
+                                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">{res.category || 'Restaurant'}</p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleAddRestaurant(res.id)}
+                                                        className="bg-brand-orange text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-orange/20 active:scale-95 transition-all outline-none"
+                                                    >
+                                                        Add
+                                                    </button>
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-black text-brand-dark text-xs uppercase truncate">{res.name}</h4>
-                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">{res.category || 'Restaurant'}</p>
-                                                </div>
-                                                <button
-                                                    onClick={() => handleAddRestaurant(res.id)}
-                                                    className="bg-brand-orange text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-orange/20 active:scale-95 transition-all"
-                                                >
-                                                    Add
-                                                </button>
+                                            ))
+                                    ) : (
+                                        <div className="py-20 text-center flex flex-col items-center">
+                                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-4">
+                                                <MapPin size={32} />
                                             </div>
-                                        ))
+                                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest max-w-[180px]">No more restaurants from your list to add!</p>
+                                        </div>
+                                    )
                                 ) : (
-                                    <div className="py-12 text-center">
-                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No more restaurants to add!</p>
+                                    <div className="space-y-6">
+                                        <div className="relative">
+                                            {typeof google !== 'undefined' ? (
+                                                <Autocomplete
+                                                    onLoad={auto => setAutocomplete(auto)}
+                                                    onPlaceChanged={onPlaceChanged}
+                                                    options={{ types: ['restaurant', 'food', 'cafe'] }}
+                                                >
+                                                    <div className="relative">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Search for a place..."
+                                                            className="w-full bg-slate-100 border-2 border-transparent p-5 pl-14 rounded-[2rem] text-brand-dark font-black focus:outline-none focus:ring-4 focus:ring-brand-orange/10 focus:bg-white focus:border-brand-orange/20 transition-all placeholder:text-gray-300"
+                                                        />
+                                                        <Search size={22} className="absolute left-6 top-1/2 -translate-y-1/2 text-brand-orange" />
+                                                    </div>
+                                                </Autocomplete>
+                                            ) : (
+                                                <div className="p-10 text-center animate-pulse text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                                                    Initializing Google Places...
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="bg-brand-orange/5 border border-brand-orange/10 rounded-[2rem] p-6 text-center">
+                                            <p className="text-[10px] font-black text-brand-orange uppercase tracking-widest leading-relaxed">
+                                                Search for any restaurant on Google. If it's not in your list yet, we'll add it for you!
+                                            </p>
+                                        </div>
+
+                                        {isLoadingPlace && (
+                                            <div className="flex items-center justify-center gap-3 text-brand-orange">
+                                                <div className="w-5 h-5 border-2 border-brand-orange border-t-transparent rounded-full animate-spin" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">Processing...</span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

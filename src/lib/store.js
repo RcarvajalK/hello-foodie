@@ -236,11 +236,14 @@ export const useStore = create((set, get) => ({
 
     createClub: async (clubData) => {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) return { success: false, error: "No active session found." };
+        if (!session?.user) return { success: false, error: 'No session' };
 
         const { data, error } = await supabase
             .from('clubs')
-            .insert([{ ...clubData, created_by: session.user.id }])
+            .insert([{
+                ...clubData,
+                created_by: session.user.id
+            }])
             .select()
             .single();
 
@@ -249,13 +252,12 @@ export const useStore = create((set, get) => ({
             return { success: false, error: error.message };
         }
 
-        // Auto-join creator
-        const { error: joinError } = await supabase.from('club_members').insert([{ club_id: data.id, user_id: session.user.id, role: 'admin' }]);
-
-        if (joinError) {
-            console.error("Supabase Auto-join Error:", joinError);
-            // We still created the club, but joining failed. This is a partial success, but maybe better to report as issue.
-        }
+        // Auto-join creator as admin
+        await supabase.from('club_members').insert([{
+            club_id: data.id,
+            user_id: session.user.id,
+            role: 'admin'
+        }]);
 
         set(state => ({ clubs: [{ ...data, is_member: true }, ...state.clubs] }));
         return { success: true, data };
@@ -359,5 +361,46 @@ export const useStore = create((set, get) => ({
         }
 
         return { success: true };
+    },
+
+    addGooglePlaceToClub: async (clubId, place) => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return { success: false, error: 'No session' };
+
+        // 1. Check if restaurant already exists for this user
+        let { data: restaurant, error: fetchErr } = await supabase
+            .from('restaurants')
+            .select('id')
+            .eq('user_id', session.user.id)
+            .eq('name', place.name)
+            .maybeSingle();
+
+        if (!restaurant) {
+            // 2. Create it if not
+            const { data: newRes, error: createErr } = await supabase
+                .from('restaurants')
+                .insert([{
+                    user_id: session.user.id,
+                    name: place.name,
+                    category: place.types?.[0]?.replace(/_/g, ' ') || 'Restaurant',
+                    address: place.vicinity || place.formatted_address,
+                    lat: place.geometry?.location?.lat(),
+                    lng: place.geometry?.location?.lng(),
+                    image_url: place.photos?.[0]?.getUrl() || null,
+                    rating: place.rating || null,
+                    is_visited: false
+                }])
+                .select()
+                .single();
+
+            if (createErr) return { success: false, error: createErr.message };
+            restaurant = newRes;
+
+            // Add to local state
+            set(state => ({ restaurants: [newRes, ...state.restaurants] }));
+        }
+
+        // 3. Link to club
+        return get().addRestaurantToClub(clubId, restaurant.id);
     }
 }));
