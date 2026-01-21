@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../lib/store';
+import { supabase } from '../lib/supabase';
 import {
     Users,
     ChevronLeft,
