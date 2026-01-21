@@ -6,9 +6,13 @@ import BrandLogo from '../components/BrandLogo';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
+import { List, LayoutGrid, Image as ImageIcon } from 'lucide-react';
+
 export default function Visited() {
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
+    const [viewMode, setViewMode] = useState(() => localStorage.getItem('foodie_view_mode') || 'list');
+    const [userCoords, setUserCoords] = useState(null);
 
     const restaurants = useStore(state => state.restaurants);
     const fetchRestaurants = useStore(state => state.fetchRestaurants);
@@ -22,7 +26,22 @@ export default function Visited() {
 
     useEffect(() => {
         fetchRestaurants();
+        navigator.geolocation.getCurrentPosition(
+            (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            (err) => console.log('Geolocation error', err)
+        );
     }, []);
+
+    useEffect(() => {
+        localStorage.setItem('foodie_view_mode', viewMode);
+    }, [viewMode]);
+
+    const calculateDistance = (r) => {
+        if (!userCoords || !r.coordinates) return Infinity;
+        const dx = (r.coordinates.x || 0) - userCoords.lat;
+        const dy = (r.coordinates.y || 0) - userCoords.lng;
+        return Math.sqrt(dx * dx + dy * dy);
+    };
 
     const visitedRestaurants = useMemo(() => {
         let list = restaurants.filter(r => r.is_visited);
@@ -34,9 +53,12 @@ export default function Visited() {
                 r.zone?.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
-        // Latest visited first? We don't have a visited_date, but date_added or just existing order.
+
+        // Default sort by proximity
+        list.sort((a, b) => calculateDistance(a) - calculateDistance(b));
+
         return list;
-    }, [restaurants, searchQuery]);
+    }, [restaurants, searchQuery, userCoords]);
 
     return (
         <div className="pb-24 bg-brand-light min-h-screen">
@@ -54,7 +76,7 @@ export default function Visited() {
                     </div>
                 </div>
 
-                <div className="relative">
+                <div className="relative mb-6">
                     <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-brand-orange/40" size={18} />
                     <input
                         type="text"
@@ -64,9 +86,34 @@ export default function Visited() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
+
+                <div className="flex bg-slate-200/40 p-1.5 rounded-[1.5rem] backdrop-blur-sm border border-slate-100 w-fit mx-auto">
+                    {[
+                        { id: 'list', icon: List },
+                        { id: 'list-photos', icon: LayoutGrid },
+                        { id: 'gallery', icon: ImageIcon }
+                    ].map(modeItem => {
+                        const Icon = modeItem.icon;
+                        return (
+                            <button
+                                key={modeItem.id}
+                                onClick={() => setViewMode(modeItem.id)}
+                                className={clsx(
+                                    "p-2.5 rounded-2xl transition-all",
+                                    viewMode === modeItem.id ? "bg-white text-brand-green shadow-lg scale-110" : "text-gray-400"
+                                )}
+                            >
+                                <Icon size={22} />
+                            </button>
+                        );
+                    })}
+                </div>
             </header>
 
-            <div className="px-6 py-8 flex flex-col gap-6">
+            <div className={clsx(
+                "px-6 py-8 transition-all duration-300",
+                viewMode === 'gallery' ? "grid grid-cols-2 gap-5" : "flex flex-col gap-6"
+            )}>
                 <AnimatePresence mode="popLayout" initial={false}>
                     {visitedRestaurants.length > 0 ? (
                         visitedRestaurants.map((restaurant) => (
@@ -80,7 +127,7 @@ export default function Visited() {
                             >
                                 <RestaurantCard
                                     restaurant={restaurant}
-                                    variant="list"
+                                    variant={viewMode}
                                     onDelete={handleDelete}
                                 />
                             </motion.div>

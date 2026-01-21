@@ -45,6 +45,7 @@ export default function ClubDetails() {
     const [isLoadingPlace, setIsLoadingPlace] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
     const [editForm, setEditForm] = useState(null);
+    const [userCoords, setUserCoords] = useState(null);
 
     const fetchRestaurants = useStore(state => state.fetchRestaurants);
     const addGooglePlaceToClub = useStore(state => state.addGooglePlaceToClub);
@@ -70,7 +71,24 @@ export default function ClubDetails() {
         };
         load();
         if (myRestaurants.length === 0) fetchRestaurants();
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            (err) => console.log('Geolocation error', err)
+        );
     }, [id, fetchClubDetails, fetchRestaurants, myRestaurants.length]);
+
+    const calculateDistance = (r) => {
+        if (!userCoords || !r.coordinates) return Infinity;
+        const dx = (r.coordinates.x || 0) - userCoords.lat;
+        const dy = (r.coordinates.y || 0) - userCoords.lng;
+        return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const sortedClubRestaurants = useMemo(() => {
+        if (!club?.restaurants) return [];
+        return [...club.restaurants].sort((a, b) => calculateDistance(a) - calculateDistance(b));
+    }, [club?.restaurants, userCoords]);
 
     if (loading) {
         return (
@@ -271,8 +289,8 @@ export default function ClubDetails() {
                                 </button>
                             </div>
 
-                            {(club.restaurants || []).length > 0 ? (
-                                club.restaurants.map((res) => (
+                            {(sortedClubRestaurants || []).length > 0 ? (
+                                sortedClubRestaurants.map((res) => (
                                     <RestaurantCard
                                         key={res.id}
                                         restaurant={res}

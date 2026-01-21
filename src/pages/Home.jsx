@@ -9,8 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
     const [searchQuery, setSearchQuery] = useState('');
-    const [viewMode, setViewMode] = useState('list');
-    const [sortBy, setSortBy] = useState('date');
+    const [viewMode, setViewMode] = useState(() => localStorage.getItem('foodie_view_mode') || 'list');
+    const [sortBy, setSortBy] = useState('distance');
     const [filterCuisine, setFilterCuisine] = useState('All');
     const [userCoords, setUserCoords] = useState(null);
     const navigate = useNavigate();
@@ -21,6 +21,10 @@ export default function Home() {
     const fetchRestaurants = useStore(state => state.fetchRestaurants);
     const fetchProfile = useStore(state => state.fetchProfile);
     const deleteRestaurant = useStore(state => state.deleteRestaurant);
+
+    useEffect(() => {
+        localStorage.setItem('foodie_view_mode', viewMode);
+    }, [viewMode]);
 
     const handleDelete = async (id) => {
         if (window.confirm('¿Borrar este restaurante de tu lista?')) {
