@@ -414,5 +414,47 @@ export const useStore = create((set, get) => ({
 
         // 3. Link to club
         return get().addRestaurantToClub(clubId, restaurant.id);
+    },
+
+    updateClub: async (clubId, updates) => {
+        const { data, error } = await supabase
+            .from('clubs')
+            .update(updates)
+            .eq('id', clubId)
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Update Club Error:", error);
+            return { success: false, error: error.message };
+        }
+
+        // Update local state
+        set(state => ({
+            clubs: state.clubs.map(c => c.id === clubId ? { ...c, ...data } : c),
+            clubDetails: state.clubDetails?.id === clubId ? { ...state.clubDetails, ...data } : state.clubDetails
+        }));
+
+        return { success: true, data };
+    },
+
+    deleteClub: async (clubId) => {
+        const { error } = await supabase
+            .from('clubs')
+            .delete()
+            .eq('id', clubId);
+
+        if (error) {
+            console.error("Delete Club Error:", error);
+            return { success: false, error: error.message };
+        }
+
+        // Update local state
+        set(state => ({
+            clubs: state.clubs.filter(c => c.id !== clubId),
+            clubDetails: state.clubDetails?.id === clubId ? null : state.clubDetails
+        }));
+
+        return { success: true };
     }
 }));

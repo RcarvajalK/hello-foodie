@@ -13,7 +13,9 @@ import {
     CheckCircle2,
     Calendar,
     X,
-    Search
+    Search,
+    Settings,
+    Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Autocomplete } from '@react-google-maps/api';
@@ -28,22 +30,39 @@ export default function ClubDetails() {
     const loading = useStore(state => state.loading);
     const addRestaurantToClub = useStore(state => state.addRestaurantToClub);
     const myRestaurants = useStore(state => state.restaurants);
+    const updateClub = useStore(state => state.updateClub);
+    const deleteClub = useStore(state => state.deleteClub);
 
     const [activeTab, setActiveTab] = useState('list'); // 'list', 'members', 'rules'
     const [isAddOpen, setIsAddOpen] = useState(false);
+    const [isEditOpen, setIsEditOpen] = useState(false);
     const [addSource, setAddSource] = useState('personal'); // 'personal' or 'google'
     const [error, setError] = useState(null);
     const [autocomplete, setAutocomplete] = useState(null);
     const [isLoadingPlace, setIsLoadingPlace] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [editForm, setEditForm] = useState(null);
 
     const fetchRestaurants = useStore(state => state.fetchRestaurants);
     const addGooglePlaceToClub = useStore(state => state.addGooglePlaceToClub);
 
     useEffect(() => {
         const load = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
             const result = await fetchClubDetails(id);
             if (!result.success) {
                 setError(result.error);
+            } else {
+                const clubData = result.data;
+                const userMember = clubData.members?.find(m => m.user_id === session?.user?.id);
+                setIsAdmin(userMember?.role === 'admin');
+                setEditForm({
+                    name: clubData.name,
+                    description: clubData.description,
+                    image: clubData.image,
+                    type: clubData.type,
+                    rules: clubData.rules
+                });
             }
         };
         load();
@@ -104,6 +123,28 @@ export default function ClubDetails() {
         }
     };
 
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        const result = await updateClub(id, editForm);
+        if (result.success) {
+            setIsEditOpen(false);
+            alert('¡Club actualizado exitosamente!');
+        } else {
+            alert(`Error: ${result.error}`);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (window.confirm('¿Estás seguro de que quieres eliminar este club? Esta acción no se puede deshacer.')) {
+            const result = await deleteClub(id);
+            if (result.success) {
+                navigate('/clubs');
+            } else {
+                alert(`Error: ${result.error}`);
+            }
+        }
+    };
+
     const handleShare = () => {
         const url = `${window.location.origin}/join/${club.id}`; // Simple join link
         const text = `Join my foodie club "${club.name}" on Hello Foodie! 🍔✨\n${url}`;
@@ -135,12 +176,22 @@ export default function ClubDetails() {
                     >
                         <ChevronLeft size={24} />
                     </button>
-                    <button
-                        onClick={handleShare}
-                        className="w-12 h-12 bg-brand-orange text-white rounded-2xl flex items-center justify-center shadow-lg shadow-brand-orange/30 active:scale-90 transition-transform"
-                    >
-                        <Share2 size={20} />
-                    </button>
+                    <div className="flex gap-2">
+                        {isAdmin && (
+                            <button
+                                onClick={() => setIsEditOpen(true)}
+                                className="w-12 h-12 bg-brand-dark text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+                            >
+                                <Settings size={20} />
+                            </button>
+                        )}
+                        <button
+                            onClick={handleShare}
+                            className="w-12 h-12 bg-brand-orange text-white rounded-2xl flex items-center justify-center shadow-lg shadow-brand-orange/30 active:scale-90 transition-transform"
+                        >
+                            <Share2 size={20} />
+                        </button>
+                    </div>
                 </div>
 
                 <div className="absolute bottom-6 left-8 right-8">
@@ -423,6 +474,122 @@ export default function ClubDetails() {
                                     </div>
                                 )}
                             </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Edit Club Modal */}
+            <AnimatePresence>
+                {isEditOpen && editForm && (
+                    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-brand-dark/60 backdrop-blur-sm"
+                            onClick={() => setIsEditOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ y: "100%" }}
+                            animate={{ y: 0 }}
+                            exit={{ y: "100%" }}
+                            className="relative bg-white w-full max-w-lg rounded-t-[3rem] sm:rounded-[3rem] p-8 shadow-2xl max-h-[90vh] flex flex-col overflow-hidden"
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight italic">Manage Club</h2>
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Admin Settings</p>
+                                </div>
+                                <button onClick={() => setIsEditOpen(false)} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-gray-400 active:scale-90 transition-transform">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleUpdate} className="flex-1 overflow-y-auto pr-2 space-y-6 no-scrollbar pb-8">
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Club Name</label>
+                                    <input
+                                        required
+                                        className="w-full bg-slate-50 p-5 rounded-[1.5rem] font-bold text-brand-dark border-2 border-transparent focus:border-brand-orange/20 focus:bg-white focus:outline-none transition-all"
+                                        placeholder="Epic Foodies..."
+                                        value={editForm.name}
+                                        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Vibe/Description</label>
+                                    <textarea
+                                        className="w-full bg-slate-50 p-5 rounded-[1.5rem] font-bold text-brand-dark border-2 border-transparent focus:border-brand-orange/20 focus:bg-white focus:outline-none transition-all min-h-[100px]"
+                                        placeholder="What's this club about?"
+                                        value={editForm.description}
+                                        onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Custom Image URL</label>
+                                    <input
+                                        className="w-full bg-slate-50 p-5 rounded-[1.5rem] font-bold text-brand-dark border-2 border-transparent focus:border-brand-orange/20 focus:bg-white focus:outline-none transition-all"
+                                        placeholder="https://..."
+                                        value={editForm.image}
+                                        onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
+                                    />
+                                    {editForm.image && (
+                                        <div className="mt-2 h-24 rounded-2xl overflow-hidden border-2 border-slate-50">
+                                            <img src={editForm.image} className="w-full h-full object-cover" alt="Preview" />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Privacy</label>
+                                    <div className="flex gap-2">
+                                        {['public', 'private'].map(t => (
+                                            <button
+                                                key={t}
+                                                type="button"
+                                                onClick={() => setEditForm({ ...editForm, type: t })}
+                                                className={clsx(
+                                                    "flex-1 py-4 rounded-[1.2rem] text-[10px] font-black uppercase tracking-widest transition-all",
+                                                    editForm.type === t ? "bg-brand-dark text-white shadow-lg" : "bg-slate-50 text-gray-400"
+                                                )}
+                                            >
+                                                {t}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Rules (separated by ;)</label>
+                                    <textarea
+                                        className="w-full bg-slate-50 p-5 rounded-[1.5rem] font-bold text-brand-dark border-2 border-transparent focus:border-brand-orange/20 focus:bg-white focus:outline-none transition-all min-h-[80px]"
+                                        placeholder="Rule 1; Rule 2; ..."
+                                        value={editForm.rules}
+                                        onChange={(e) => setEditForm({ ...editForm, rules: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="pt-4 space-y-4">
+                                    <button
+                                        type="submit"
+                                        className="w-full bg-brand-orange text-white font-black py-5 rounded-[1.5rem] shadow-xl shadow-brand-orange/20 active:scale-95 transition-all uppercase text-xs tracking-widest"
+                                    >
+                                        Save Changes
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleDelete}
+                                        className="w-full bg-red-50 text-red-500 font-black py-5 rounded-[1.5rem] flex items-center justify-center gap-2 active:scale-95 transition-all uppercase text-[10px] tracking-widest"
+                                    >
+                                        <Trash2 size={16} />
+                                        Delete Club (Danger Zone)
+                                    </button>
+                                </div>
+                            </form>
                         </motion.div>
                     </div>
                 )}
