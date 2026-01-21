@@ -179,25 +179,25 @@ export default function ClubDetails() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-brand-light" />
 
-                <div className="absolute top-12 left-6 right-6 flex justify-between items-center">
+                <div className="absolute top-0 left-0 right-0 p-4 pt-12 flex justify-between items-start bg-gradient-to-b from-black/50 to-transparent z-20">
                     <button
                         onClick={() => navigate('/clubs')}
-                        className="w-12 h-12 bg-white/90 backdrop-blur rounded-2xl flex items-center justify-center shadow-lg text-brand-dark active:scale-90 transition-transform"
+                        className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-90 transition-transform"
                     >
                         <ChevronLeft size={24} />
                     </button>
-                    <div className="flex gap-2">
+                    <div className="flex gap-3">
                         {isAdmin && (
                             <>
                                 <button
                                     onClick={handleDelete}
-                                    className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white shadow-lg active:scale-90 transition-transform"
+                                    className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-90 transition-transform"
                                 >
                                     <Trash2 size={20} />
                                 </button>
                                 <button
                                     onClick={() => setIsEditOpen(true)}
-                                    className="w-12 h-12 bg-brand-dark text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+                                    className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-90 transition-transform"
                                 >
                                     <Edit3 size={20} />
                                 </button>
@@ -205,7 +205,7 @@ export default function ClubDetails() {
                         )}
                         <button
                             onClick={handleShare}
-                            className="w-12 h-12 bg-brand-orange text-white rounded-2xl flex items-center justify-center shadow-lg shadow-brand-orange/30 active:scale-90 transition-transform"
+                            className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-90 transition-transform"
                         >
                             <Share2 size={20} />
                         </button>
