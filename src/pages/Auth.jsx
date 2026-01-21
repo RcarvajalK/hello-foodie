@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, LogIn, AlertCircle, ChevronRight } from 'lucide-react';
+import { Mail, LogIn, AlertCircle, ChevronRight, Lock, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BrandLogo from '../components/BrandLogo';
+import clsx from 'clsx';
 
 export default function Auth() {
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isPasswordMode, setIsPasswordMode] = useState(false);
+    const [isSignUp, setIsSignUp] = useState(false);
     const [message, setMessage] = useState('');
     const [errorType, setErrorType] = useState('info');
     const navigate = useNavigate();
@@ -17,15 +21,30 @@ export default function Auth() {
         setLoading(true);
         setMessage('');
         try {
-            const { error } = await supabase.auth.signInWithOtp({
-                email,
-                options: {
-                    emailRedirectTo: window.location.origin,
-                },
-            });
-            if (error) throw error;
-            setErrorType('info');
-            setMessage('Check your email for the magic link!');
+            if (isPasswordMode) {
+                if (isSignUp) {
+                    const { error } = await supabase.auth.signUp({
+                        email,
+                        password,
+                        options: { data: { full_name: email.split('@')[0] } }
+                    });
+                    if (error) throw error;
+                    setErrorType('info');
+                    setMessage('Registration successful! Check your email.');
+                } else {
+                    const { error } = await supabase.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    navigate('/');
+                }
+            } else {
+                const { error } = await supabase.auth.signInWithOtp({
+                    email,
+                    options: { emailRedirectTo: window.location.origin },
+                });
+                if (error) throw error;
+                setErrorType('info');
+                setMessage('Check your email for the magic link!');
+            }
         } catch (error) {
             setErrorType('error');
             setMessage(error.message);
@@ -66,6 +85,27 @@ export default function Auth() {
                 </div>
 
                 <div className="px-8 pb-12">
+                    <div className="flex bg-slate-100/50 p-1 rounded-2xl mb-6 border border-slate-50">
+                        <button
+                            onClick={() => { setIsPasswordMode(false); setMessage(''); }}
+                            className={clsx(
+                                "flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                                !isPasswordMode ? "bg-white text-brand-orange shadow-md" : "text-gray-400"
+                            )}
+                        >
+                            Magic Link
+                        </button>
+                        <button
+                            onClick={() => { setIsPasswordMode(true); setMessage(''); }}
+                            className={clsx(
+                                "flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                                isPasswordMode ? "bg-white text-brand-orange shadow-md" : "text-gray-400"
+                            )}
+                        >
+                            Password
+                        </button>
+                    </div>
+
                     <form onSubmit={handleEmailAuth} className="space-y-4">
                         <div className="relative">
                             <input
@@ -78,6 +118,20 @@ export default function Auth() {
                             />
                             <Mail size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-brand-orange/40" />
                         </div>
+
+                        {isPasswordMode && (
+                            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="relative">
+                                <input
+                                    type="password"
+                                    placeholder="••••••••"
+                                    className="w-full bg-slate-50 border border-slate-100 p-5 pl-14 rounded-2xl text-brand-dark font-bold text-sm focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all shadow-inner"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required={isPasswordMode}
+                                />
+                                <Lock size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-brand-orange/40" />
+                            </motion.div>
+                        )}
 
                         <AnimatePresence mode="wait">
                             {message && (
@@ -104,12 +158,23 @@ export default function Auth() {
                                 <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
                             ) : (
                                 <>
-                                    <span className="uppercase tracking-[0.2em]">Send Magic Link</span>
+                                    <span className="uppercase tracking-[0.2em]">
+                                        {isPasswordMode ? (isSignUp ? 'Create Account' : 'Login') : 'Send Magic Link'}
+                                    </span>
                                     <ChevronRight size={18} />
                                 </>
                             )}
                         </button>
                     </form>
+
+                    {isPasswordMode && (
+                        <button
+                            onClick={() => setIsSignUp(!isSignUp)}
+                            className="w-full text-center text-[9px] font-black text-gray-400 mt-4 uppercase tracking-[0.2em] hover:text-brand-orange transition-colors"
+                        >
+                            {isSignUp ? 'Back to Login' : "Don't have an account? Signup"}
+                        </button>
+                    )}
 
                     <div className="relative my-10">
                         <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-100"></span></div>
@@ -135,5 +200,3 @@ export default function Auth() {
         </div>
     );
 }
-
-
