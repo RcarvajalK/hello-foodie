@@ -10,6 +10,68 @@ export const useStore = create((set, get) => ({
         lunch: true,
         dinner: true
     },
+
+    uploadImage: async (file, path = 'uploads') => {
+        try {
+            // 1. Compression logic
+            const compressedFile = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 1200;
+                        const MAX_HEIGHT = 1200;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob((blob) => {
+                            resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+                        }, 'image/jpeg', 0.8);
+                    };
+                };
+            });
+
+            // 2. Upload to Supabase
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+            const filePath = `${path}/${fileName}`;
+
+            const { data, error } = await supabase.storage
+                .from('images')
+                .upload(filePath, compressedFile);
+
+            if (error) throw error;
+
+            // 3. Get Public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('images')
+                .getPublicUrl(filePath);
+
+            return { success: true, url: publicUrl };
+        } catch (error) {
+            console.error("Upload Error:", error);
+            return { success: false, error: error.message };
+        }
+    },
     setRestaurants: (restaurants) => set({ restaurants }),
     // Fetch all restaurants for the current user
     fetchRestaurants: async () => {

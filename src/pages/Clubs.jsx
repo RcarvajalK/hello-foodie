@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useStore } from '../lib/store';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
+import ImageUploader from '../components/ImageUploader';
 
 export default function Clubs() {
     const navigate = useNavigate();
@@ -215,39 +216,12 @@ export default function Clubs() {
 
                             {createStep === 1 ? (
                                 <form onSubmit={handleCreate} className="space-y-5">
-                                    <div className="flex justify-center mb-4">
-                                        <div className="relative group w-24 h-24">
-                                            <img
-                                                src={newClub.image}
-                                                className="w-24 h-24 rounded-[2rem] object-cover shadow-lg border-2 border-white"
-                                                alt="Preview"
-                                                onError={(e) => e.target.src = 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400'}
-                                            />
-                                            <div className="absolute inset-0 bg-black/20 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                                                <Star size={20} className="text-white" />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Club Name</label>
-                                        <input
-                                            type="text" required
-                                            className="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-[1.5rem] text-brand-dark font-black focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all text-sm"
-                                            placeholder="e.g. Sushi Stars"
-                                            value={newClub.name}
-                                            onChange={e => setNewClub({ ...newClub, name: e.target.value })}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Image URL</label>
-                                        <input
-                                            type="url"
-                                            className="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-[1.5rem] text-brand-dark font-black focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all text-[10px]"
-                                            placeholder="Paste image link here"
-                                            value={newClub.image}
-                                            onChange={e => setNewClub({ ...newClub, image: e.target.value })}
+                                    <div className="space-y-3">
+                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Club Cover Photo</label>
+                                        <ImageUploader
+                                            currentImage={newClub.image}
+                                            onUploadComplete={(url) => setNewClub({ ...newClub, image: url })}
+                                            label="Upload club photo"
                                         />
                                     </div>
 

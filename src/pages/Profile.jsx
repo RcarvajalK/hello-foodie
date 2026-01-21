@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import BrandLogo from '../components/BrandLogo';
 import { requestNotificationPermission } from '../lib/notifications';
 import clsx from 'clsx';
+import ImageUploader from '../components/ImageUploader';
 
 export default function Profile() {
     const profile = useStore(state => state.profile);
@@ -20,6 +21,7 @@ export default function Profile() {
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState({
         full_name: '',
+        avatar_url: '',
         phone: '',
         instagram: '',
         favorite_cuisines: [],
@@ -30,6 +32,7 @@ export default function Profile() {
         if (profile) {
             setEditData({
                 full_name: profile.full_name || '',
+                avatar_url: profile.avatar_url || '',
                 phone: profile.phone || '',
                 instagram: profile.instagram || '',
                 favorite_cuisines: profile.favorite_cuisines || [],
@@ -79,21 +82,28 @@ export default function Profile() {
                 </div>
 
                 <div className="flex flex-col items-center text-center">
-                    <div className="relative mb-4 group cursor-pointer">
-                        <div className="w-24 h-24 bg-slate-100 rounded-[2rem] flex items-center justify-center text-3xl font-black text-brand-orange border-4 border-white shadow-xl overflow-hidden">
-                            {profile?.avatar_url ? (
-                                <img src={profile.avatar_url} className="w-full h-full object-cover" />
-                            ) : (
-                                profile?.full_name?.charAt(0) || 'U'
-                            )}
-                        </div>
-                        <div className="absolute -bottom-2 -right-2 bg-brand-orange text-white w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg border-4 border-white">
-                            <Trophy size={18} />
-                        </div>
-                        {isEditing && (
-                            <div className="absolute inset-0 bg-black/40 rounded-[2rem] flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Plus size={24} />
-                            </div>
+                    <div className="relative mb-4">
+                        {isEditing ? (
+                            <ImageUploader
+                                currentImage={editData.avatar_url}
+                                onUploadComplete={(url) => setEditData({ ...editData, avatar_url: url })}
+                                label="Photo"
+                                className="w-24 h-24"
+                                aspectRatio="aspect-square"
+                            />
+                        ) : (
+                            <>
+                                <div className="w-24 h-24 bg-slate-100 rounded-[2rem] flex items-center justify-center text-3xl font-black text-brand-orange border-4 border-white shadow-xl overflow-hidden">
+                                    {profile?.avatar_url ? (
+                                        <img src={profile.avatar_url} className="w-full h-full object-cover" />
+                                    ) : (
+                                        profile?.full_name?.charAt(0) || 'U'
+                                    )}
+                                </div>
+                                <div className="absolute -bottom-2 -right-2 bg-brand-orange text-white w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg border-4 border-white">
+                                    <Trophy size={18} />
+                                </div>
+                            </>
                         )}
                     </div>
 

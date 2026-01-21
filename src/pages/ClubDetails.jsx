@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Autocomplete } from '@react-google-maps/api';
 import RestaurantCard from '../components/RestaurantCard';
 import clsx from 'clsx';
+import ImageUploader from '../components/ImageUploader';
 
 export default function ClubDetails() {
     const { id } = useParams();
@@ -187,12 +188,20 @@ export default function ClubDetails() {
                     </button>
                     <div className="flex gap-2">
                         {isAdmin && (
-                            <button
-                                onClick={() => setIsEditOpen(true)}
-                                className="w-12 h-12 bg-brand-dark text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-transform"
-                            >
-                                <Edit3 size={20} />
-                            </button>
+                            <>
+                                <button
+                                    onClick={handleDelete}
+                                    className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white shadow-lg active:scale-90 transition-transform"
+                                >
+                                    <Trash2 size={20} />
+                                </button>
+                                <button
+                                    onClick={() => setIsEditOpen(true)}
+                                    className="w-12 h-12 bg-brand-dark text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+                                >
+                                    <Edit3 size={20} />
+                                </button>
+                            </>
                         )}
                         <button
                             onClick={handleShare}
@@ -539,18 +548,12 @@ export default function ClubDetails() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Custom Image URL</label>
-                                    <input
-                                        className="w-full bg-slate-50 p-5 rounded-[1.5rem] font-bold text-brand-dark border-2 border-transparent focus:border-brand-orange/20 focus:bg-white focus:outline-none transition-all"
-                                        placeholder="https://..."
-                                        value={editForm.image}
-                                        onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
+                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Club Cover Photo</label>
+                                    <ImageUploader
+                                        currentImage={editForm.image}
+                                        onUploadComplete={(url) => setEditForm({ ...editForm, image: url })}
+                                        label="Click to upload club photo"
                                     />
-                                    {editForm.image && (
-                                        <div className="mt-2 h-24 rounded-2xl overflow-hidden border-2 border-slate-50">
-                                            <img src={editForm.image} className="w-full h-full object-cover" alt="Preview" />
-                                        </div>
-                                    )}
                                 </div>
 
                                 <div className="space-y-2">
