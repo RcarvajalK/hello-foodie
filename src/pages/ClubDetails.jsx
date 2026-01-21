@@ -15,7 +15,7 @@ import {
     Calendar,
     X,
     Search,
-    Settings,
+    Edit3,
     Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -183,7 +183,7 @@ export default function ClubDetails() {
                                 onClick={() => setIsEditOpen(true)}
                                 className="w-12 h-12 bg-brand-dark text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-transform"
                             >
-                                <Settings size={20} />
+                                <Edit3 size={20} />
                             </button>
                         )}
                         <button

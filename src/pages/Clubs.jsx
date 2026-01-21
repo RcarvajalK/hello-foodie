@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, ChevronRight, Globe, Lock, Star, X } from 'lucide-react';
+import { Users, Plus, ChevronRight, Globe, Lock, Star, X, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useStore } from '../lib/store';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +12,7 @@ export default function Clubs() {
     const fetchClubs = useStore(state => state.fetchClubs);
     const createClub = useStore(state => state.createClub);
     const joinClub = useStore(state => state.joinClub);
+    const deleteClub = useStore(state => state.deleteClub);
     const profile = useStore(state => state.profile);
 
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -83,6 +84,17 @@ export default function Clubs() {
         }
     };
 
+    const handleDelete = async (clubId) => {
+        if (window.confirm('¿Estás seguro de que quieres eliminar este club? Esta acción no se puede deshacer.')) {
+            const result = await deleteClub(clubId);
+            if (result.success) {
+                // Local state is already updated by deleteClub in store.js
+            } else {
+                alert(`Error: ${result.error}`);
+            }
+        }
+    };
+
     return (
         <div className="pb-24 bg-brand-light min-h-screen">
             <header className="bg-white p-6 pt-12 rounded-b-[3rem] shadow-xl shadow-slate-200/40 relative z-10 border-b border-gray-100 flex justify-between items-center">
@@ -106,44 +118,65 @@ export default function Clubs() {
                 <section>
                     <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-4 ml-2">Active Clubs</h2>
                     <div className="space-y-4">
-                        {clubs.length > 0 ? clubs.map(club => (
-                            <motion.div
-                                key={club.id}
-                                layout
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                onClick={() => navigate(`/clubs/${club.id}`)}
-                                className="bg-white rounded-[2.5rem] overflow-hidden shadow-xl shadow-slate-200/20 border border-gray-50 flex items-center p-4 gap-5 cursor-pointer active:scale-[0.98] transition-all"
-                            >
-                                <img src={club.image || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400'} alt={club.name} className="w-20 h-20 rounded-[1.5rem] object-cover shadow-md bg-slate-100" />
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="font-black text-brand-dark truncate text-sm uppercase tracking-tight">{club.name}</h3>
-                                        {club.type === 'private' ? <Lock size={12} className="text-brand-orange" /> : <Globe size={12} className="text-brand-green" />}
-                                    </div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                                        <Users size={12} /> {club.club_members?.[0]?.count || 0} Members
-                                    </p>
-                                    {club.is_member ? (
-                                        <div className="mt-3 inline-flex items-center gap-1.5 bg-brand-green/10 px-4 py-1.5 rounded-full text-[9px] font-black uppercase text-brand-green border border-brand-green/20">
-                                            <Star size={10} fill="currentColor" />
-                                            Member
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleJoin(club.id);
-                                            }}
-                                            className="mt-3 bg-slate-50 px-4 py-1.5 rounded-full text-[9px] font-black uppercase text-brand-orange border border-slate-100 active:scale-95 transition-all"
+                        {clubs.length > 0 ? clubs.map(club => {
+                            const isAdmin = club.created_by === profile?.id;
+
+                            return (
+                                <div key={club.id} className="relative overflow-hidden rounded-[2.5rem]">
+                                    {/* Delete/Manage Action Background */}
+                                    {isAdmin && (
+                                        <div
+                                            className="absolute inset-0 bg-red-500 flex items-center justify-end px-12 text-white"
+                                            onClick={(e) => { e.stopPropagation(); handleDelete(club.id); }}
                                         >
-                                            Join Community
-                                        </button>
+                                            <div className="flex flex-col items-center gap-1">
+                                                <Trash2 size={24} />
+                                                <span className="text-[8px] font-black uppercase tracking-widest">Delete</span>
+                                            </div>
+                                        </div>
                                     )}
+
+                                    <motion.div
+                                        layout
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        drag={isAdmin ? "x" : false}
+                                        dragConstraints={{ left: -120, right: 0 }}
+                                        dragElastic={0.05}
+                                        onClick={() => navigate(`/clubs/${club.id}`)}
+                                        className="bg-white rounded-[2.5rem] overflow-hidden shadow-xl shadow-slate-200/20 border border-gray-50 flex items-center p-4 gap-5 cursor-pointer relative z-10"
+                                    >
+                                        <img src={club.image || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400'} alt={club.name} className="w-20 h-20 rounded-[1.5rem] object-cover shadow-md bg-slate-100" />
+                                        <div className="flex-1 min-w-0 pointer-events-none">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h3 className="font-black text-brand-dark truncate text-sm uppercase tracking-tight">{club.name}</h3>
+                                                {club.type === 'private' ? <Lock size={12} className="text-brand-orange" /> : <Globe size={12} className="text-brand-green" />}
+                                            </div>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                                <Users size={12} /> {club.club_members?.[0]?.count || 0} Members
+                                            </p>
+                                            {club.is_member ? (
+                                                <div className="mt-3 inline-flex items-center gap-1.5 bg-brand-green/10 px-4 py-1.5 rounded-full text-[9px] font-black uppercase text-brand-green border border-brand-green/20 font-black">
+                                                    <Star size={10} fill="currentColor" />
+                                                    Member
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleJoin(club.id);
+                                                    }}
+                                                    className="mt-3 bg-slate-50 px-4 py-1.5 rounded-full text-[9px] font-black uppercase text-brand-orange border border-slate-100 pointer-events-auto"
+                                                >
+                                                    Join Community
+                                                </button>
+                                            )}
+                                        </div>
+                                        <ChevronRight className="text-slate-200" size={24} />
+                                    </motion.div>
                                 </div>
-                                <ChevronRight className="text-slate-200" size={24} />
-                            </motion.div>
-                        )) : (
+                            );
+                        }) : (
                             <div className="py-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
                                 <Users size={40} className="mx-auto text-slate-100 mb-4" />
                                 <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No clubs found. Create the first one!</p>
