@@ -73,7 +73,8 @@ export default function Clubs() {
                                 layout
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="bg-white rounded-[2.5rem] overflow-hidden shadow-xl shadow-slate-200/20 border border-gray-50 flex items-center p-4 gap-5"
+                                onClick={() => navigate(`/clubs/${club.id}`)}
+                                className="bg-white rounded-[2.5rem] overflow-hidden shadow-xl shadow-slate-200/20 border border-gray-50 flex items-center p-4 gap-5 cursor-pointer active:scale-[0.98] transition-all"
                             >
                                 <img src={club.image || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400'} alt={club.name} className="w-20 h-20 rounded-[1.5rem] object-cover shadow-md" />
                                 <div className="flex-1 min-w-0">

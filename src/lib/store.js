@@ -275,5 +275,60 @@ export const useStore = create((set, get) => ({
         }
 
         return { success: true };
+    },
+
+    // --- Expanded Clubs Logic ---
+    clubDetails: null,
+    fetchClubDetails: async (clubId) => {
+        set({ loading: true });
+        const { data: club, error: clubError } = await supabase
+            .from('clubs')
+            .select(`
+                *,
+                members:club_members(
+                    user_id,
+                    role,
+                    profile:profiles(full_name, avatar_url)
+                )
+            `)
+            .eq('id', clubId)
+            .single();
+
+        if (clubError) {
+            set({ loading: false });
+            return { success: false, error: clubError.message };
+        }
+
+        const { data: restaurants, error: restError } = await supabase
+            .from('club_restaurants')
+            .select(`
+                *,
+                restaurant:restaurants(*)
+            `)
+            .eq('club_id', clubId);
+
+        const details = {
+            ...club,
+            restaurants: (restaurants || []).map(r => r.restaurant)
+        };
+
+        set({ clubDetails: details, loading: false });
+        return { success: true, data: details };
+    },
+
+    addRestaurantToClub: async (clubId, restaurantId) => {
+        const { error } = await supabase
+            .from('club_restaurants')
+            .insert([{ club_id: clubId, restaurant_id: restaurantId }]);
+
+        if (error) return { success: false, error: error.message };
+
+        // Refresh details local state if viewing this club
+        const currentDetails = get().clubDetails;
+        if (currentDetails && currentDetails.id === clubId) {
+            get().fetchClubDetails(clubId);
+        }
+
+        return { success: true };
     }
 }));

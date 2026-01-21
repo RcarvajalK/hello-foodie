@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import MapPage from './pages/MapPage';
 import Clubs from './pages/Clubs';
+import ClubDetails from './pages/ClubDetails';
 import Stats from './pages/Stats';
 import AddRestaurant from './pages/AddRestaurant';
 import RestaurantDetails from './pages/RestaurantDetails';
@@ -112,6 +113,8 @@ export default function App() {
               <Route path="map" element={<MapPage />} />
               <Route path="add" element={<AddRestaurant />} />
               <Route path="clubs" element={<Clubs />} />
+              <Route path="clubs/:id" element={<ClubDetails />} />
+              <Route path="join/:token" element={<Clubs />} /> {/* Placeholder for invitation handling */}
               <Route path="stats" element={<Stats />} />
               <Route path="visited" element={<Visited />} />
               <Route path="badges" element={<Badges />} />
