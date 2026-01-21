@@ -518,14 +518,19 @@ export const useStore = create((set, get) => ({
     },
 
     deleteClub: async (clubId) => {
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('clubs')
             .delete()
-            .eq('id', clubId);
+            .eq('id', clubId)
+            .select();
 
         if (error) {
             console.error("Delete Club Error:", error);
             return { success: false, error: error.message };
+        }
+
+        if (!data || data.length === 0) {
+            return { success: false, error: 'No tienes permisos para borrar este club o ya fue eliminado.' };
         }
 
         // Update local state
