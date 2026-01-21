@@ -26,7 +26,10 @@ export default function Auth() {
                     const { error } = await supabase.auth.signUp({
                         email,
                         password,
-                        options: { data: { full_name: email.split('@')[0] } }
+                        options: {
+                            data: { full_name: email.split('@')[0] },
+                            emailRedirectTo: window.location.origin,
+                        }
                     });
                     if (error) throw error;
                     setErrorType('info');
@@ -46,6 +49,7 @@ export default function Auth() {
                 setMessage('Check your email for the magic link!');
             }
         } catch (error) {
+            console.error("Authentication Error:", error);
             setErrorType('error');
             setMessage(error.message);
         } finally {
