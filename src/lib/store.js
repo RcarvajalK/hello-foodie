@@ -377,27 +377,39 @@ export const useStore = create((set, get) => ({
 
         if (!restaurant) {
             // 2. Create it if not
+            const coords = place.geometry?.location;
+            const formattedCoords = coords ? `(${coords.lng()}, ${coords.lat()})` : null;
+
             const { data: newRes, error: createErr } = await supabase
                 .from('restaurants')
                 .insert([{
                     user_id: session.user.id,
                     name: place.name,
-                    category: place.types?.[0]?.replace(/_/g, ' ') || 'Restaurant',
-                    address: place.vicinity || place.formatted_address,
-                    lat: place.geometry?.location?.lat(),
-                    lng: place.geometry?.location?.lng(),
+                    cuisine: place.types?.[0]?.replace(/_/g, ' ') || 'Restaurant',
+                    zone: place.vicinity || place.formatted_address,
+                    coordinates: formattedCoords,
                     image_url: place.photos?.[0]?.getUrl() || null,
                     rating: place.rating || null,
-                    is_visited: false
+                    is_visited: false,
+                    date_added: new Date().toISOString()
                 }])
                 .select()
                 .single();
 
-            if (createErr) return { success: false, error: createErr.message };
+            if (createErr) {
+                console.error("Add Google Place Error:", createErr);
+                return { success: false, error: createErr.message };
+            }
             restaurant = newRes;
 
+            // Format coordinates back for local state if needed
+            let storableRes = newRes;
+            if (formattedCoords && coords) {
+                storableRes = { ...newRes, coordinates: { x: coords.lat(), y: coords.lng() } };
+            }
+
             // Add to local state
-            set(state => ({ restaurants: [newRes, ...state.restaurants] }));
+            set(state => ({ restaurants: [storableRes, ...state.restaurants] }));
         }
 
         // 3. Link to club
