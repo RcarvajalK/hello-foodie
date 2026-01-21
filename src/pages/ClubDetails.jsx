@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Autocomplete } from '@react-google-maps/api';
+import RestaurantCard from '../components/RestaurantCard';
 import clsx from 'clsx';
 
 export default function ClubDetails() {
@@ -203,21 +204,11 @@ export default function ClubDetails() {
 
                             {(club.restaurants || []).length > 0 ? (
                                 club.restaurants.map((res) => (
-                                    <div key={res.id} className="bg-white p-4 rounded-[2.5rem] shadow-xl shadow-slate-200/20 border border-gray-50 flex items-center gap-4">
-                                        <div className="w-16 h-16 rounded-[1.5rem] bg-slate-100 flex items-center justify-center overflow-hidden">
-                                            {res.image_url ? (
-                                                <img src={res.image_url} className="w-full h-full object-cover" alt={res.name} />
-                                            ) : (
-                                                <MapPin className="text-slate-300" />
-                                            )}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="font-black text-brand-dark uppercase text-xs truncate">{res.name}</h3>
-                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{res.category}</p>
-                                        </div>
-                                        {res.is_visited && <CheckCircle2 className="text-brand-green" size={20} />}
-                                        <ChevronLeft className="text-slate-100 rotate-180" size={20} />
-                                    </div>
+                                    <RestaurantCard
+                                        key={res.id}
+                                        restaurant={res}
+                                        variant="list"
+                                    />
                                 ))
                             ) : (
                                 <div className="py-16 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
@@ -374,7 +365,7 @@ export default function ClubDetails() {
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <h4 className="font-black text-brand-dark text-xs uppercase truncate">{res.name}</h4>
-                                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">{res.category || 'Restaurant'}</p>
+                                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">{res.cuisine || 'Restaurant'}</p>
                                                     </div>
                                                     <button
                                                         onClick={() => handleAddRestaurant(res.id)}
