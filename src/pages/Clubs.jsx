@@ -16,24 +16,34 @@ export default function Clubs() {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [newClub, setNewClub] = useState({ name: '', description: '', type: 'public', image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400' });
 
+    const [isCreating, setIsCreating] = useState(false);
+
     useEffect(() => {
         fetchClubs();
     }, [fetchClubs]);
 
     const handleCreate = async (e) => {
         e.preventDefault();
-        const success = await createClub(newClub);
-        if (success) {
+        setIsCreating(true);
+        const result = await createClub(newClub);
+        setIsCreating(false);
+
+        if (result?.success) {
             setIsCreateOpen(false);
             setNewClub({ name: '', description: '', type: 'public', image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400' });
+            alert('¡Club creado exitosamente!');
+        } else {
+            alert(`Error al crear el club: ${result?.error || 'Unknown error'}`);
         }
     };
 
     const handleJoin = async (id) => {
-        const success = await joinClub(id);
-        if (success) {
+        const result = await joinClub(id);
+        if (result?.success) {
             fetchClubs();
             alert('¡Te has unido al club!');
+        } else {
+            alert(`Error al unirse al club: ${result?.error || 'Unknown error'}`);
         }
     };
 
@@ -146,8 +156,15 @@ export default function Clubs() {
                                         ))}
                                     </div>
                                 </div>
-                                <button type="submit" className="w-full bg-brand-orange text-white font-black py-5 rounded-[2rem] shadow-xl shadow-brand-orange/30 active:scale-95 transition-all">
-                                    Create and Launch
+                                <button
+                                    type="submit"
+                                    disabled={isCreating}
+                                    className={clsx(
+                                        "w-full text-white font-black py-5 rounded-[2rem] shadow-xl transition-all",
+                                        isCreating ? "bg-gray-400 cursor-not-allowed" : "bg-brand-orange shadow-brand-orange/30 active:scale-95"
+                                    )}
+                                >
+                                    {isCreating ? 'Creating...' : 'Create and Launch'}
                                 </button>
                             </form>
                         </motion.div>

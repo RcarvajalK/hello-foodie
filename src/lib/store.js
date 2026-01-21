@@ -207,7 +207,7 @@ export const useStore = create((set, get) => ({
 
     createClub: async (clubData) => {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) return null;
+        if (!session?.user) return { success: false, error: "No active session found." };
 
         const { data, error } = await supabase
             .from('clubs')
@@ -215,23 +215,36 @@ export const useStore = create((set, get) => ({
             .select()
             .single();
 
-        if (error) return null;
+        if (error) {
+            console.error("Supabase Create Club Error:", error);
+            return { success: false, error: error.message };
+        }
 
         // Auto-join creator
-        await supabase.from('club_members').insert([{ club_id: data.id, user_id: session.user.id, role: 'admin' }]);
+        const { error: joinError } = await supabase.from('club_members').insert([{ club_id: data.id, user_id: session.user.id, role: 'admin' }]);
+
+        if (joinError) {
+            console.error("Supabase Auto-join Error:", joinError);
+            // We still created the club, but joining failed. This is a partial success, but maybe better to report as issue.
+        }
 
         set(state => ({ clubs: [data, ...state.clubs] }));
-        return data;
+        return { success: true, data };
     },
 
     joinClub: async (clubId) => {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) return false;
+        if (!session?.user) return { success: false, error: "No active session found." };
 
         const { error } = await supabase
             .from('club_members')
             .insert([{ club_id: clubId, user_id: session.user.id, role: 'member' }]);
 
-        return !error;
+        if (error) {
+            console.error("Supabase Join Club Error:", error);
+            return { success: false, error: error.message };
+        }
+
+        return { success: true };
     }
 }));
