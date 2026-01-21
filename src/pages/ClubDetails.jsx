@@ -26,11 +26,13 @@ export default function ClubDetails() {
     const myRestaurants = useStore(state => state.restaurants);
 
     const [activeTab, setActiveTab] = useState('list'); // 'list', 'members', 'rules'
-    const [isSharing, setIsSharing] = useState(false);
+    const [isAddOpen, setIsAddOpen] = useState(false);
+    const fetchRestaurants = useStore(state => state.fetchRestaurants);
 
     useEffect(() => {
         fetchClubDetails(id);
-    }, [id, fetchClubDetails]);
+        if (myRestaurants.length === 0) fetchRestaurants();
+    }, [id, fetchClubDetails, fetchRestaurants, myRestaurants.length]);
 
     if (loading || !club) {
         return (
@@ -39,6 +41,16 @@ export default function ClubDetails() {
             </div>
         );
     }
+
+    const handleAddRestaurant = async (resId) => {
+        const result = await addRestaurantToClub(id, resId);
+        if (result.success) {
+            setIsAddOpen(false);
+            alert('Restaurante añadido al club');
+        } else {
+            alert(`Error: ${result.error}`);
+        }
+    };
 
     const handleShare = () => {
         const url = `${window.location.origin}/join/${club.id}`; // Simple join link
@@ -130,7 +142,10 @@ export default function ClubDetails() {
                         >
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Collaborative List</h2>
-                                <button className="flex items-center gap-2 text-brand-orange text-[10px] font-black uppercase tracking-widest">
+                                <button
+                                    onClick={() => setIsAddOpen(true)}
+                                    className="flex items-center gap-2 text-brand-orange text-[10px] font-black uppercase tracking-widest py-2 px-4 bg-brand-orange/5 rounded-full border border-brand-orange/10 active:scale-95 transition-all"
+                                >
                                     <Plus size={14} /> Add New
                                 </button>
                             </div>
@@ -248,6 +263,63 @@ export default function ClubDetails() {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Add Restaurant Modal */}
+            <AnimatePresence>
+                {isAddOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-brand-dark/60 backdrop-blur-sm"
+                            onClick={() => setIsAddOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ y: "100%" }}
+                            animate={{ y: 0 }}
+                            exit={{ y: "100%" }}
+                            className="relative bg-white w-full max-w-lg rounded-t-[3rem] sm:rounded-[3rem] p-8 shadow-2xl max-h-[85vh] flex flex-col"
+                        >
+                            <div className="flex justify-between items-center mb-8">
+                                <div>
+                                    <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">Suggest a Spot</h2>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">From your personal list</p>
+                                </div>
+                                <button onClick={() => setIsAddOpen(false)} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-gray-400"><Plus size={24} className="rotate-45" /></button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto pr-2 space-y-4 no-scrollbar">
+                                {myRestaurants.filter(r => !club.restaurants.some(cr => cr.id === r.id)).length > 0 ? (
+                                    myRestaurants
+                                        .filter(r => !club.restaurants.some(cr => cr.id === r.id))
+                                        .map(res => (
+                                            <div key={res.id} className="bg-slate-50 p-4 rounded-[2rem] flex items-center gap-4 group hover:bg-white hover:shadow-xl transition-all border border-transparent hover:border-slate-100">
+                                                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-200">
+                                                    {res.image_url && <img src={res.image_url} className="w-full h-full object-cover" />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="font-black text-brand-dark text-xs uppercase truncate">{res.name}</h4>
+                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">{res.category || 'Restaurant'}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleAddRestaurant(res.id)}
+                                                    className="bg-brand-orange text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-orange/20 active:scale-95 transition-all"
+                                                >
+                                                    Add
+                                                </button>
+                                            </div>
+                                        ))
+                                ) : (
+                                    <div className="py-12 text-center">
+                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No more restaurants to add!</p>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

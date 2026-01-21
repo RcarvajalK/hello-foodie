@@ -299,7 +299,16 @@ export const useStore = create((set, get) => ({
             return { success: false, error: clubError.message };
         }
 
-        const { data: restaurants, error: restError } = await supabase
+        const { data: members, error: membersError } = await supabase
+            .from('club_members')
+            .select(`
+                user_id,
+                role,
+                profile:profiles(id, full_name, avatar_url)
+            `)
+            .eq('club_id', clubId);
+
+        const { data: clubRestaurants, error: restError } = await supabase
             .from('club_restaurants')
             .select(`
                 *,
@@ -307,9 +316,30 @@ export const useStore = create((set, get) => ({
             `)
             .eq('club_id', clubId);
 
+        // Fetch visits for rankings
+        const memberIds = (members || []).map(m => m.user_id);
+        const { data: allVisits } = await supabase
+            .from('restaurants')
+            .select('user_id, name, is_visited')
+            .in('user_id', memberIds)
+            .eq('is_visited', true);
+
+        const restaurantsInClubNames = new Set((clubRestaurants || []).map(r => r.restaurant.name));
+
+        const rankings = (members || []).map(m => {
+            const memberVisits = (allVisits || []).filter(v =>
+                v.user_id === m.user_id && restaurantsInClubNames.has(v.name)
+            ).length;
+            return {
+                ...m,
+                visit_count: memberVisits
+            };
+        }).sort((a, b) => b.visit_count - a.visit_count);
+
         const details = {
             ...club,
-            restaurants: (restaurants || []).map(r => r.restaurant)
+            members: rankings,
+            restaurants: (clubRestaurants || []).map(r => r.restaurant)
         };
 
         set({ clubDetails: details, loading: false });

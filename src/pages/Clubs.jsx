@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Users, Plus, ChevronRight, Globe, Lock, Star, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useStore } from '../lib/store';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 
 export default function Clubs() {
     const navigate = useNavigate();
+    const { token } = useParams();
     const clubs = useStore(state => state.clubs);
     const fetchClubs = useStore(state => state.fetchClubs);
     const createClub = useStore(state => state.createClub);
@@ -21,6 +22,22 @@ export default function Clubs() {
     useEffect(() => {
         fetchClubs();
     }, [fetchClubs]);
+
+    useEffect(() => {
+        if (token) {
+            const autoJoin = async () => {
+                const result = await joinClub(token);
+                if (result.success) {
+                    alert('¡Bienvenido al club!');
+                    navigate(`/clubs/${token}`);
+                } else {
+                    alert(`No se pudo unir al club: ${result.error}`);
+                    navigate('/clubs');
+                }
+            };
+            autoJoin();
+        }
+    }, [token, joinClub, navigate]);
 
     const handleCreate = async (e) => {
         e.preventDefault();
