@@ -91,6 +91,7 @@ export const useStore = create((set, get) => ({
         const { data, error } = await supabase
             .from('restaurants')
             .select('*')
+            .eq('is_deleted', false)
             .order('date_added', { ascending: false });
 
         if (error) {
@@ -270,8 +271,63 @@ export const useStore = create((set, get) => ({
         return { data, error };
     },
 
-    // Delete restaurant
+    // Soft delete restaurant
     deleteRestaurant: async (id) => {
+        const { error } = await supabase
+            .from('restaurants')
+            .update({ is_deleted: true })
+            .eq('id', id);
+
+        if (!error) {
+            set((state) => ({
+                restaurants: state.restaurants.filter((r) => r.id !== id)
+            }));
+            return { success: true };
+        }
+        return { success: false, error: error.message };
+    },
+
+    // --- Trash Bin Actions ---
+    deletedRestaurants: [],
+    fetchDeletedRestaurants: async () => {
+        set({ loading: true });
+        const { data, error } = await supabase
+            .from('restaurants')
+            .select('*')
+            .eq('is_deleted', true)
+            .order('date_added', { ascending: false });
+
+        if (!error) {
+            const parsedData = (data || []).map(r => {
+                if (typeof r.coordinates === 'string') {
+                    const [lng, lat] = r.coordinates.replace(/[()]/g, '').split(',');
+                    return { ...r, coordinates: { lat: parseFloat(lat), lng: parseFloat(lng) } };
+                }
+                return r;
+            });
+            set({ deletedRestaurants: parsedData });
+        }
+        set({ loading: false });
+    },
+
+    restoreRestaurant: async (id) => {
+        const { error } = await supabase
+            .from('restaurants')
+            .update({ is_deleted: false })
+            .eq('id', id);
+
+        if (!error) {
+            // Refetch or update local state
+            set((state) => ({
+                deletedRestaurants: state.deletedRestaurants.filter(r => r.id !== id)
+            }));
+            get().fetchRestaurants(); // Refresh main list
+            return { success: true };
+        }
+        return { success: false, error: error.message };
+    },
+
+    permanentlyDeleteRestaurant: async (id) => {
         const { error } = await supabase
             .from('restaurants')
             .delete()
@@ -279,9 +335,11 @@ export const useStore = create((set, get) => ({
 
         if (!error) {
             set((state) => ({
-                restaurants: state.restaurants.filter((r) => r.id !== id)
+                deletedRestaurants: state.deletedRestaurants.filter(r => r.id !== id)
             }));
+            return { success: true };
         }
+        return { success: false, error: error.message };
     },
 
     // --- Clubs Functionality ---

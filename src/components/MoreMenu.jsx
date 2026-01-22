@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Settings, HelpCircle, LogOut, Info, Shield, Bell, Heart, CreditCard, Users, Share2, Star } from 'lucide-react';
+import { X, Settings, HelpCircle, LogOut, Info, Shield, Bell, Heart, CreditCard, Users, Share2, Star, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../lib/store';
 
@@ -12,6 +12,7 @@ export default function MoreMenu({ isOpen, onClose }) {
         { label: 'Clubs', icon: Users, path: '/clubs', color: 'text-purple-500' },
         { label: 'Favorites', icon: Heart, path: '/badges', color: 'text-red-500' },
         { label: 'Stats', icon: Star, path: '/stats', color: 'text-yellow-500' },
+        { label: 'Trash Bin', icon: Trash2, path: '/trash', color: 'text-slate-400' },
         { label: 'Notifications', icon: Bell, path: '/profile', color: 'text-orange-500' },
         { label: 'Subscription', icon: CreditCard, path: '/profile', color: 'text-green-500' },
         { label: 'Privacy', icon: Shield, path: '/profile', color: 'text-gray-500' },
