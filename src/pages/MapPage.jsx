@@ -45,8 +45,26 @@ export default function MapPage() {
         }
     }, [fetchRestaurants]);
 
-    const onLoad = useCallback(function callback(map) { setMap(map); }, []);
-    const onUnmount = useCallback(function callback() { setMap(null); }, []);
+    useEffect(() => {
+        if (userLocation && map) {
+            map.panTo(userLocation);
+            map.setZoom(15);
+        }
+    }, [userLocation, map]);
+
+    const onLoad = useCallback(function callback(map) {
+        setMap(map);
+        setTimeout(() => {
+            if (userLocation && map) {
+                map.panTo(userLocation);
+                map.setZoom(15);
+            }
+        }, 100);
+    }, [userLocation]);
+
+    const onUnmount = useCallback(function callback() {
+        setMap(null);
+    }, []);
 
     const centerOnUser = () => {
         if (userLocation && map) {

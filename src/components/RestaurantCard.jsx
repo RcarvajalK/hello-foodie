@@ -37,12 +37,22 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
     );
 
     const CardCarousel = ({ images, height = "h-64", rounded = "rounded-t-[3.5rem]" }) => {
-        const allImages = [restaurant.image_url || restaurant.image, ...(restaurant.additional_images || [])].filter(Boolean);
+        const defaultImage = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80';
+        const allImages = [restaurant.image_url || restaurant.image, ...(restaurant.additional_images || [])]
+            .filter(Boolean)
+            .filter(img => !img.includes('maps.gstatic.com')); // Filter out broken google maps placeholders
+
+        if (allImages.length === 0) allImages.push(defaultImage);
 
         if (allImages.length <= 1) {
             return (
                 <div className={clsx("relative overflow-hidden", height, rounded)}>
-                    <img src={allImages[0]} alt={restaurant.name} className="w-full h-full object-cover" />
+                    <img
+                        src={allImages[0]}
+                        alt={restaurant.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => e.target.src = defaultImage}
+                    />
                 </div>
             );
         }
@@ -52,7 +62,14 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                 <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full">
                     {allImages.map((img, idx) => (
                         <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
-                            <img src={img} alt={`${restaurant.name} ${idx + 1}`} className="w-full h-full object-cover" />
+                            <img
+                                src={img}
+                                alt={`${restaurant.name} ${idx + 1}`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                    e.target.src = defaultImage;
+                                }}
+                            />
                         </div>
                     ))}
                 </div>
@@ -102,7 +119,12 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                         className="flex items-center gap-4 bg-white p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden active:scale-98 cursor-pointer"
                     >
                         <div className="w-16 h-16 rounded-2xl bg-slate-50 overflow-hidden flex-shrink-0 border border-slate-100">
-                            <img src={restaurant.image_url || restaurant.image} alt={restaurant.name} className="w-full h-full object-cover" />
+                            <img
+                                src={restaurant.image_url || restaurant.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=200&q=80'}
+                                alt={restaurant.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => e.target.src = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=200&q=80'}
+                            />
                         </div>
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">

@@ -132,21 +132,31 @@ export default function RestaurantDetails() {
     return (
         <div className="bg-white min-h-screen pb-24">
             <div className="relative h-80 bg-slate-100">
-                <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full">
-                    {[restaurant.image_url || restaurant.image, ...(restaurant.additional_images || [])].filter(Boolean).map((img, idx) => (
-                        <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
-                            <img
-                                src={img}
-                                alt={`${restaurant.name} ${idx + 1}`}
-                                className="w-full h-full object-cover"
-                            />
-                            <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-1.5 px-6">
-                                {[restaurant.image_url || restaurant.image, ...(restaurant.additional_images || [])].filter(Boolean).map((_, i) => (
-                                    <div key={i} className={clsx("h-1 rounded-full transition-all", i === idx ? "w-4 bg-white" : "w-1 bg-white/40")} />
-                                ))}
+                <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full relative">
+                    {(() => {
+                        const defaultImage = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80';
+                        const allImages = [restaurant.image_url || restaurant.image, ...(restaurant.additional_images || [])]
+                            .filter(Boolean)
+                            .filter(img => !img.includes('maps.gstatic.com'));
+
+                        if (allImages.length === 0) allImages.push(defaultImage);
+
+                        return allImages.map((img, idx) => (
+                            <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
+                                <img
+                                    src={img}
+                                    alt={`${restaurant.name} ${idx + 1}`}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => e.target.src = defaultImage}
+                                />
+                                <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-1.5 px-6">
+                                    {allImages.map((_, i) => (
+                                        <div key={i} className={clsx("h-1 rounded-full transition-all", i === idx ? "w-4 bg-white" : "w-1 bg-white/40")} />
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ));
+                    })()}
                 </div>
                 <div className="absolute top-0 left-0 right-0 p-4 pt-12 flex justify-between items-start bg-gradient-to-b from-black/50 to-transparent">
                     <button
