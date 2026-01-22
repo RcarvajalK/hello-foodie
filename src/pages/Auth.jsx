@@ -57,19 +57,6 @@ export default function Auth() {
         }
     };
 
-    const handleSocialAuth = async (provider) => {
-        setLoading(true);
-        try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider,
-                options: { redirectTo: window.location.origin }
-            });
-            if (error) throw error;
-        } catch (error) {
-            alert(error.message);
-            setLoading(false);
-        }
-    };
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col justify-center p-6 pb-20 relative overflow-hidden">
@@ -179,21 +166,6 @@ export default function Auth() {
                             {isSignUp ? 'Back to Login' : "Don't have an account? Signup"}
                         </button>
                     )}
-
-                    <div className="relative my-10">
-                        <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-100"></span></div>
-                        <div className="relative flex justify-center text-[8px] font-black uppercase tracking-[0.3em] text-slate-300">
-                            <span className="bg-white px-4 italic">Social Join</span>
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={() => handleSocialAuth('google')}
-                        className="w-full bg-white border border-slate-100 p-5 rounded-2xl flex items-center justify-center gap-3 shadow-sm hover:shadow-md active:scale-95 transition-all"
-                    >
-                        <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="Google" />
-                        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-brand-dark">Continue with Google</span>
-                    </button>
 
                     <p className="text-[8px] text-center text-gray-300 uppercase font-black tracking-widest mt-10 leading-relaxed">
                         By joining you agree to our <br />
