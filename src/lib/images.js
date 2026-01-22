@@ -30,7 +30,8 @@ export function getRestaurantImage(url, fallback = DEFAULT_RESTAURANT_IMAGE) {
  * @returns {string[]} - Filtered array of images.
  */
 export function filterRestaurantImages(images = [], mainImage = null) {
-    const all = [mainImage, ...images].filter(Boolean);
+    const safeImages = Array.isArray(images) ? images : [];
+    const all = [mainImage, ...safeImages].filter(Boolean);
     const valid = all.map(img => getRestaurantImage(img)).filter(img => img !== DEFAULT_RESTAURANT_IMAGE);
 
     if (valid.length === 0) return [DEFAULT_RESTAURANT_IMAGE];
