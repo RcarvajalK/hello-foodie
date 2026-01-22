@@ -99,10 +99,10 @@ export default function AddRestaurant() {
 
         setLoading(true);
         // Convert meal_type array to comma-separated string for DB
+        const { group_ids, ...rest } = formData;
         const result = await addRestaurant({
-            ...formData,
-            meal_type: formData.meal_type.join(', '),
-            group_ids: undefined // Don't send array to restaurant table directly if not expected
+            ...rest,
+            meal_type: formData.meal_type.join(', ')
         });
 
         setLoading(false);

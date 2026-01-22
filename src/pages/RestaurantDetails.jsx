@@ -130,8 +130,8 @@ export default function RestaurantDetails() {
     };
 
     return (
-        <div className="bg-white min-h-screen pb-24">
-            <div className="relative h-80 bg-slate-100">
+        <div className="bg-white min-h-screen pb-16">
+            <div className="relative h-48 bg-slate-100 sm:h-64">
                 <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full relative">
                     {(() => {
                         const defaultImage = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80';
@@ -188,119 +188,70 @@ export default function RestaurantDetails() {
                 </div>
             </div>
 
-            <div className="px-5 py-6 -mt-8 bg-white rounded-t-[3rem] relative z-10 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
-                <div className="flex justify-between items-start mb-2">
-                    <h1 className="text-2xl font-black text-brand-dark uppercase tracking-tight">{restaurant.name}</h1>
-                    <span className="text-xl font-black text-brand-orange">{restaurant.price}</span>
+            <div className="px-5 py-5 -mt-8 bg-white rounded-t-[3rem] relative z-10 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+                <div className="flex justify-between items-start mb-1">
+                    <h1 className="text-xl font-black text-brand-dark uppercase tracking-tight line-clamp-1">{restaurant.name}</h1>
+                    <span className="text-base font-black text-brand-orange">{restaurant.price}</span>
                 </div>
 
-                <div className="flex items-center gap-2 mb-8">
-                    <Star className="text-yellow-400 fill-yellow-400" size={20} />
-                    <span className="font-black text-brand-dark">{restaurant.rating || '---'}</span>
-                    <span className="w-1 h-1 bg-gray-300 rounded-full mx-1"></span>
-                    <span className="text-brand-green font-bold text-sm uppercase">{restaurant.cuisine}</span>
+                <div className="flex items-center gap-2 mb-4">
+                    <Star className="text-yellow-400 fill-yellow-400" size={16} />
+                    <span className="font-black text-brand-dark text-xs">{restaurant.rating || '---'}</span>
+                    <span className="w-0.5 h-0.5 bg-gray-300 rounded-full mx-0.5"></span>
+                    <span className="text-brand-green font-bold text-[9px] uppercase">{restaurant.cuisine}</span>
                     {restaurant.meal_type && (
-                        <span className="ml-auto bg-brand-orange/10 text-brand-orange px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">{restaurant.meal_type}</span>
+                        <span className="ml-auto bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tight">{restaurant.meal_type}</span>
                     )}
                 </div>
 
-                <div className="space-y-5 mb-10">
-                    <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <MapPin className="text-brand-orange" size={20} />
-                        </div>
-                        <div className="flex-1">
-                            <p className="font-bold text-brand-dark text-[10px] uppercase tracking-wider mb-0.5">Location / Address</p>
-                            <p className="text-sm text-gray-500 font-medium leading-normal">{restaurant.address || restaurant.zone || 'Address not set'}</p>
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                    <div className="flex items-start gap-2.5 p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
+                        <MapPin className="text-brand-orange flex-shrink-0" size={14} />
+                        <div className="min-w-0">
+                            <p className="font-black text-brand-dark text-[8px] uppercase tracking-wider mb-0.5">Location</p>
+                            <p className="text-[10px] text-gray-500 font-bold truncate">{restaurant.address || restaurant.zone || 'N/A'}</p>
                             <a
                                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address || restaurant.name)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-[10px] font-bold text-brand-orange uppercase tracking-wider mt-2 inline-block"
+                                className="text-[8px] font-black text-brand-orange uppercase tracking-wider mt-1 inline-block"
                             >
-                                Open in Maps
+                                Map
                             </a>
                         </div>
                     </div>
 
-                    {restaurant.phone && (
-                        <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <Phone className="text-blue-500" size={20} />
-                            </div>
-                            <div>
-                                <p className="font-bold text-brand-dark text-[10px] uppercase tracking-wider mb-0.5">Phone</p>
-                                <a href={`tel:${restaurant.phone}`} className="text-sm text-gray-500 font-medium hover:text-brand-orange transition-colors">
-                                    {restaurant.phone}
-                                </a>
-                            </div>
-                        </div>
-                    )}
-
-                    {restaurant.website && (
-                        <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <Globe className="text-purple-500" size={20} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="font-bold text-brand-dark text-[10px] uppercase tracking-wider mb-0.5">Website</p>
-                                <a
-                                    href={restaurant.website}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-sm text-gray-500 font-medium truncate block hover:text-brand-orange transition-colors"
-                                >
-                                    {restaurant.website.replace(/^https?:\/\/(www\.)?/, '')}
-                                </a>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <Clock className="text-brand-green" size={20} />
-                        </div>
-                        <div className="flex-1">
-                            <p className="font-bold text-brand-dark text-[10px] uppercase tracking-wider mb-0.5">Opening Hours</p>
-                            {restaurant.opening_hours && restaurant.opening_hours.length > 0 ? (
-                                <div className="space-y-1 mt-2">
-                                    {restaurant.opening_hours.map((day, idx) => (
-                                        <p key={idx} className="text-[11px] text-gray-400 font-medium flex justify-between">
-                                            <span className="text-brand-dark/70">{day.split(': ')[0]}</span>
-                                            <span className="tabular-nums">{day.split(': ')[1]}</span>
-                                        </p>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-sm text-gray-500 font-medium">
-                                    Added on {new Date(restaurant.date_added).toLocaleDateString()}
-                                </p>
-                            )}
+                    <div className="flex items-start gap-2.5 p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
+                        <Clock className="text-brand-green flex-shrink-0" size={14} />
+                        <div className="min-w-0">
+                            <p className="font-black text-brand-dark text-[8px] uppercase tracking-wider mb-0.5">Hours</p>
+                            <p className="text-[10px] text-gray-500 font-bold truncate">
+                                {restaurant.opening_hours?.length > 0 ? 'See Detail' : `Added ${new Date(restaurant.date_added).toLocaleDateString()}`}
+                            </p>
                         </div>
                     </div>
                 </div>
 
                 {restaurant.notes && (
-                    <div className="mb-10">
-                        <h3 className="font-black text-lg mb-3 tracking-tight">Notes</h3>
-                        <div className="bg-slate-50 p-5 rounded-[1.5rem] border border-slate-100 text-sm text-gray-600 font-medium italic">
+                    <div className="mb-6">
+                        <h3 className="font-black text-base mb-2 tracking-tight">Notes</h3>
+                        <div className="bg-slate-50 p-4 rounded-[1.2rem] border border-slate-100 text-[13px] text-gray-600 font-medium italic">
                             "{restaurant.notes}"
                         </div>
                     </div>
                 )}
 
-                <div className="mb-10">
-                    <h3 className="font-black text-lg mb-3 tracking-tight">Details</h3>
-                    <div className="bg-slate-50 p-4 rounded-2xl text-sm text-gray-600 font-medium leading-relaxed border border-slate-100 flex flex-col gap-2">
-                        <p><span className="text-brand-dark font-bold uppercase text-[10px] tracking-wider block mb-1">Recommended By</span> {restaurant.recommended_by || 'Me'}</p>
-                        {restaurant.club_name && <p><span className="text-brand-dark font-bold uppercase text-[10px] tracking-wider block mb-1">Club</span> {restaurant.club_name}</p>}
+                <div className="mb-4">
+                    <div className="bg-slate-50/50 p-3 rounded-2xl text-[10px] text-gray-600 font-bold border border-slate-100 flex flex-col gap-1">
+                        <p><span className="text-brand-dark font-black uppercase text-[8px] tracking-widest block">Recommended By</span> {restaurant.recommended_by || 'Me'}</p>
+                        {restaurant.club_name && <p><span className="text-brand-dark font-black uppercase text-[8px] tracking-widest block">Club</span> {restaurant.club_name}</p>}
                     </div>
                 </div>
 
                 {(restaurant.review_comment || showComparison) && (
-                    <div className="mb-10 bg-brand-green/5 p-6 rounded-[2rem] border border-brand-green/10">
-                        <h3 className="font-black text-sm text-brand-green uppercase tracking-widest mb-3 flex items-center gap-2">
-                            <CheckCircle size={16} /> {showComparison ? 'Comparison' : 'My Review'}
+                    <div className="mb-6 bg-brand-green/5 p-5 rounded-[1.5rem] border border-brand-green/10">
+                        <h3 className="font-black text-xs text-brand-green uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <CheckCircle size={14} /> {showComparison ? 'Comparison' : 'My Review'}
                         </h3>
 
                         <div className="grid grid-cols-2 gap-4 mb-4">
