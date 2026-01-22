@@ -204,32 +204,45 @@ export default function RestaurantDetails() {
                     )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-5">
-                    <div className="flex items-start gap-2.5 p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
+                <div className="flex flex-wrap gap-2 mb-4">
+                    <div className="flex-1 min-w-[120px] flex items-center gap-2.5 p-2 bg-slate-50/50 rounded-xl border border-slate-100">
                         <MapPin className="text-brand-orange flex-shrink-0" size={14} />
                         <div className="min-w-0">
-                            <p className="font-black text-brand-dark text-[8px] uppercase tracking-wider mb-0.5">Location</p>
-                            <p className="text-[10px] text-gray-500 font-bold truncate">{restaurant.address || restaurant.zone || 'N/A'}</p>
+                            <p className="font-black text-brand-dark text-[7px] uppercase tracking-wider">Location</p>
                             <a
                                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address || restaurant.name)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-[8px] font-black text-brand-orange uppercase tracking-wider mt-1 inline-block"
+                                className="text-[10px] text-gray-500 font-bold truncate block"
                             >
-                                Map
+                                {restaurant.zone || 'Open Map'}
                             </a>
                         </div>
                     </div>
 
-                    <div className="flex items-start gap-2.5 p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
+                    <div className="flex-1 min-w-[120px] flex items-center gap-2.5 p-2 bg-slate-50/50 rounded-xl border border-slate-100">
                         <Clock className="text-brand-green flex-shrink-0" size={14} />
                         <div className="min-w-0">
-                            <p className="font-black text-brand-dark text-[8px] uppercase tracking-wider mb-0.5">Hours</p>
+                            <p className="font-black text-brand-dark text-[7px] uppercase tracking-wider">Hours</p>
                             <p className="text-[10px] text-gray-500 font-bold truncate">
-                                {restaurant.opening_hours?.length > 0 ? 'See Detail' : `Added ${new Date(restaurant.date_added).toLocaleDateString()}`}
+                                {restaurant.opening_hours?.length > 0 ? 'See List' : `Added ${new Date(restaurant.date_added).getMonth() + 1}/${new Date(restaurant.date_added).getFullYear()}`}
                             </p>
                         </div>
                     </div>
+
+                    {restaurant.phone && (
+                        <a href={`tel:${restaurant.phone}`} className="flex items-center gap-2 p-2 bg-blue-50/50 rounded-xl border border-blue-100 text-blue-500">
+                            <Phone size={14} />
+                            <span className="text-[10px] font-black uppercase tracking-tight">Call</span>
+                        </a>
+                    )}
+
+                    {restaurant.website && (
+                        <a href={restaurant.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-purple-50/50 rounded-xl border border-purple-100 text-purple-500">
+                            <Globe size={14} />
+                            <span className="text-[10px] font-black uppercase tracking-tight">Web</span>
+                        </a>
+                    )}
                 </div>
 
                 {restaurant.notes && (
