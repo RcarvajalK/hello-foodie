@@ -90,7 +90,7 @@ export const useStore = create((set, get) => ({
 
         const { data, error } = await supabase
             .from('restaurants')
-            .select('id, name, cuisine, image, image_url, rating, price, zone, address, coordinates, is_visited, is_favorite, recommended_by, club_name, date_added, notes, phone, website, opening_hours')
+            .select('id, name, cuisine, image_url, additional_images, rating, price, zone, address, coordinates, is_visited, is_favorite, recommended_by, club_name, date_added, notes, phone, website, opening_hours, meal_type')
             .order('date_added', { ascending: false });
 
         if (!error) {
@@ -395,7 +395,7 @@ export const useStore = create((set, get) => ({
                 .from('club_restaurants')
                 .select(`
                     *,
-                    restaurant:restaurants(id, name, cuisine, image, image_url, rating, price, zone, address, coordinates, is_visited)
+                    restaurant:restaurants(id, name, cuisine, image_url, additional_images, rating, price, zone, address, coordinates, is_visited, is_favorite, recommended_by, club_name, date_added, notes, phone, website, opening_hours, meal_type)
                 `)
                 .eq('club_id', clubId);
 
