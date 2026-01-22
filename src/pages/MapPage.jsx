@@ -118,8 +118,8 @@ export default function MapPage() {
                 {restaurants.map((restaurant) => {
                     if (!restaurant.coordinates) return null;
                     const position = {
-                        lat: restaurant.coordinates.x,
-                        lng: restaurant.coordinates.y
+                        lat: restaurant.coordinates.lat,
+                        lng: restaurant.coordinates.lng
                     };
 
                     return (
@@ -158,7 +158,7 @@ export default function MapPage() {
 
                 {selected && (
                     <InfoWindow
-                        position={{ lat: selected.coordinates.x, lng: selected.coordinates.y }}
+                        position={{ lat: selected.coordinates.lat, lng: selected.coordinates.lng }}
                         onCloseClick={() => setSelected(null)}
                     >
                         <div className="p-1 min-w-[200px]">
@@ -171,7 +171,7 @@ export default function MapPage() {
                                 </div>
                                 <div className="flex gap-2">
                                     <button
-                                        onClick={() => calculateRoute({ lat: selected.coordinates.x, lng: selected.coordinates.y })}
+                                        onClick={() => calculateRoute({ lat: selected.coordinates.lat, lng: selected.coordinates.lng })}
                                         className="flex-1 bg-brand-orange text-white text-[9px] font-black py-2 rounded-lg flex items-center justify-center gap-1 uppercase tracking-widest"
                                     >
                                         <Route size={14} /> Ruta

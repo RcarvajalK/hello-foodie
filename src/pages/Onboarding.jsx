@@ -23,10 +23,16 @@ export default function Onboarding() {
     });
 
     const handleNext = () => setStep(s => s + 1);
-    const handleSkip = () => navigate('/');
+    const handleSkip = async () => {
+        await updateProfile({ has_onboarded: true });
+        navigate('/');
+    };
 
     const handleFinish = async () => {
-        await updateProfile(data);
+        await updateProfile({
+            ...data,
+            has_onboarded: true
+        });
         navigate('/');
     };
 

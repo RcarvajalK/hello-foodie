@@ -95,9 +95,10 @@ export const useStore = create((set, get) => ({
 
         if (!error) {
             const parsedData = (data || []).map(r => {
-                if (typeof r.coordinates === 'string' && r.coordinates.includes('(')) {
-                    const [lng, lat] = r.coordinates.replace(/[()]/g, '').split(',').map(Number);
-                    return { ...r, coordinates: { x: lat, y: lng } };
+                if (typeof r.coordinates === 'string') {
+                    // Supabase point returns (lng, lat) -> (x, y) in Postgres
+                    const [lng, lat] = r.coordinates.replace(/[()]/g, '').split(',');
+                    return { ...r, coordinates: { lat: parseFloat(lat), lng: parseFloat(lng) } };
                 }
                 return r;
             });
@@ -136,7 +137,7 @@ export const useStore = create((set, get) => ({
 
         const coords = restaurantData.coordinates;
         // Postgres Point is (lng, lat)
-        const formattedCoords = coords ? `(${coords.y}, ${coords.x})` : null;
+        const formattedCoords = coords ? `(${coords.lng}, ${coords.lat})` : null;
 
         const payload = {
             ...restaurantData,

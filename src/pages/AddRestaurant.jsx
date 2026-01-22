@@ -75,8 +75,8 @@ export default function AddRestaurant() {
                 image_url: photoUrl,
                 additional_images: extraPhotos,
                 coordinates: {
-                    x: place.geometry?.location?.lat() || 0,
-                    y: place.geometry?.location?.lng() || 0
+                    lat: place.geometry?.location?.lat() || 0,
+                    lng: place.geometry?.location?.lng() || 0
                 },
                 phone: place.formatted_phone_number || '',
                 website: place.website || '',

@@ -22,6 +22,21 @@ import Onboarding from './pages/Onboarding';
 
 const libraries = ['places'];
 
+function OnboardingGuard({ children }) {
+  const profile = useStore(state => state.profile);
+  const loading = useStore(state => state.loading);
+
+  if (loading || !profile) return children;
+
+  const needsOnboarding = !profile.has_onboarded && (!profile.favorite_cuisines || profile.favorite_cuisines.length === 0);
+
+  if (needsOnboarding) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  return children;
+}
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -109,18 +124,23 @@ export default function App() {
           <Routes>
             <Route path="/auth" element={!session ? <Auth /> : <Navigate to="/" />} />
 
+            {/* Onboarding is outside the main Layout for fullscreen experience */}
+            <Route
+              path="/onboarding"
+              element={session ? <Onboarding /> : <Navigate to="/auth" />}
+            />
+
             <Route path="/" element={session ? <Layout /> : <Navigate to="/auth" />}>
               <Route index element={
-                (session && useStore.getState().profile && (!useStore.getState().profile.favorite_cuisines || useStore.getState().profile.favorite_cuisines.length === 0))
-                  ? <Navigate to="/onboarding" />
-                  : <Home />
+                <OnboardingGuard>
+                  <Home />
+                </OnboardingGuard>
               } />
-              <Route path="onboarding" element={<Onboarding />} />
               <Route path="map" element={<MapPage />} />
               <Route path="add" element={<AddRestaurant />} />
               <Route path="clubs" element={<Clubs />} />
               <Route path="clubs/:id" element={<ClubDetails />} />
-              <Route path="join/:token" element={<Clubs />} /> {/* Placeholder for invitation handling */}
+              <Route path="join/:token" element={<Clubs />} />
               <Route path="stats" element={<Stats />} />
               <Route path="visited" element={<Visited />} />
               <Route path="badges" element={<Badges />} />
