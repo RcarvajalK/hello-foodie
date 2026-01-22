@@ -5,6 +5,7 @@ import { useStore } from '../lib/store';
 import RestaurantCard from '../components/RestaurantCard';
 import BrandLogo from '../components/BrandLogo';
 import clsx from 'clsx';
+import { getRestaurantImage, DEFAULT_RESTAURANT_IMAGE } from '../lib/images';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
@@ -174,7 +175,11 @@ export default function Home() {
                                 className="flex-shrink-0 w-[80vw] bg-white p-4 rounded-[2.5rem] shadow-2xl shadow-slate-200/40 border border-gray-50 active:scale-95 transition-all snap-center relative overflow-hidden"
                             >
                                 <div className="h-48 rounded-[2rem] overflow-hidden mb-4 relative">
-                                    <img src={r.image_url || r.image} className="w-full h-full object-cover" />
+                                    <img
+                                        src={getRestaurantImage(r.image_url || r.image)}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => e.target.src = DEFAULT_RESTAURANT_IMAGE}
+                                    />
                                     <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center shadow-lg">
                                         <Star size={12} className="text-brand-orange fill-brand-orange mr-1" />
                                         <span className="text-[10px] font-black text-brand-dark">{r.rating || '---'}</span>

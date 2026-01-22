@@ -5,6 +5,7 @@ import RestaurantCard from '../components/RestaurantCard';
 import BrandLogo from '../components/BrandLogo';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import clsx from 'clsx';
 
 import { List, LayoutGrid, Image as ImageIcon } from 'lucide-react';
 

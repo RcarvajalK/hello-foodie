@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../lib/store';
 import { Autocomplete } from '@react-google-maps/api';
 import clsx from 'clsx';
+import { DEFAULT_RESTAURANT_IMAGE, getRestaurantImage } from '../lib/images';
 
 export default function AddRestaurant() {
     const navigate = useNavigate();
@@ -33,7 +34,7 @@ export default function AddRestaurant() {
         meal_type: [], // array for multi-select
         notes: '',
         group_ids: [],
-        image_url: 'https://images.unsplash.com/photo-1517248135467-4c7ed9d42339?auto=format&fit=crop&q=80&w=1000',
+        image_url: DEFAULT_RESTAURANT_IMAGE,
         additional_images: [],
         coordinates: null,
         phone: '',
@@ -190,9 +191,19 @@ export default function AddRestaurant() {
                                 className="bg-white p-6 rounded-[2.5rem] shadow-xl border border-gray-100 flex flex-col gap-6"
                             >
                                 <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-inner flex gap-1 overflow-x-auto no-scrollbar">
-                                    <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover flex-shrink-0" />
+                                    <img
+                                        src={getRestaurantImage(formData.image_url)}
+                                        alt="Preview"
+                                        className="w-full h-full object-cover flex-shrink-0"
+                                        onError={(e) => e.target.src = DEFAULT_RESTAURANT_IMAGE}
+                                    />
                                     {formData.additional_images?.map((img, i) => (
-                                        <img key={i} src={img} className="w-full h-full object-cover flex-shrink-0" />
+                                        <img
+                                            key={i}
+                                            src={getRestaurantImage(img)}
+                                            className="w-full h-full object-cover flex-shrink-0"
+                                            onError={(e) => e.target.src = DEFAULT_RESTAURANT_IMAGE}
+                                        />
                                     ))}
                                     <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center shadow-lg">
                                         <Star size={14} className="text-yellow-400 fill-yellow-400 mr-1" />

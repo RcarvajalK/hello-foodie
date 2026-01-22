@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { ArrowLeft, Star, Clock, MapPin, Globe, Phone, Share2, Heart, CheckCircle, Trash2, Edit3, Save, X } from 'lucide-react';
 import { useStore } from '../lib/store';
+import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE } from '../lib/images';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -134,12 +135,7 @@ export default function RestaurantDetails() {
             <div className="relative h-48 bg-slate-100 sm:h-64">
                 <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full relative">
                     {(() => {
-                        const defaultImage = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80';
-                        const allImages = [restaurant.image_url || restaurant.image, ...(restaurant.additional_images || [])]
-                            .filter(Boolean)
-                            .filter(img => !img.includes('maps.gstatic.com'));
-
-                        if (allImages.length === 0) allImages.push(defaultImage);
+                        const allImages = filterRestaurantImages(restaurant.additional_images, restaurant.image_url || restaurant.image);
 
                         return allImages.map((img, idx) => (
                             <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
@@ -147,7 +143,7 @@ export default function RestaurantDetails() {
                                     src={img}
                                     alt={`${restaurant.name} ${idx + 1}`}
                                     className="w-full h-full object-cover"
-                                    onError={(e) => e.target.src = defaultImage}
+                                    onError={(e) => e.target.src = DEFAULT_RESTAURANT_IMAGE}
                                 />
                                 <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-1.5 px-6">
                                     {allImages.map((_, i) => (
