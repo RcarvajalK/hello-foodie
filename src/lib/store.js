@@ -90,10 +90,13 @@ export const useStore = create((set, get) => ({
 
         const { data, error } = await supabase
             .from('restaurants')
-            .select('id, name, cuisine, image_url, additional_images, rating, price, zone, address, coordinates, is_visited, is_favorite, recommended_by, club_name, date_added, notes, phone, website, opening_hours, meal_type')
+            .select('*')
             .order('date_added', { ascending: false });
 
-        if (!error) {
+        if (error) {
+            console.error("fetchRestaurants Error:", error);
+            alert("Error loading restaurants: " + error.message);
+        } else {
             const parsedData = (data || []).map(r => {
                 if (typeof r.coordinates === 'string') {
                     // Supabase point returns (lng, lat) -> (x, y) in Postgres
@@ -395,7 +398,7 @@ export const useStore = create((set, get) => ({
                 .from('club_restaurants')
                 .select(`
                     *,
-                    restaurant:restaurants(id, name, cuisine, image_url, additional_images, rating, price, zone, address, coordinates, is_visited, is_favorite, recommended_by, club_name, date_added, notes, phone, website, opening_hours, meal_type)
+                    restaurant:restaurants(*)
                 `)
                 .eq('club_id', clubId);
 
