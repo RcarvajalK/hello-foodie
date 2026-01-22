@@ -173,12 +173,18 @@ export default function ClubDetails() {
         }
     };
 
-    const handleShare = () => {
+    const handleShare = async () => {
         const url = `${window.location.origin}/join/${club.id}`; // Simple join link
         const text = `Join my foodie club "${club.name}" on Hello Foodie! 🍔✨\n${url}`;
 
         if (navigator.share) {
-            navigator.share({ title: club.name, text, url });
+            try {
+                await navigator.share({ title: club.name, text, url });
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Share error:', err);
+                }
+            }
         } else {
             // Fallback to clipboard
             navigator.clipboard.writeText(text);

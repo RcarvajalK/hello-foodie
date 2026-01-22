@@ -117,14 +117,20 @@ export default function RestaurantDetails() {
         }
     };
 
-    const handleShare = () => {
+    const handleShare = async () => {
         const text = `Hey! Let's go to ${restaurant.name}! It's a ${restaurant.cuisine} place in ${restaurant.zone}. Check it out on Hello Foodie!`;
         if (navigator.share) {
-            navigator.share({
-                title: 'Hungry?',
-                text: text,
-                url: window.location.href,
-            });
+            try {
+                await navigator.share({
+                    title: 'Hungry?',
+                    text: text,
+                    url: window.location.href,
+                });
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Share error:', err);
+                }
+            }
         } else {
             alert('Sharing not supported on this browser, but here is the text: ' + text);
         }
