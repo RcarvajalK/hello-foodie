@@ -18,6 +18,7 @@ import { checkProximity, sendNotification, checkMealTime, requestNotificationPer
 import Visited from './pages/Visited';
 import Badges from './pages/Badges';
 import Profile from './pages/Profile';
+import Onboarding from './pages/Onboarding';
 
 const libraries = ['places'];
 
@@ -109,7 +110,12 @@ export default function App() {
             <Route path="/auth" element={!session ? <Auth /> : <Navigate to="/" />} />
 
             <Route path="/" element={session ? <Layout /> : <Navigate to="/auth" />}>
-              <Route index element={<Home />} />
+              <Route index element={
+                (session && useStore.getState().profile && (!useStore.getState().profile.favorite_cuisines || useStore.getState().profile.favorite_cuisines.length === 0))
+                  ? <Navigate to="/onboarding" />
+                  : <Home />
+              } />
+              <Route path="onboarding" element={<Onboarding />} />
               <Route path="map" element={<MapPage />} />
               <Route path="add" element={<AddRestaurant />} />
               <Route path="clubs" element={<Clubs />} />

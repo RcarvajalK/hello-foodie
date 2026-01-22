@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, List, LayoutGrid, Image as ImageIcon, ChevronDown } from 'lucide-react';
+import { Search, List, LayoutGrid, Image as ImageIcon, ChevronDown, Heart } from 'lucide-react';
 import { useStore } from '../lib/store';
 import RestaurantCard from '../components/RestaurantCard';
 import BrandLogo from '../components/BrandLogo';
@@ -13,6 +13,7 @@ export default function Home() {
     const [sortBy, setSortBy] = useState('distance');
     const [filterCuisine, setFilterCuisine] = useState('All');
     const [userCoords, setUserCoords] = useState(null);
+    const [onlyFavorites, setOnlyFavorites] = useState(false);
     const navigate = useNavigate();
 
     const restaurants = useStore(state => state.restaurants);
@@ -74,8 +75,13 @@ export default function Home() {
             if (sortBy === 'club') return (a.club_name || '').localeCompare(b.club_name || '');
             return 0;
         });
+
+        if (onlyFavorites) {
+            list = list.filter(r => r.is_favorite);
+        }
+
         return list;
-    }, [restaurants, searchQuery, sortBy, filterCuisine, userCoords]);
+    }, [restaurants, searchQuery, sortBy, filterCuisine, userCoords, onlyFavorites]);
 
     const recommended = useMemo(() => {
         if (!profile?.favorite_cuisines?.length) return null;
@@ -104,9 +110,20 @@ export default function Home() {
                             <p className="text-[9px] font-black uppercase tracking-[0.35em] text-gray-300 mt-1">Culinary Journey Log</p>
                         </div>
                     </div>
-                    <div className="relative group" onClick={() => navigate('/profile')}>
-                        <div className="w-12 h-12 bg-slate-50 border-2 border-brand-orange/20 rounded-[1.2rem] flex items-center justify-center font-black text-brand-orange shadow-inner group-hover:scale-110 transition-transform cursor-pointer">
-                            {profile?.full_name?.charAt(0) || 'U'}
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setOnlyFavorites(!onlyFavorites)}
+                            className={clsx(
+                                "w-12 h-12 rounded-[1.2rem] flex items-center justify-center transition-all shadow-inner active:scale-95",
+                                onlyFavorites ? "bg-red-500 text-white shadow-red-200" : "bg-slate-50 text-red-400 border-2 border-red-50/50"
+                            )}
+                        >
+                            <Heart size={22} fill={onlyFavorites ? "currentColor" : "none"} strokeWidth={onlyFavorites ? 0 : 2.5} />
+                        </button>
+                        <div className="relative group" onClick={() => navigate('/profile')}>
+                            <div className="w-12 h-12 bg-slate-50 border-2 border-brand-orange/20 rounded-[1.2rem] flex items-center justify-center font-black text-brand-orange shadow-inner group-hover:scale-110 transition-transform cursor-pointer">
+                                {profile?.full_name?.charAt(0) || 'U'}
+                            </div>
                         </div>
                     </div>
                 </div>

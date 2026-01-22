@@ -9,6 +9,8 @@ import clsx from 'clsx';
 export default function AddRestaurant() {
     const navigate = useNavigate();
     const addRestaurant = useStore(state => state.addRestaurant);
+    const addRestaurantToClub = useStore(state => state.addRestaurantToClub);
+    const clubs = useStore(state => state.clubs);
     const restaurants = useStore(state => state.restaurants);
     const [userLoc, setUserLoc] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -30,10 +32,14 @@ export default function AddRestaurant() {
         recommended_by: '',
         meal_type: [], // array for multi-select
         notes: '',
-        group_id: '',
+        group_ids: [],
         image_url: 'https://images.unsplash.com/photo-1517248135467-4c7ed9d42339?auto=format&fit=crop&q=80&w=1000',
         additional_images: [],
-        coordinates: null
+        coordinates: null,
+        phone: '',
+        website: '',
+        address: '',
+        opening_hours: []
     });
 
     const previousRecommenders = useMemo(() => {
@@ -71,7 +77,11 @@ export default function AddRestaurant() {
                 coordinates: {
                     x: place.geometry?.location?.lat() || 0,
                     y: place.geometry?.location?.lng() || 0
-                }
+                },
+                phone: place.formatted_phone_number || '',
+                website: place.website || '',
+                address: place.formatted_address || '',
+                opening_hours: place.opening_hours?.weekday_text || []
             });
         }
     };
@@ -88,20 +98,35 @@ export default function AddRestaurant() {
         }
 
         setLoading(true);
-        // Convert array to comma-separated string for DB
-        const payload = {
+        // Convert meal_type array to comma-separated string for DB
+        const result = await addRestaurant({
             ...formData,
-            meal_type: formData.meal_type.join(', ')
-        };
-        const result = await addRestaurant(payload);
+            meal_type: formData.meal_type.join(', '),
+            group_ids: undefined // Don't send array to restaurant table directly if not expected
+        });
+
         setLoading(false);
 
         if (result.success) {
-            // Success! Head back to your list
+            // Add to selected clubs
+            if (formData.group_ids.length > 0) {
+                await Promise.all(formData.group_ids.map(clubId =>
+                    addRestaurantToClub(clubId, result.data.id)
+                ));
+            }
             navigate('/');
         } else {
-            alert(`Error: ${result.error}`);
+            alert(result.error);
         }
+    };
+
+    const toggleGroup = (clubId) => {
+        setFormData(prev => ({
+            ...prev,
+            group_ids: prev.group_ids.includes(clubId)
+                ? prev.group_ids.filter(id => id !== clubId)
+                : [...prev.group_ids, clubId]
+        }));
     };
 
     const handleKeyDown = (e) => {
@@ -241,14 +266,25 @@ export default function AddRestaurant() {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-1.5">
-                                        <label className="text-[9px] font-black uppercase text-gray-400 ml-3 tracking-widest">Notes</label>
-                                        <textarea
-                                            placeholder="What makes this place special?"
-                                            className="w-full bg-slate-50 p-4 rounded-2xl text-sm font-bold text-brand-dark border-none focus:ring-2 focus:ring-brand-orange/10 min-h-[100px]"
-                                            value={formData.notes || ''}
-                                            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                        />
+                                    <div className="space-y-4 mb-10">
+                                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-4 block mb-2">Add to Groups / Clubs</label>
+                                        <div className="flex flex-wrap gap-2 px-1">
+                                            {clubs.map(club => (
+                                                <button
+                                                    key={club.id}
+                                                    type="button"
+                                                    onClick={() => toggleGroup(club.id)}
+                                                    className={clsx(
+                                                        "px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2",
+                                                        formData.group_ids.includes(club.id)
+                                                            ? "bg-brand-orange border-brand-orange text-white shadow-lg shadow-brand-orange/20"
+                                                            : "bg-white border-slate-100 text-gray-400"
+                                                    )}
+                                                >
+                                                    {club.name}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
 

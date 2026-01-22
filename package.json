@@ -13,6 +13,7 @@
     "@react-google-maps/api": "^2.20.8",
     "@supabase/supabase-js": "^2.90.1",
     "@tailwindcss/vite": "^4.1.18",
+    "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "framer-motion": "^12.27.0",
     "leaflet": "^1.9.4",

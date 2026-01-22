@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutGrid, Map as MapIcon, Users, MoreHorizontal, Plus } from 'lucide-react';
+import { List, Map as MapIcon, Users, MoreHorizontal, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import MoreMenu from './MoreMenu';
@@ -27,7 +27,7 @@ export default function Navbar() {
     }, [lastScrollY]);
 
     const navItems = [
-        { path: '/', icon: LayoutGrid, label: 'Feed' },
+        { path: '/', icon: List, label: 'My List' },
         { path: '/map', icon: MapIcon, label: 'Map' },
         { path: '/add', icon: Plus, label: 'Add', special: true },
         { path: '/clubs', icon: Users, label: 'Clubs' },

@@ -210,6 +210,24 @@ export const useStore = create((set, get) => ({
         return { success: false, error: errorMsg };
     },
 
+    toggleFavorite: async (id, currentStatus) => {
+        const { data, error } = await supabase
+            .from('restaurants')
+            .update({ is_favorite: !currentStatus })
+            .eq('id', id)
+            .select();
+
+        if (!error && data?.length > 0) {
+            set((state) => ({
+                restaurants: state.restaurants.map((r) =>
+                    r.id === id ? { ...r, is_favorite: !currentStatus } : r
+                )
+            }));
+            return { success: true };
+        }
+        return { success: false, error: error?.message };
+    },
+
     updateRestaurant: async (id, updates) => {
         console.log("Updating Restaurant:", { id, updates });
         const { data, error } = await supabase

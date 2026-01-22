@@ -36,6 +36,35 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
         </button>
     );
 
+    const CardCarousel = ({ images, height = "h-64", rounded = "rounded-t-[3.5rem]" }) => {
+        const allImages = [restaurant.image_url || restaurant.image, ...(restaurant.additional_images || [])].filter(Boolean);
+
+        if (allImages.length <= 1) {
+            return (
+                <div className={clsx("relative overflow-hidden", height, rounded)}>
+                    <img src={allImages[0]} alt={restaurant.name} className="w-full h-full object-cover" />
+                </div>
+            );
+        }
+
+        return (
+            <div className={clsx("relative overflow-hidden group", height, rounded)}>
+                <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full">
+                    {allImages.map((img, idx) => (
+                        <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
+                            <img src={img} alt={`${restaurant.name} ${idx + 1}`} className="w-full h-full object-cover" />
+                        </div>
+                    ))}
+                </div>
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1">
+                    {allImages.map((_, i) => (
+                        <div key={i} className="w-1 h-1 rounded-full bg-white/60" />
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
     const SwipeWrapper = ({ children, rounded = "rounded-[2rem]" }) => {
         if (!onDelete) return children;
 
@@ -103,17 +132,17 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
             <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative group active:scale-95 transition-transform">
                 <Link
                     to={`/restaurant/${restaurant.id}`}
-                    className="block aspect-square rounded-[2.5rem] overflow-hidden shadow-lg border-2 border-white"
+                    className="block aspect-square rounded-[2.5rem] overflow-hidden shadow-lg border-2 border-white relative group"
                 >
-                    <img src={restaurant.image_url || restaurant.image} alt={restaurant.name} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/95 via-brand-dark/20 to-transparent flex flex-col justify-end p-5">
+                    <CardCarousel height="h-full" rounded="rounded-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/95 via-brand-dark/20 to-transparent flex flex-col justify-end p-5 pointer-events-none">
                         <div className="flex items-center gap-2 mb-1">
                             <h3 className="font-black text-white text-xs leading-tight drop-shadow-md uppercase tracking-tight">{restaurant.name}</h3>
                             {isVisited && <BrandLogo size={12} animate={false} />}
                         </div>
                         <p className="text-[8px] text-brand-orange-light font-black uppercase tracking-[0.2em]">{restaurant.cuisine}</p>
                     </div>
-                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full flex items-center shadow-lg">
+                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full flex items-center shadow-lg pointer-events-none">
                         <Star size={10} className="text-brand-orange fill-brand-orange mr-1" />
                         <span className="text-[10px] font-black text-brand-dark">{restaurant.rating || '---'}</span>
                     </div>
@@ -130,13 +159,13 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                     onClick={() => navigate(`/restaurant/${restaurant.id}`)}
                     className="block bg-white border border-gray-50 transition-all hover:shadow-2xl relative cursor-pointer"
                 >
-                    <div className="relative h-64">
-                        <img src={restaurant.image_url || restaurant.image} alt={restaurant.name} className="w-full h-full object-cover" />
-                        <div className="absolute top-6 right-6 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-[1.5rem] flex items-center shadow-2xl border border-white/50">
+                    <div className="relative group">
+                        <CardCarousel />
+                        <div className="absolute top-6 right-6 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-[1.5rem] flex items-center shadow-2xl border border-white/50 pointer-events-none">
                             <Star size={18} className="text-brand-orange fill-brand-orange mr-2" />
                             <span className="text-base font-black text-brand-dark tabular-nums">{restaurant.rating || '---'}</span>
                         </div>
-                        <div className="absolute bottom-6 left-6 bg-brand-dark/40 backdrop-blur-md text-white px-5 py-2.5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl border border-white/10 flex items-center gap-3">
+                        <div className="absolute bottom-6 left-6 bg-brand-dark/40 backdrop-blur-md text-white px-5 py-2.5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl border border-white/10 flex items-center gap-3 pointer-events-none">
                             {restaurant.cuisine}
                             {restaurant.meal_type && (
                                 <span className="bg-brand-orange text-white px-2 py-0.5 rounded-lg text-[8px]">{restaurant.meal_type}</span>

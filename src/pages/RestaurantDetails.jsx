@@ -4,18 +4,30 @@ import { ArrowLeft, Star, Clock, MapPin, Globe, Phone, Share2, Heart, CheckCircl
 import { useStore } from '../lib/store';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
+
+const MILESTONES = [
+    { count: 1, name: 'First Bite', icon: '🍴', rank: 'Newcomer' },
+    { count: 5, name: 'Foodie Explorer', icon: '🔍', rank: 'Apprentice' },
+    { count: 10, name: 'Gourmet Adventurer', icon: '🍷', rank: 'Expert' },
+    { count: 25, name: 'Culinary Legend', icon: '🏆', rank: 'Master' },
+    { count: 50, name: 'Master Chef\'s Muse', icon: '👨‍🍳', rank: 'Guru' },
+    { count: 100, name: 'Immortal Epicurean', icon: '✨', rank: 'Legend' }
+];
 
 export default function RestaurantDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
     const restaurants = useStore(state => state.restaurants);
     const toggleVisited = useStore(state => state.toggleVisited);
+    const toggleFavorite = useStore(state => state.toggleFavorite);
     const deleteRestaurant = useStore(state => state.deleteRestaurant);
     const updateRestaurant = useStore(state => state.updateRestaurant);
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [showComparison, setShowComparison] = useState(false);
+    const [levelUpData, setLevelUpData] = useState(null);
 
     const restaurant = restaurants.find(r => r.id === id);
 
@@ -76,7 +88,22 @@ export default function RestaurantDetails() {
         const result = await toggleVisited(restaurant.id, false, review);
         if (result.success) {
             setShowReviewModal(false);
-            setShowComparison(true);
+
+            // Celebration Logic
+            const visitedCount = restaurants.filter(r => r.is_visited).length + 1; // +1 because we just visited this one
+            const milestone = MILESTONES.find(m => m.count === visitedCount);
+
+            if (milestone) {
+                setLevelUpData(milestone);
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#FF6B00', '#2B3A4F', '#4ECDC4']
+                });
+            } else {
+                setShowComparison(true);
+            }
         } else {
             alert(`Error: ${result.error}`);
         }
@@ -104,12 +131,23 @@ export default function RestaurantDetails() {
 
     return (
         <div className="bg-white min-h-screen pb-24">
-            <div className="relative h-72">
-                <img
-                    src={restaurant.image_url || restaurant.image}
-                    alt={restaurant.name}
-                    className="w-full h-full object-cover"
-                />
+            <div className="relative h-80 bg-slate-100">
+                <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full">
+                    {[restaurant.image_url || restaurant.image, ...(restaurant.additional_images || [])].filter(Boolean).map((img, idx) => (
+                        <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
+                            <img
+                                src={img}
+                                alt={`${restaurant.name} ${idx + 1}`}
+                                className="w-full h-full object-cover"
+                            />
+                            <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-1.5 px-6">
+                                {[restaurant.image_url || restaurant.image, ...(restaurant.additional_images || [])].filter(Boolean).map((_, i) => (
+                                    <div key={i} className={clsx("h-1 rounded-full transition-all", i === idx ? "w-4 bg-white" : "w-1 bg-white/40")} />
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
                 <div className="absolute top-0 left-0 right-0 p-4 pt-12 flex justify-between items-start bg-gradient-to-b from-black/50 to-transparent">
                     <button
                         onClick={() => navigate(-1)}
@@ -127,8 +165,14 @@ export default function RestaurantDetails() {
                         <button onClick={() => setIsEditing(true)} className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all">
                             <Edit3 size={20} />
                         </button>
-                        <button className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all">
-                            <Heart size={20} />
+                        <button
+                            onClick={() => toggleFavorite(restaurant.id, restaurant.is_favorite)}
+                            className={clsx(
+                                "w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center transition-all",
+                                restaurant.is_favorite ? "bg-red-500 text-white" : "bg-white/20 text-white"
+                            )}
+                        >
+                            <Heart size={20} fill={restaurant.is_favorite ? "currentColor" : "none"} />
                         </button>
                     </div>
                 </div>
@@ -155,21 +199,73 @@ export default function RestaurantDetails() {
                         <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center flex-shrink-0">
                             <MapPin className="text-brand-orange" size={20} />
                         </div>
-                        <div>
-                            <p className="font-bold text-brand-dark text-sm">Location / Zone</p>
-                            <p className="text-sm text-gray-500 font-medium">{restaurant.zone || 'Address not set'}</p>
+                        <div className="flex-1">
+                            <p className="font-bold text-brand-dark text-[10px] uppercase tracking-wider mb-0.5">Location / Address</p>
+                            <p className="text-sm text-gray-500 font-medium leading-normal">{restaurant.address || restaurant.zone || 'Address not set'}</p>
+                            <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address || restaurant.name)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] font-bold text-brand-orange uppercase tracking-wider mt-2 inline-block"
+                            >
+                                Open in Maps
+                            </a>
                         </div>
                     </div>
+
+                    {restaurant.phone && (
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <Phone className="text-blue-500" size={20} />
+                            </div>
+                            <div>
+                                <p className="font-bold text-brand-dark text-[10px] uppercase tracking-wider mb-0.5">Phone</p>
+                                <a href={`tel:${restaurant.phone}`} className="text-sm text-gray-500 font-medium hover:text-brand-orange transition-colors">
+                                    {restaurant.phone}
+                                </a>
+                            </div>
+                        </div>
+                    )}
+
+                    {restaurant.website && (
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <Globe className="text-purple-500" size={20} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-bold text-brand-dark text-[10px] uppercase tracking-wider mb-0.5">Website</p>
+                                <a
+                                    href={restaurant.website}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-gray-500 font-medium truncate block hover:text-brand-orange transition-colors"
+                                >
+                                    {restaurant.website.replace(/^https?:\/\/(www\.)?/, '')}
+                                </a>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="flex items-start gap-4">
                         <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center flex-shrink-0">
                             <Clock className="text-brand-green" size={20} />
                         </div>
-                        <div>
-                            <p className="font-bold text-brand-dark text-sm">Status</p>
-                            <p className="text-sm text-gray-500 font-medium tracking-tight">
-                                Added on {new Date(restaurant.date_added).toLocaleDateString()}
-                            </p>
+                        <div className="flex-1">
+                            <p className="font-bold text-brand-dark text-[10px] uppercase tracking-wider mb-0.5">Opening Hours</p>
+                            {restaurant.opening_hours && restaurant.opening_hours.length > 0 ? (
+                                <div className="space-y-1 mt-2">
+                                    {restaurant.opening_hours.map((day, idx) => (
+                                        <p key={idx} className="text-[11px] text-gray-400 font-medium flex justify-between">
+                                            <span className="text-brand-dark/70">{day.split(': ')[0]}</span>
+                                            <span className="tabular-nums">{day.split(': ')[1]}</span>
+                                        </p>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-500 font-medium">
+                                    Added on {new Date(restaurant.date_added).toLocaleDateString()}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -410,6 +506,59 @@ export default function RestaurantDetails() {
                                     Update Details
                                 </button>
                             </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Level Up / Celebration Modal */}
+            <AnimatePresence>
+                {levelUpData && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-brand-dark/95 backdrop-blur-xl"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.5, y: 50, opacity: 0 }}
+                            animate={{ scale: 1, y: 0, opacity: 1 }}
+                            exit={{ scale: 0.5, y: 50, opacity: 0 }}
+                            className="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-[0_30px_100px_rgba(255,107,0,0.3)] text-center overflow-hidden"
+                        >
+                            <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-r from-brand-orange via-brand-yellow to-brand-orange animate-pulse" />
+
+                            <div className="text-7xl mb-8 animate-bounce">{levelUpData.icon}</div>
+
+                            <h2 className="text-4xl font-black text-brand-dark uppercase tracking-tighter mb-2 leading-none">
+                                Level Up!
+                            </h2>
+                            <p className="text-[10px] font-black text-brand-orange uppercase tracking-[0.4em] mb-8">
+                                {levelUpData.rank} Status Achieved
+                            </p>
+
+                            <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 mb-8">
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">New Title</p>
+                                <p className="text-xl font-black text-brand-dark uppercase tracking-tight">{levelUpData.name}</p>
+                            </div>
+
+                            <p className="text-sm text-gray-400 font-medium mb-10 leading-relaxed px-2">
+                                You just reached <b>{levelUpData.count}</b> visited restaurants on Hello Foodie! Way to go!
+                            </p>
+
+                            <button
+                                onClick={handleShare}
+                                className="w-full bg-brand-orange text-white font-black py-5 rounded-[1.8rem] shadow-xl shadow-brand-orange/30 flex items-center justify-center gap-3 active:scale-95 transition-all text-sm uppercase tracking-widest mb-4"
+                            >
+                                <Share2 size={18} />
+                                Share Success
+                            </button>
+
+                            <button
+                                onClick={() => { setLevelUpData(null); setShowComparison(true); }}
+                                className="text-[10px] font-black text-gray-300 uppercase tracking-widest hover:text-brand-dark transition-colors"
+                            >
+                                Continue to Review
+                            </button>
                         </motion.div>
                     </div>
                 )}
