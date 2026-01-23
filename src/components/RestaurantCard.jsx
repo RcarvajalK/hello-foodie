@@ -170,11 +170,12 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
 
                 <motion.div
                     drag="x"
+                    dragDirectionLock
                     dragConstraints={{ left: -120, right: 0 }}
-                    dragElastic={0.05}
+                    dragElastic={0.4}
                     animate={{ x: isOpen ? -120 : 0 }}
                     onDragEnd={handleDragEnd}
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                     className="relative z-10"
                 >
                     {children}

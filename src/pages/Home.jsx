@@ -114,7 +114,7 @@ export default function Home() {
                         <BrandLogo size={48} animate={false} />
                         <div>
                             <h1 className="text-2xl font-black tracking-tighter text-brand-dark uppercase leading-none">Hello Foodie!</h1>
-                            <p className="text-[9px] font-black uppercase tracking-[0.35em] text-gray-300 mt-1">Culinary Journey Log</p>
+                            <p className="text-[9px] font-black uppercase tracking-[0.35em] text-gray-300 mt-1">Your Culinary Journey</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -128,8 +128,12 @@ export default function Home() {
                             <Heart size={22} fill={onlyFavorites ? "currentColor" : "none"} strokeWidth={onlyFavorites ? 0 : 2.5} />
                         </button>
                         <div className="relative group" onClick={() => navigate('/profile')}>
-                            <div className="w-12 h-12 bg-slate-50 border-2 border-brand-orange/20 rounded-[1.2rem] flex items-center justify-center font-black text-brand-orange shadow-inner group-hover:scale-110 transition-transform cursor-pointer">
-                                {profile?.full_name?.charAt(0) || 'U'}
+                            <div className="w-12 h-12 bg-slate-50 border-2 border-brand-orange/20 rounded-[1.2rem] flex items-center justify-center font-black text-brand-orange shadow-inner group-hover:scale-110 transition-transform cursor-pointer overflow-hidden">
+                                {profile?.avatar_url ? (
+                                    <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    profile?.full_name?.charAt(0) || 'U'
+                                )}
                             </div>
                         </div>
                     </div>

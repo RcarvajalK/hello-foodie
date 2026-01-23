@@ -71,8 +71,12 @@ export default function MoreMenu({ isOpen, onClose }) {
 
                         <div className="mt-8 pt-8 border-t border-gray-100">
                             <div className="flex items-center gap-4 p-6 bg-brand-orange/5 rounded-[2rem] border border-brand-orange/10">
-                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center font-black text-brand-orange shadow-sm border border-brand-orange/5">
-                                    {profile?.full_name?.charAt(0) || 'U'}
+                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center font-black text-brand-orange shadow-sm border border-brand-orange/5 overflow-hidden">
+                                    {profile?.avatar_url ? (
+                                        <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                    ) : (
+                                        profile?.full_name?.charAt(0) || 'U'
+                                    )}
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-sm font-black text-brand-dark uppercase tracking-tight">{profile?.full_name || 'Foodie Explorer'}</p>
