@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Camera, MapPin, Plus, X, Star, Search } from 'lucide-react';
+import { Camera, MapPin, Plus, X, Star, Search, Heart, Globe, Phone } from 'lucide-react';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../lib/store';
@@ -32,7 +33,9 @@ export default function AddRestaurant() {
         rating: 0,
         recommended_by: '',
         meal_type: [], // array for multi-select
+        is_favorite: false,
         notes: '',
+
         group_ids: [],
         image_url: DEFAULT_RESTAURANT_IMAGE,
         additional_images: [],
@@ -279,26 +282,55 @@ export default function AddRestaurant() {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-4 mb-10">
-                                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-4 block mb-2">Add to Groups / Clubs</label>
-                                        <div className="flex flex-wrap gap-2 px-1">
-                                            {clubs.map(club => (
-                                                <button
-                                                    key={club.id}
-                                                    type="button"
-                                                    onClick={() => toggleGroup(club.id)}
-                                                    className={clsx(
-                                                        "px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2",
-                                                        formData.group_ids.includes(club.id)
-                                                            ? "bg-brand-orange border-brand-orange text-white shadow-lg shadow-brand-orange/20"
-                                                            : "bg-white border-slate-100 text-gray-400"
-                                                    )}
-                                                >
-                                                    {club.name}
-                                                </button>
-                                            ))}
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-4 block mb-2">Save Options</label>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, is_favorite: !formData.is_favorite })}
+                                                className={clsx(
+                                                    "flex items-center justify-center gap-3 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2",
+                                                    formData.is_favorite
+                                                        ? "bg-red-500 border-red-500 text-white shadow-lg shadow-red-100"
+                                                        : "bg-white border-slate-100 text-gray-400"
+                                                )}
+                                            >
+                                                <Heart size={16} fill={formData.is_favorite ? "currentColor" : "none"} />
+                                                Favorite
+                                            </button>
+                                            <div
+                                                className="flex items-center justify-center gap-3 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-brand-orange border-2 border-brand-orange text-white shadow-lg shadow-brand-orange/20 opacity-50 cursor-not-allowed"
+                                            >
+                                                My List
+                                            </div>
                                         </div>
                                     </div>
+
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-4 block mb-2">Add to Groups / Clubs</label>
+                                        <div className="flex flex-wrap gap-2 px-1">
+                                            {clubs.length > 0 ? (
+                                                clubs.map(club => (
+                                                    <button
+                                                        key={club.id}
+                                                        type="button"
+                                                        onClick={() => toggleGroup(club.id)}
+                                                        className={clsx(
+                                                            "px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2",
+                                                            formData.group_ids.includes(club.id)
+                                                                ? "bg-brand-orange border-brand-orange text-white shadow-lg shadow-brand-orange/20"
+                                                                : "bg-white border-slate-100 text-gray-400"
+                                                        )}
+                                                    >
+                                                        {club.name}
+                                                    </button>
+                                                ))
+                                            ) : (
+                                                <p className="text-[10px] text-gray-400 font-bold italic ml-3">You haven't joined any clubs yet.</p>
+                                            )}
+                                        </div>
+                                    </div>
+
                                 </div>
 
                                 <button

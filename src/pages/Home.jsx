@@ -7,6 +7,8 @@ import BrandLogo from '../components/BrandLogo';
 import clsx from 'clsx';
 import { getRestaurantImage, DEFAULT_RESTAURANT_IMAGE } from '../lib/images';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BADGE_LEVELS } from '../lib/badges';
+
 
 export default function Home() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -92,11 +94,15 @@ export default function Home() {
             .slice(0, 3);
     }, [restaurants, profile]);
 
+    const visitedCount = restaurants.filter(r => r.is_visited).length;
+    const badgesCount = BADGE_LEVELS.filter(b => visitedCount >= b.minVisits).length;
+
     const stats = [
         { label: 'To Visit', count: restaurants.filter(r => !r.is_visited).length, color: 'bg-brand-orange', link: '/' },
-        { label: 'Visited', count: restaurants.filter(r => r.is_visited).length, color: 'bg-brand-green', link: '/visited' },
-        { label: 'Badges', count: profile?.badges_count || 0, color: 'bg-brand-yellow', link: '/badges' },
+        { label: 'Visited', count: visitedCount, color: 'bg-brand-green', link: '/visited' },
+        { label: 'Badges', count: badgesCount, color: 'bg-brand-yellow', link: '/badges' },
     ];
+
 
     const cuisines = ['All', ...new Set(restaurants.map(r => r.cuisine).filter(Boolean))];
 
