@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useStore } from '../lib/store';
 import { BADGE_LEVELS, getBadgeForVisitCount } from '../lib/badges';
 import { motion } from 'framer-motion';
@@ -16,6 +16,8 @@ export default function Profile() {
     const prefs = useStore(state => state.notificationPreferences);
     const setNotificationPreferences = useStore(state => state.setNotificationPreferences);
     const updateProfile = useStore(state => state.updateProfile);
+    const uploadImage = useStore(state => state.uploadImage);
+    const loading = useStore(state => state.loading);
     const navigate = useNavigate();
 
     const [isEditing, setIsEditing] = useState(false);
@@ -67,6 +69,22 @@ export default function Profile() {
         }));
     };
 
+    const handleQuickUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        const result = await uploadImage(file);
+
+        if (result.success) {
+            const { error } = await updateProfile({ avatar_url: result.url });
+            if (error) alert(`Error saving photo: ${error.message}`);
+        } else {
+            alert(`Upload failed: ${result.error}`);
+        }
+        setIsUploading(false);
+    };
+
     return (
         <div className="pb-24 bg-slate-50 min-h-screen">
             <header className="bg-white p-6 pt-12 rounded-b-[3rem] shadow-sm border-b border-gray-100">
@@ -86,7 +104,14 @@ export default function Profile() {
                 </div>
 
                 <div className="flex flex-col items-center text-center">
-                    <div className="relative mb-4">
+                    <div className="relative mb-4 group">
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleQuickUpload}
+                        />
                         {isEditing ? (
                             <ImageUploader
                                 currentImage={editData.avatar_url}
@@ -97,12 +122,27 @@ export default function Profile() {
                             />
                         ) : (
                             <>
-                                <div className="w-24 h-24 bg-slate-100 rounded-[2rem] flex items-center justify-center text-3xl font-black text-brand-orange border-4 border-white shadow-xl overflow-hidden">
+                                <div
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className={clsx(
+                                        "w-24 h-24 bg-slate-100 rounded-[2rem] flex items-center justify-center text-3xl font-black text-brand-orange border-4 border-white shadow-xl overflow-hidden cursor-pointer hover:scale-105 active:scale-95 transition-all relative",
+                                        isUploading && "animate-pulse"
+                                    )}
+                                >
+                                    {isUploading && (
+                                        <div className="absolute inset-0 bg-white/40 flex items-center justify-center">
+                                            <div className="w-6 h-6 border-2 border-brand-orange border-t-transparent rounded-full animate-spin" />
+                                        </div>
+                                    )}
                                     {profile?.avatar_url ? (
                                         <img src={profile.avatar_url} className="w-full h-full object-cover" />
                                     ) : (
                                         profile?.full_name?.charAt(0) || 'U'
                                     )}
+
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                        <Plus className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={24} />
+                                    </div>
                                 </div>
                                 <div className="absolute -bottom-2 -right-2 bg-brand-orange text-white w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg border-4 border-white">
                                     <Trophy size={18} />
