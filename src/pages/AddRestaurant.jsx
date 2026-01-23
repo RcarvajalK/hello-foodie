@@ -40,7 +40,8 @@ export default function AddRestaurant() {
         phone: '',
         website: '',
         address: '',
-        opening_hours: []
+        opening_hours: [],
+        google_place_id: ''
     });
 
     const previousRecommenders = useMemo(() => {
@@ -82,7 +83,8 @@ export default function AddRestaurant() {
                 phone: place.formatted_phone_number || '',
                 website: place.website || '',
                 address: place.formatted_address || '',
-                opening_hours: place.opening_hours?.weekday_text || []
+                opening_hours: place.opening_hours?.weekday_text || [],
+                google_place_id: place.place_id || ''
             });
         }
     };

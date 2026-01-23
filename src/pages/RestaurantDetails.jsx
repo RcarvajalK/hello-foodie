@@ -43,9 +43,37 @@ export default function RestaurantDetails() {
         name: restaurant?.name,
         cuisine: restaurant?.cuisine,
         zone: restaurant?.zone,
-        price: restaurant?.price,
+        price: restaurant?.price || '$$',
         meal_type: restaurant?.meal_type?.split(', ') || []
     });
+
+    const [livePhotos, setLivePhotos] = useState([]);
+
+    useEffect(() => {
+        if (restaurant?.google_place_id && typeof google !== 'undefined') {
+            const service = new google.maps.places.PlacesService(document.createElement('div'));
+            service.getDetails(
+                {
+                    placeId: restaurant.google_place_id,
+                    fields: ['photos']
+                },
+                (place, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK && place.photos) {
+                        const newPhotos = place.photos.map(p => p.getUrl());
+                        setLivePhotos(newPhotos);
+
+                        // Proactively update Supabase if the main image changed or was fallback
+                        if (newPhotos.length > 0 && (restaurant.image_url !== newPhotos[0])) {
+                            updateRestaurant(restaurant.id, {
+                                image_url: newPhotos[0],
+                                additional_images: newPhotos.slice(1, 5)
+                            });
+                        }
+                    }
+                }
+            );
+        }
+    }, [restaurant?.google_place_id]);
 
     const handleSaveEdit = async () => {
         const payload = {
@@ -141,7 +169,9 @@ export default function RestaurantDetails() {
             <div className="relative h-48 bg-slate-100 sm:h-64">
                 <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full relative">
                     {(() => {
-                        const allImages = filterRestaurantImages(restaurant.additional_images, restaurant.image_url || restaurant.image);
+                        const allImages = livePhotos.length > 0
+                            ? livePhotos
+                            : filterRestaurantImages(restaurant.additional_images, restaurant.image_url || restaurant.image);
 
                         return allImages.map((img, idx) => (
                             <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
