@@ -19,8 +19,9 @@ export default function Profile() {
     const uploadImage = useStore(state => state.uploadImage);
     const loading = useStore(state => state.loading);
     const navigate = useNavigate();
-
+    const fileInputRef = useRef(null);
     const [isEditing, setIsEditing] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [editData, setEditData] = useState({
         full_name: '',
         avatar_url: '',
