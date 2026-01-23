@@ -289,6 +289,8 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                 </div>
             </div>
         </div>
+    );
+
     return (
         <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} whileTap={{ scale: 0.98 }}>
             {variant === 'list' ? (
