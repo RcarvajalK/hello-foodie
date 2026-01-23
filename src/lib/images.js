@@ -13,7 +13,8 @@ export function getRestaurantImage(url, fallback = DEFAULT_RESTAURANT_IMAGE) {
     // Filter out known broken Google Maps placeholders/expired URLs
     const brokenPatterns = [
         'maps.gstatic.com',
-        'lh3.googleusercontent.com', // Sometimes these work, but often expire
+        'maps.googleapis.com',
+        'googleusercontent.com', // Covers lh3 and others
     ];
 
     if (brokenPatterns.some(pattern => url.includes(pattern))) {
