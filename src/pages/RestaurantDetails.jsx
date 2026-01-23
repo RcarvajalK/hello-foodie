@@ -50,30 +50,49 @@ export default function RestaurantDetails() {
     const [livePhotos, setLivePhotos] = useState([]);
 
     useEffect(() => {
-        if (restaurant?.google_place_id && typeof google !== 'undefined') {
-            const service = new google.maps.places.PlacesService(document.createElement('div'));
+        if (typeof google === 'undefined') return;
+        const service = new google.maps.places.PlacesService(document.createElement('div'));
+
+        const fetchPhotosForId = (placeId) => {
             service.getDetails(
-                {
-                    placeId: restaurant.google_place_id,
-                    fields: ['photos']
-                },
+                { placeId, fields: ['photos'] },
                 (place, status) => {
                     if (status === google.maps.places.PlacesServiceStatus.OK && place.photos) {
                         const newPhotos = place.photos.map(p => p.getUrl());
                         setLivePhotos(newPhotos);
 
-                        // Proactively update Supabase if the main image changed or was fallback
-                        if (newPhotos.length > 0 && (restaurant.image_url !== newPhotos[0])) {
-                            updateRestaurant(restaurant.id, {
-                                image_url: newPhotos[0],
-                                additional_images: newPhotos.slice(1, 5)
-                            });
-                        }
+                        // Update Supabase with new photos and the Place ID if it was missing
+                        const updates = {
+                            image_url: newPhotos[0],
+                            additional_images: newPhotos.slice(1, 5)
+                        };
+                        if (!restaurant.google_place_id) updates.google_place_id = placeId;
+
+                        updateRestaurant(restaurant.id, updates);
+                    }
+                }
+            );
+        };
+
+        if (restaurant?.google_place_id) {
+            // Case A: Has ID, fetch photos
+            fetchPhotosForId(restaurant.google_place_id);
+        } else if (restaurant?.name) {
+            // Case B: Missing ID, heal by searching
+            const searchQuery = `${restaurant.name} ${restaurant.zone || ''} ${restaurant.address || ''}`;
+            service.findPlaceFromQuery(
+                {
+                    query: searchQuery,
+                    fields: ['place_id']
+                },
+                (results, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK && results?.[0]?.place_id) {
+                        fetchPhotosForId(results[0].place_id);
                     }
                 }
             );
         }
-    }, [restaurant?.google_place_id]);
+    }, [restaurant?.id, restaurant?.google_place_id, typeof google]);
 
     const handleSaveEdit = async () => {
         const payload = {
