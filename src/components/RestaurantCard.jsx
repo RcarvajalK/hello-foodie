@@ -140,7 +140,20 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
     };
 
     const SwipeWrapper = ({ children, rounded = "rounded-[2rem]" }) => {
+        const [isOpen, setIsOpen] = useState(false);
         if (!onDelete) return children;
+
+        const handleDragEnd = (_, info) => {
+            // Threshold for snapping: 60px or high velocity
+            const threshold = -60;
+            const velocity = info.velocity.x;
+
+            if (info.offset.x < threshold || velocity < -500) {
+                setIsOpen(true);
+            } else {
+                setIsOpen(false);
+            }
+        };
 
         return (
             <div className={clsx("relative overflow-hidden", rounded)}>
@@ -159,6 +172,9 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                     drag="x"
                     dragConstraints={{ left: -120, right: 0 }}
                     dragElastic={0.05}
+                    animate={{ x: isOpen ? -120 : 0 }}
+                    onDragEnd={handleDragEnd}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                     className="relative z-10"
                 >
                     {children}
