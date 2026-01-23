@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import Layout from './components/Layout';
+import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import MapPage from './pages/MapPage';
 import Clubs from './pages/Clubs';
@@ -118,6 +119,7 @@ export default function App() {
     <>
       <SplashScreen isVisible={showSplash} />
       <BrowserRouter>
+        <ScrollToTop />
         <LoadScriptNext
           googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
           libraries={libraries}
