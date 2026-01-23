@@ -225,6 +225,29 @@ export default function Clubs() {
                                         />
                                     </div>
 
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Club Name</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            className="w-full bg-slate-50 p-4 rounded-2xl text-sm font-bold text-brand-dark border-none focus:ring-2 focus:ring-brand-orange/10"
+                                            placeholder="e.g., Pizza Lovers, Burger Club..."
+                                            value={newClub.name}
+                                            onChange={(e) => setNewClub({ ...newClub, name: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Short Description</label>
+                                        <textarea
+                                            className="w-full bg-slate-50 p-4 rounded-2xl text-sm font-bold text-brand-dark border-none focus:ring-2 focus:ring-brand-orange/10 min-h-[80px] resize-none"
+                                            placeholder="What is this club about? (Optional)"
+                                            value={newClub.description}
+                                            onChange={(e) => setNewClub({ ...newClub, description: e.target.value })}
+                                        />
+                                    </div>
+
+
                                     <div className="space-y-2">
                                         <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Type</label>
                                         <div className="flex gap-2">
