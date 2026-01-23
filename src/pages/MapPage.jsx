@@ -3,7 +3,7 @@ import { GoogleMap, Marker, InfoWindow, DirectionsRenderer } from '@react-google
 import { Navigation, MapPin, Star, ArrowRight, Crosshair, Plus, Minus, Route } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../lib/store';
-import { getRestaurantImage, DEFAULT_RESTAURANT_IMAGE } from '../lib/images';
+import { getRestaurantImage, DEFAULT_RESTAURANT_IMAGE, getDiverseFallbackImage } from '../lib/images';
 
 const containerStyle = {
     width: '100%',
@@ -185,7 +185,7 @@ export default function MapPage() {
                                 src={getRestaurantImage(selected.image_url || selected.image)}
                                 className="w-full h-24 object-cover rounded-xl mb-3"
                                 alt={selected.name}
-                                onError={(e) => e.target.src = DEFAULT_RESTAURANT_IMAGE}
+                                onError={(e) => e.target.src = getDiverseFallbackImage(selected.name)}
                             />
                             <div className="px-1">
                                 <h3 className="font-black text-brand-dark text-sm uppercase leading-tight mb-1">{selected.name}</h3>

@@ -66,6 +66,8 @@ export default function RestaurantDetails() {
                             image_url: newPhotos[0],
                             additional_images: newPhotos.slice(1, 5)
                         };
+
+                        // Ensure we use the current restaurant ID
                         if (!restaurant.google_place_id) updates.google_place_id = placeId;
 
                         updateRestaurant(restaurant.id, updates);
@@ -198,7 +200,7 @@ export default function RestaurantDetails() {
                                     src={img}
                                     alt={`${restaurant.name} ${idx + 1}`}
                                     className="w-full h-full object-cover"
-                                    onError={(e) => e.target.src = DEFAULT_RESTAURANT_IMAGE}
+                                    onError={(e) => e.target.src = getDiverseFallbackImage(`${restaurant.name}-${idx}`)}
                                 />
                                 <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-1.5 px-6">
                                     {allImages.map((_, i) => (

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useStore } from '../lib/store';
 import clsx from 'clsx';
 import BrandLogo from './BrandLogo';
-import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE } from '../lib/images';
+import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE, getDiverseFallbackImage } from '../lib/images';
 
 export default function RestaurantCard({ restaurant, variant = 'list-photos', onDelete }) {
     const navigate = useNavigate();
@@ -47,7 +47,7 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                         src={allImages[0]}
                         alt={restaurant.name}
                         className="w-full h-full object-cover"
-                        onError={(e) => e.target.src = DEFAULT_RESTAURANT_IMAGE}
+                        onError={(e) => e.target.src = getDiverseFallbackImage(restaurant.name)}
                     />
                 </div>
             );
@@ -63,7 +63,7 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                                 alt={`${restaurant.name} ${idx + 1}`}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
-                                    e.target.src = DEFAULT_RESTAURANT_IMAGE;
+                                    e.target.src = getDiverseFallbackImage(`${restaurant.name}-${idx}`);
                                 }}
                             />
                         </div>
@@ -119,7 +119,7 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                                 src={getRestaurantImage(restaurant.image_url || restaurant.image)}
                                 alt={restaurant.name}
                                 className="w-full h-full object-cover"
-                                onError={(e) => e.target.src = DEFAULT_RESTAURANT_IMAGE}
+                                onError={(e) => e.target.src = getDiverseFallbackImage(restaurant.name)}
                             />
                         </div>
                         <div className="flex-1 min-w-0">

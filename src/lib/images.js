@@ -36,11 +36,10 @@ export function getRestaurantImage(url, fallback = null) {
 
     if (!url || typeof url !== 'string') return defaultFallback;
 
-    // Filter out known broken Google Maps placeholders/expired URLs
+    // Filter out known STATIC Google Maps placeholders (these are always "missing photo" icons)
     const brokenPatterns = [
         'maps.gstatic.com',
-        'maps.googleapis.com',
-        'googleusercontent.com', // Covers lh3 and others
+        'default_geocode'
     ];
 
     if (brokenPatterns.some(pattern => url.includes(pattern))) {
@@ -60,4 +59,11 @@ export function filterRestaurantImages(images = [], mainImage = null) {
 
     if (valid.length === 0) return [getDiverseFallback(mainImage || 'main')];
     return valid;
+}
+
+/**
+ * Public accessor for a diverse fallback image.
+ */
+export function getDiverseFallbackImage(seed) {
+    return getDiverseFallback(seed);
 }
