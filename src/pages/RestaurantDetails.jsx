@@ -1,6 +1,9 @@
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Clock, MapPin, Globe, Phone, Share2, Heart, CheckCircle, Trash2, Edit3, Save, X } from 'lucide-react';
+import {
+    ArrowLeft, Star, Clock, MapPin, Heart, Share2, Trash2, Edit3,
+    MessageCircle, ChevronLeft, ChevronRight, Globe, Phone, CheckCircle, Save, X
+} from 'lucide-react';
 import { useStore } from '../lib/store';
 import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE } from '../lib/images';
 import clsx from 'clsx';
@@ -185,170 +188,297 @@ export default function RestaurantDetails() {
         }
     };
 
-    return (
-        <div className="bg-white min-h-screen pb-16">
-            <div className="relative h-48 bg-slate-100 sm:h-64">
-                <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full relative">
-                    {(() => {
-                        const allImages = livePhotos.length > 0
-                            ? livePhotos
-                            : filterRestaurantImages(restaurant.additional_images, restaurant.image_url || restaurant.image);
+    const [activeIdx, setActiveIdx] = useState(0);
+    const scrollRef = useRef(null);
 
-                        return allImages.map((img, idx) => (
+    const allImages = useMemo(() => {
+        if (!restaurant) return [];
+        return livePhotos.length > 0
+            ? livePhotos
+            : filterRestaurantImages(restaurant.additional_images, restaurant.image_url || restaurant.image);
+    }, [livePhotos, restaurant]);
+
+    const handleScroll = (e) => {
+        const scrollLeft = e.target.scrollLeft;
+        const width = e.target.clientWidth;
+        if (width > 0) {
+            const newIdx = Math.round(scrollLeft / width);
+            if (newIdx !== activeIdx) {
+                setActiveIdx(newIdx);
+            }
+        }
+    };
+
+    const scrollTo = (index) => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTo({
+                left: index * scrollRef.current.clientWidth,
+                behavior: 'smooth'
+            });
+        }
+    };
+
+    return (
+        <div className="bg-slate-50 min-h-screen pb-16">
+            <div className="relative h-[45vh] bg-slate-200 group overflow-hidden">
+                <div
+                    ref={scrollRef}
+                    onScroll={handleScroll}
+                    className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full relative"
+                >
+                    {allImages.length > 0 ? (
+                        allImages.map((img, idx) => (
                             <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
                                 <img
                                     src={img}
                                     alt={`${restaurant.name} ${idx + 1}`}
                                     className="w-full h-full object-cover"
-                                    onError={(e) => e.target.src = getDiverseFallbackImage(`${restaurant.name}-${idx}`)}
+                                    onError={(e) => e.target.src = DEFAULT_RESTAURANT_IMAGE}
                                 />
-                                <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-1.5 px-6">
-                                    {allImages.map((_, i) => (
-                                        <div key={i} className={clsx("h-1 rounded-full transition-all", i === idx ? "w-4 bg-white" : "w-1 bg-white/40")} />
-                                    ))}
-                                </div>
                             </div>
-                        ));
-                    })()}
-                </div>
-                <div className="absolute top-0 left-0 right-0 p-4 pt-12 flex justify-between items-start bg-gradient-to-b from-black/50 to-transparent">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white"
-                    >
-                        <ArrowLeft size={24} />
-                    </button>
-                    <div className="flex gap-3">
-                        <button onClick={handleShare} className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white">
-                            <Share2 size={20} />
-                        </button>
-                        <button onClick={handleDelete} className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white">
-                            <Trash2 size={20} />
-                        </button>
-                        <button onClick={() => setIsEditing(true)} className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all">
-                            <Edit3 size={20} />
-                        </button>
-                        <button
-                            onClick={() => toggleFavorite(restaurant.id, restaurant.is_favorite)}
-                            className={clsx(
-                                "w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center transition-all",
-                                restaurant.is_favorite ? "bg-red-500 text-white" : "bg-white/20 text-white"
-                            )}
-                        >
-                            <Heart size={20} fill={restaurant.is_favorite ? "currentColor" : "none"} />
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div className="px-5 py-5 -mt-8 bg-white rounded-t-[3rem] relative z-10 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
-                <div className="flex justify-between items-start mb-1">
-                    <h1 className="text-xl font-black text-brand-dark uppercase tracking-tight line-clamp-1">{restaurant.name}</h1>
-                    <span className="text-base font-black text-brand-orange">{restaurant.price}</span>
-                </div>
-
-                <div className="flex items-center gap-2 mb-4">
-                    <Star className="text-yellow-400 fill-yellow-400" size={16} />
-                    <span className="font-black text-brand-dark text-xs">{restaurant.rating || '---'}</span>
-                    <span className="w-0.5 h-0.5 bg-gray-300 rounded-full mx-0.5"></span>
-                    <span className="text-brand-green font-bold text-[9px] uppercase">{restaurant.cuisine}</span>
-                    {restaurant.meal_type && (
-                        <span className="ml-auto bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tight">{restaurant.meal_type}</span>
+                        ))
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-slate-100">
+                            <img src={DEFAULT_RESTAURANT_IMAGE} className="w-full h-full object-cover opacity-50" />
+                        </div>
                     )}
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-4">
-                    <div className="flex-1 min-w-[120px] flex items-center gap-2.5 p-2 bg-slate-50/50 rounded-xl border border-slate-100">
-                        <MapPin className="text-brand-orange flex-shrink-0" size={14} />
-                        <div className="min-w-0">
-                            <p className="font-black text-brand-dark text-[7px] uppercase tracking-wider">Location</p>
+                {/* Gradient Overlays */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/30 pointer-events-none" />
+
+                {/* Carousel Controls */}
+                {allImages.length > 1 && (
+                    <>
+                        {/* Navigation Arrows (Desktop) */}
+                        <div className="absolute inset-y-0 left-0 right-0 hidden md:flex items-center justify-between px-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <button
+                                onClick={() => scrollTo(activeIdx - 1)}
+                                disabled={activeIdx === 0}
+                                className="w-10 h-10 bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center text-white pointer-events-auto disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/50 transition-all"
+                            >
+                                <ChevronLeft size={24} />
+                            </button>
+                            <button
+                                onClick={() => scrollTo(activeIdx + 1)}
+                                disabled={activeIdx === allImages.length - 1}
+                                className="w-10 h-10 bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center text-white pointer-events-auto disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/50 transition-all"
+                            >
+                                <ChevronRight size={24} />
+                            </button>
+                        </div>
+
+                        {/* Dot Indicators */}
+                        <div className="absolute bottom-16 left-0 right-0 flex justify-center gap-1.5 px-6">
+                            {allImages.map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => scrollTo(i)}
+                                    className={clsx(
+                                        "h-1.5 rounded-full transition-all duration-300",
+                                        i === activeIdx ? "w-6 bg-white" : "w-1.5 bg-white/40 hover:bg-white/60"
+                                    )}
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
+
+                {/* Back Button */}
+                <div className="absolute top-0 left-0 right-0 p-4 pt-12 flex justify-between items-start transition-all">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="w-10 h-10 bg-black/20 backdrop-blur-xl rounded-full flex items-center justify-center text-white shadow-lg border border-white/10"
+                    >
+                        <ArrowLeft size={20} />
+                    </button>
+                </div>
+            </div>
+
+            <div className="px-5 pb-10 -mt-12 bg-slate-50 rounded-t-[3rem] relative z-10">
+                <div className="bg-white rounded-[2.5rem] p-6 shadow-xl shadow-slate-200/50 mb-6">
+                    <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1 mr-4">
+                            <h1 className="text-2xl font-black text-brand-dark uppercase tracking-tight leading-tight">{restaurant.name}</h1>
+                            <div className="flex items-center gap-2 mt-1">
+                                <Star className="text-yellow-400 fill-yellow-400" size={16} />
+                                <span className="font-black text-brand-dark text-sm">{restaurant.rating || '---'}</span>
+                                <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                <span className="text-brand-green font-bold text-[10px] uppercase tracking-wider">{restaurant.cuisine}</span>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-end">
+                            <span className="text-xl font-black text-brand-orange">{restaurant.price}</span>
+                            {restaurant.meal_type && (
+                                <span className="bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-tight mt-1">{restaurant.meal_type}</span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Quick Tools Header */}
+                    <div className="flex justify-between items-center py-4 mt-4 border-t border-slate-50">
+                        <div className="flex gap-2">
+                            <button onClick={handleShare} className="w-11 h-11 bg-slate-50 text-slate-500 rounded-2xl flex items-center justify-center hover:bg-brand-orange/5 hover:text-brand-orange transition-all">
+                                <Share2 size={20} />
+                            </button>
+                            <button onClick={handleDelete} className="w-11 h-11 bg-slate-50 text-slate-500 rounded-2xl flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all">
+                                <Trash2 size={20} />
+                            </button>
+                            <button onClick={() => setIsEditing(true)} className="w-11 h-11 bg-slate-50 text-slate-500 rounded-2xl flex items-center justify-center hover:bg-blue-50 hover:text-blue-500 transition-all">
+                                <Edit3 size={20} />
+                            </button>
+                        </div>
+                        <button
+                            onClick={() => toggleFavorite(restaurant.id, restaurant.is_favorite)}
+                            className={clsx(
+                                "h-11 px-6 rounded-2xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all",
+                                restaurant.is_favorite ? "bg-red-500 text-white shadow-lg shadow-red-200" : "bg-slate-50 text-red-500"
+                            )}
+                        >
+                            <Heart size={18} fill={restaurant.is_favorite ? "currentColor" : "none"} />
+                            {restaurant.is_favorite ? "Saved" : "Save"}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Contact & Info Grid */}
+                <div className="grid grid-cols-1 gap-4 mb-6">
+                    {/* Location Card */}
+                    <div className="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100 flex items-start gap-4">
+                        <div className="w-12 h-12 bg-brand-orange/10 rounded-2xl flex items-center justify-center text-brand-orange flex-shrink-0">
+                            <MapPin size={24} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-1">Address</p>
+                            <p className="text-sm font-bold text-brand-dark leading-snug mb-2">{restaurant.address || restaurant.zone || 'No address provided'}</p>
                             <a
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address || restaurant.name)}`}
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address || `${restaurant.name} ${restaurant.zone || ''}`)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-[10px] text-gray-500 font-bold truncate block"
+                                className="inline-flex items-center text-[10px] font-black uppercase tracking-widest text-brand-orange hover:gap-3 transition-all gap-2"
                             >
-                                {restaurant.zone || 'Open Map'}
+                                Open in Maps <ChevronRight size={12} />
                             </a>
                         </div>
                     </div>
 
-                    <div className="flex-1 min-w-[120px] flex items-center gap-2.5 p-2 bg-slate-50/50 rounded-xl border border-slate-100">
-                        <Clock className="text-brand-green flex-shrink-0" size={14} />
-                        <div className="min-w-0">
-                            <p className="font-black text-brand-dark text-[7px] uppercase tracking-wider">Hours</p>
-                            <p className="text-[10px] text-gray-500 font-bold truncate">
-                                {restaurant.opening_hours?.length > 0 ? 'See List' : `Added ${new Date(restaurant.date_added).getMonth() + 1}/${new Date(restaurant.date_added).getFullYear()}`}
-                            </p>
+                    {/* Contact Info Card */}
+                    {(restaurant.phone || restaurant.website) && (
+                        <div className="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col gap-4">
+                            {restaurant.phone && (
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-brand-green/10 rounded-xl flex items-center justify-center text-brand-green flex-shrink-0">
+                                        <Phone size={20} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Phone</p>
+                                        <a href={`tel:${restaurant.phone}`} className="text-sm font-black text-brand-dark">{restaurant.phone}</a>
+                                    </div>
+                                    <a href={`tel:${restaurant.phone}`} className="bg-brand-green text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest">Call</a>
+                                </div>
+                            )}
+
+                            {restaurant.website && (
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500 flex-shrink-0">
+                                        <Globe size={20} />
+                                    </div>
+                                    <div className="flex-1 truncate">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Website</p>
+                                        <a href={restaurant.website} target="_blank" rel="noopener noreferrer" className="text-sm font-black text-brand-dark truncate block">{restaurant.website.replace(/^https?:\/\//, '')}</a>
+                                    </div>
+                                    <a href={restaurant.website} target="_blank" rel="noopener noreferrer" className="bg-blue-500 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest">Visit</a>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Opening Hours */}
+                    <div className="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100 flex items-start gap-4">
+                        <div className="w-12 h-12 bg-brand-dark/5 rounded-2xl flex items-center justify-center text-brand-dark flex-shrink-0">
+                            <Clock size={24} />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-1">Schedule</p>
+                            {restaurant.opening_hours?.length > 0 ? (
+                                <div className="space-y-1">
+                                    {restaurant.opening_hours.map((day, i) => (
+                                        <p key={i} className="text-[11px] font-bold text-brand-dark flex justify-between">
+                                            {day.split(': ')[0]} <span className="text-gray-400 font-medium">{day.split(': ')[1]}</span>
+                                        </p>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm font-bold text-brand-dark">Added {new Date(restaurant.date_added).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
+                            )}
                         </div>
                     </div>
-
-                    {restaurant.phone && (
-                        <a href={`tel:${restaurant.phone}`} className="flex items-center gap-2 p-2 bg-blue-50/50 rounded-xl border border-blue-100 text-blue-500">
-                            <Phone size={14} />
-                            <span className="text-[10px] font-black uppercase tracking-tight">Call</span>
-                        </a>
-                    )}
-
-                    {restaurant.website && (
-                        <a href={restaurant.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-purple-50/50 rounded-xl border border-purple-100 text-purple-500">
-                            <Globe size={14} />
-                            <span className="text-[10px] font-black uppercase tracking-tight">Web</span>
-                        </a>
-                    )}
                 </div>
 
                 {restaurant.notes && (
-                    <div className="mb-6">
-                        <h3 className="font-black text-base mb-2 tracking-tight">Notes</h3>
-                        <div className="bg-slate-50 p-4 rounded-[1.2rem] border border-slate-100 text-[13px] text-gray-600 font-medium italic">
+                    <div className="mb-8 p-6 bg-white rounded-[2.5rem] shadow-sm border border-slate-100">
+                        <h3 className="font-black text-brand-dark uppercase text-[10px] tracking-[0.3em] mb-4">My Notes</h3>
+                        <div className="text-sm text-gray-600 font-medium leading-relaxed italic border-l-4 border-brand-orange pl-4 py-1">
                             "{restaurant.notes}"
                         </div>
                     </div>
-                )}
+                ) || (
+                        <div className="mb-8 p-5 bg-slate-100/50 rounded-[2rem] border-2 border-dashed border-slate-200 text-center">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No notes added yet</p>
+                            <button onClick={() => setIsEditing(true)} className="mt-2 text-[10px] font-black text-brand-orange uppercase">Add Note</button>
+                        </div>
+                    )}
 
-                <div className="mb-4">
-                    <div className="bg-slate-50/50 p-3 rounded-2xl text-[10px] text-gray-600 font-bold border border-slate-100 flex flex-col gap-1">
-                        <p><span className="text-brand-dark font-black uppercase text-[8px] tracking-widest block">Recommended By</span> {restaurant.recommended_by || 'Me'}</p>
-                        {restaurant.club_name && <p><span className="text-brand-dark font-black uppercase text-[8px] tracking-widest block">Club</span> {restaurant.club_name}</p>}
+                <div className="mb-8 flex items-center justify-between px-2">
+                    <div className="flex flex-col">
+                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Recommended By</span>
+                        <span className="text-sm font-black text-brand-dark">{restaurant.recommended_by || 'Me'}</span>
                     </div>
+                    {restaurant.club_name && (
+                        <div className="flex flex-col items-end">
+                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Club</span>
+                            <span className="bg-brand-dark text-white px-3 py-1 rounded-full text-[10px] font-black">{restaurant.club_name}</span>
+                        </div>
+                    )}
                 </div>
 
                 {(restaurant.review_comment || showComparison) && (
-                    <div className="mb-6 bg-brand-green/5 p-5 rounded-[1.5rem] border border-brand-green/10">
-                        <h3 className="font-black text-xs text-brand-green uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <CheckCircle size={14} /> {showComparison ? 'Comparison' : 'My Review'}
+                    <div className="mb-8 bg-brand-green/10 p-6 rounded-[2.5rem] border border-brand-green/20">
+                        <h3 className="font-black text-[10px] text-brand-green uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+                            <CheckCircle size={16} /> {showComparison ? 'Comparison' : 'Visited Review'}
                         </h3>
 
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div className="p-3 bg-white rounded-xl">
-                                <p className="text-[8px] font-black text-gray-400 uppercase mb-1">Original (Places)</p>
-                                <div className="flex items-center gap-1 mb-1">
-                                    <Star size={10} className="text-yellow-400 fill-yellow-400" />
-                                    <span className="text-xs font-black">{restaurant.rating || '---'}</span>
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div className="p-4 bg-white/50 rounded-2xl backdrop-blur-sm">
+                                <p className="text-[8px] font-black text-gray-400 uppercase mb-2">Original Data</p>
+                                <div className="flex items-center gap-1.5 mb-1">
+                                    <Star size={12} className="text-yellow-400 fill-yellow-400" />
+                                    <span className="text-base font-black text-brand-dark">{restaurant.rating || '---'}</span>
                                 </div>
-                                <span className="text-xs font-black text-brand-orange">{restaurant.price}</span>
+                                <span className="text-sm font-black text-brand-orange">{restaurant.price}</span>
                             </div>
-                            <div className="p-3 bg-brand-green/10 rounded-xl border border-brand-green/10">
-                                <p className="text-[8px] font-black text-brand-green uppercase mb-1">Your Rating</p>
-                                <div className="flex items-center gap-1 mb-1">
-                                    <Star size={10} className="text-brand-green fill-brand-green" />
-                                    <span className="text-xs font-black">{review.rating}</span>
+                            <div className="p-4 bg-brand-green/20 rounded-2xl border border-brand-green/20">
+                                <p className="text-[8px] font-black text-brand-green uppercase mb-2">Your Rating</p>
+                                <div className="flex items-center gap-1.5 mb-1">
+                                    <Star size={12} className="text-brand-green fill-brand-green" />
+                                    <span className="text-base font-black text-brand-green">{review.rating}</span>
                                 </div>
-                                <span className="text-xs font-black text-brand-green">{review.personal_price || restaurant.price}</span>
+                                <span className="text-sm font-black text-brand-green">{review.personal_price || restaurant.price}</span>
                             </div>
                         </div>
 
                         {restaurant.review_comment && (
-                            <p className="text-sm text-brand-dark font-medium leading-relaxed italic">"{restaurant.review_comment}"</p>
+                            <div className="p-4 bg-white/40 rounded-2xl border border-white/60">
+                                <p className="text-sm text-brand-dark font-medium leading-relaxed italic">"{restaurant.review_comment}"</p>
+                            </div>
                         )}
 
                         {showComparison && (
                             <button
                                 onClick={() => navigate('/visited')}
-                                className="mt-4 w-full bg-brand-green text-white font-black py-3 rounded-xl text-[10px] uppercase tracking-widest"
+                                className="mt-6 w-full bg-brand-green text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest shadow-lg shadow-brand-green/20"
                             >
-                                Go to Visited List
+                                View in Visited History
                             </button>
                         )}
                     </div>
@@ -357,16 +487,16 @@ export default function RestaurantDetails() {
                 <button
                     onClick={handleToggleVisited}
                     className={clsx(
-                        "w-full font-black py-4 rounded-[1.5rem] shadow-xl transition-all flex items-center justify-center gap-2",
+                        "w-full font-black py-5 rounded-[2rem] shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-[0.98] text-sm uppercase tracking-widest",
                         restaurant.is_visited
                             ? "bg-brand-green text-white shadow-brand-green/30"
-                            : "bg-brand-orange text-white shadow-brand-orange/30 active:scale-[0.98]"
+                            : "bg-brand-orange text-white shadow-brand-orange/40"
                     )}
                 >
                     {restaurant.is_visited ? (
                         <>
                             <CheckCircle size={24} />
-                            Visited!
+                            Already Visited
                         </>
                     ) : (
                         "Mark as Visited"

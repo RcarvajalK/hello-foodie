@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Star, MapPin, Calendar, User, Users, CheckCircle, Edit3, X, Save, Trash2 } from 'lucide-react';
+import { Star, MapPin, Calendar, User, Users, CheckCircle, Edit3, X, Save, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useStore } from '../lib/store';
 import clsx from 'clsx';
 import BrandLogo from './BrandLogo';
@@ -38,13 +38,38 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
     );
 
     const CardCarousel = ({ images, height = "h-64", rounded = "rounded-t-[3.5rem]" }) => {
-        const allImages = filterRestaurantImages(restaurant.additional_images, restaurant.image_url || restaurant.image);
+        const [activeIdx, setActiveIdx] = useState(0);
+        const scrollRef = useRef(null);
+
+        const allImages = useMemo(() => {
+            return filterRestaurantImages(restaurant.additional_images, restaurant.image_url || restaurant.image);
+        }, [restaurant.additional_images, restaurant.image_url, restaurant.image]);
+
+        const handleScroll = (e) => {
+            const scrollLeft = e.target.scrollLeft;
+            const width = e.target.clientWidth;
+            if (width > 0) {
+                const newIdx = Math.round(scrollLeft / width);
+                if (newIdx !== activeIdx) {
+                    setActiveIdx(newIdx);
+                }
+            }
+        };
+
+        const scrollTo = (index) => {
+            if (scrollRef.current) {
+                scrollRef.current.scrollTo({
+                    left: index * scrollRef.current.clientWidth,
+                    behavior: 'smooth'
+                });
+            }
+        };
 
         if (allImages.length <= 1) {
             return (
                 <div className={clsx("relative overflow-hidden", height, rounded)}>
                     <img
-                        src={allImages[0]}
+                        src={allImages[0] || DEFAULT_RESTAURANT_IMAGE}
                         alt={restaurant.name}
                         className="w-full h-full object-cover"
                         onError={(e) => e.target.src = getDiverseFallbackImage(restaurant.name)}
@@ -54,8 +79,12 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
         }
 
         return (
-            <div className={clsx("relative overflow-hidden group", height, rounded)}>
-                <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full">
+            <div className={clsx("relative overflow-hidden group/carousel", height, rounded)}>
+                <div
+                    ref={scrollRef}
+                    onScroll={handleScroll}
+                    className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full"
+                >
                     {allImages.map((img, idx) => (
                         <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
                             <img
@@ -69,11 +98,43 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                         </div>
                     ))}
                 </div>
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1">
-                    {allImages.map((_, i) => (
-                        <div key={i} className="w-1 h-1 rounded-full bg-white/60" />
-                    ))}
-                </div>
+
+                {/* Carousel Controls */}
+                {allImages.length > 1 && (
+                    <>
+                        {/* Desktop Arrows */}
+                        <div className="absolute inset-y-0 left-0 right-0 hidden md:flex items-center justify-between px-2 opacity-0 group-hover/carousel:opacity-100 transition-opacity pointer-events-none">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); scrollTo(activeIdx - 1); }}
+                                disabled={activeIdx === 0}
+                                className="w-8 h-8 bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center text-white pointer-events-auto disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/50 transition-all"
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); scrollTo(activeIdx + 1); }}
+                                disabled={activeIdx === allImages.length - 1}
+                                className="w-8 h-8 bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center text-white pointer-events-auto disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/50 transition-all"
+                            >
+                                <ChevronRight size={20} />
+                            </button>
+                        </div>
+
+                        {/* Dot Indicators */}
+                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 px-4">
+                            {allImages.map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={(e) => { e.stopPropagation(); scrollTo(i); }}
+                                    className={clsx(
+                                        "h-1 rounded-full transition-all duration-300",
+                                        i === activeIdx ? "w-4 bg-white" : "w-1 bg-white/40 hover:bg-white/60"
+                                    )}
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
             </div>
         );
     };
