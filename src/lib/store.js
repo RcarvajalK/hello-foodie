@@ -124,6 +124,7 @@ export const useStore = create((set, get) => ({
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
+            .eq('id', user.id)
             .single();
 
         if (!error) set({ profile: data });
@@ -267,7 +268,11 @@ export const useStore = create((set, get) => ({
             .select()
             .single();
 
-        if (!error) set({ profile: data });
+        if (error) {
+            console.error("updateProfile Error:", error);
+        } else {
+            set({ profile: data });
+        }
         return { data, error };
     },
 

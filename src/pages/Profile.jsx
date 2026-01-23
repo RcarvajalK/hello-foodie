@@ -42,8 +42,12 @@ export default function Profile() {
     }, [profile]);
 
     const handleSave = async () => {
-        await updateProfile(editData);
-        setIsEditing(false);
+        const { error } = await updateProfile(editData);
+        if (error) {
+            alert(`Error saving profile: ${error.message}`);
+        } else {
+            setIsEditing(false);
+        }
     };
 
     const visitedCount = restaurants.filter(r => r.is_visited).length;
@@ -86,7 +90,7 @@ export default function Profile() {
                         {isEditing ? (
                             <ImageUploader
                                 currentImage={editData.avatar_url}
-                                onUploadComplete={(url) => setEditData({ ...editData, avatar_url: url })}
+                                onUploadComplete={(url) => setEditData(prev => ({ ...prev, avatar_url: url }))}
                                 label="Photo"
                                 className="w-24 h-24"
                                 aspectRatio="aspect-square"
