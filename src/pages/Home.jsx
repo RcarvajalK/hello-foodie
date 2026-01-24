@@ -29,9 +29,11 @@ export default function Home() {
 
     const restaurants = useStore(state => state.restaurants);
     const profile = useStore(state => state.profile);
+    const userRank = useStore(state => state.userRank);
     const loading = useStore(state => state.loading);
     const fetchRestaurants = useStore(state => state.fetchRestaurants);
     const fetchProfile = useStore(state => state.fetchProfile);
+    const fetchRankings = useStore(state => state.fetchRankings);
     const deleteRestaurant = useStore(state => state.deleteRestaurant);
 
     useEffect(() => {
@@ -47,6 +49,7 @@ export default function Home() {
     useEffect(() => {
         fetchRestaurants();
         fetchProfile();
+        fetchRankings();
 
         navigator.geolocation.getCurrentPosition(
             (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -265,7 +268,7 @@ export default function Home() {
                             <Heart size={18} fill={onlyFavorites ? "currentColor" : "none"} strokeWidth={onlyFavorites ? 0 : 2.5} />
                         </button>
                         <div
-                            className="w-10 h-10 bg-slate-100 rounded-2xl overflow-hidden border-2 border-white shadow-xl cursor-pointer"
+                            className="w-10 h-10 bg-slate-100 rounded-2xl overflow-hidden border-2 border-white shadow-xl cursor-pointer relative"
                             onClick={() => navigate('/profile')}
                         >
                             {profile?.avatar_url ? (
@@ -273,6 +276,14 @@ export default function Home() {
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center font-black text-brand-orange text-lg">
                                     {profile?.full_name?.charAt(0) || 'U'}
+                                </div>
+                            )}
+                            {userRank && (
+                                <div
+                                    onClick={(e) => { e.stopPropagation(); navigate('/rankings'); }}
+                                    className="absolute -bottom-1 -right-1 bg-brand-dark text-white text-[8px] font-black w-5 h-5 rounded-lg flex items-center justify-center border-2 border-white shadow-lg"
+                                >
+                                    #{userRank}
                                 </div>
                             )}
                         </div>

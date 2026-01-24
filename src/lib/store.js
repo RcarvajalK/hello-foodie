@@ -631,5 +631,57 @@ export const useStore = create((set, get) => ({
         }));
 
         return { success: true };
+    },
+
+    // --- Rankings Functionality ---
+    rankings: [],
+    userRank: null,
+    fetchRankings: async () => {
+        set({ loading: true });
+        try {
+            // 1. Fetch all profiles
+            const { data: profiles, error: pError } = await supabase
+                .from('profiles')
+                .select('id, full_name, avatar_url');
+
+            if (pError) throw pError;
+
+            // 2. Fetch all visited restaurant counts
+            // Note: This assumes RLS allows public select of is_visited and user_id for global ranking
+            const { data: visits, error: vError } = await supabase
+                .from('restaurants')
+                .select('user_id')
+                .eq('is_visited', true);
+
+            if (vError) throw vError;
+
+            // 3. Aggregate counts
+            const counts = (visits || []).reduce((acc, v) => {
+                acc[v.user_id] = (acc[v.user_id] || 0) + 1;
+                return acc;
+            }, {});
+
+            // 4. Combine and Sort
+            const allRankings = profiles.map(p => ({
+                ...p,
+                visit_count: counts[p.id] || 0
+            })).sort((a, b) => b.visit_count - a.visit_count);
+
+            // 5. Detect User Rank
+            const { data: { session } } = await supabase.auth.getSession();
+            const currentUserId = session?.user?.id;
+            const rankIndex = allRankings.findIndex(r => r.id === currentUserId);
+
+            set({
+                rankings: allRankings,
+                userRank: rankIndex !== -1 ? rankIndex + 1 : null,
+                loading: false
+            });
+            return { success: true };
+        } catch (error) {
+            console.error("fetchRankings Error:", error);
+            set({ loading: false });
+            return { success: false, error: error.message };
+        }
     }
 }));

@@ -16,11 +16,10 @@ import { LoadScriptNext } from '@react-google-maps/api';
 import { useStore } from './lib/store';
 import { checkProximity, sendNotification, checkMealTime, requestNotificationPermission } from './lib/notifications';
 
-import Visited from './pages/Visited';
-import Badges from './pages/Badges';
 import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
 import Trash from './pages/Trash';
+import Rankings from './pages/Rankings';
 
 const libraries = ['places'];
 
@@ -147,6 +146,7 @@ export default function App() {
               <Route path="stats" element={<Stats />} />
               <Route path="visited" element={<Visited />} />
               <Route path="badges" element={<Badges />} />
+              <Route path="rankings" element={<Rankings />} />
               <Route path="restaurant/:id" element={<RestaurantDetails />} />
               <Route path="profile" element={<Profile />} />
               <Route path="trash" element={<Trash />} />

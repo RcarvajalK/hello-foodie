@@ -12,11 +12,13 @@ import ImageUploader from '../components/ImageUploader';
 
 export default function Profile() {
     const profile = useStore(state => state.profile);
+    const userRank = useStore(state => state.userRank);
     const restaurants = useStore(state => state.restaurants);
     const prefs = useStore(state => state.notificationPreferences);
     const setNotificationPreferences = useStore(state => state.setNotificationPreferences);
     const updateProfile = useStore(state => state.updateProfile);
     const uploadImage = useStore(state => state.uploadImage);
+    const fetchRankings = useStore(state => state.fetchRankings);
     const loading = useStore(state => state.loading);
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
@@ -30,6 +32,10 @@ export default function Profile() {
         favorite_cuisines: [],
         example_places: ''
     });
+
+    useEffect(() => {
+        fetchRankings();
+    }, []);
 
     useEffect(() => {
         if (profile) {
@@ -148,6 +154,15 @@ export default function Profile() {
                                 <div className="absolute -bottom-2 -right-2 bg-brand-orange text-white w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg border-4 border-white">
                                     <Trophy size={18} />
                                 </div>
+                                {userRank && (
+                                    <div
+                                        onClick={(e) => { e.stopPropagation(); navigate('/rankings'); }}
+                                        className="absolute -bottom-2 -left-2 bg-brand-dark text-white w-10 h-10 rounded-2xl flex flex-col items-center justify-center shadow-lg border-4 border-white cursor-pointer active:scale-95 transition-all"
+                                    >
+                                        <span className="text-[7px] font-black uppercase tracking-tighter leading-none opacity-60">Rank</span>
+                                        <span className="text-[14px] font-black leading-none">#{userRank}</span>
+                                    </div>
+                                )}
                             </>
                         )}
                     </div>
