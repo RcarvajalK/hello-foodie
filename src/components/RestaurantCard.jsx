@@ -235,14 +235,14 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
     if (variant === 'gallery') {
         return (
             <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative group active:scale-95 transition-transform">
-                <Link
-                    to={`/restaurant/${restaurant.id}`}
-                    className="block aspect-square rounded-[2.5rem] overflow-hidden shadow-lg border-2 border-white relative group"
+                <div
+                    onClick={() => !restaurant.is_sponsored && navigate(`/restaurant/${restaurant.id}`)}
+                    className="block aspect-square rounded-[2.5rem] overflow-hidden shadow-lg border-2 border-white relative group cursor-pointer"
                 >
                     <CardCarousel height="h-full" rounded="rounded-none" />
                     <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/95 via-brand-dark/20 to-transparent flex flex-col justify-end p-5 pointer-events-none">
                         <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-black text-white text-xs leading-tight drop-shadow-md uppercase tracking-tight">{restaurant.name}</h3>
+                            <h3 className="font-black text-white text-[11px] leading-tight drop-shadow-md uppercase tracking-tight">{restaurant.name}</h3>
                             {isVisited && <BrandLogo size={12} animate={false} />}
                         </div>
                         <p className="text-[8px] text-brand-orange-light font-black uppercase tracking-[0.2em]">{restaurant.cuisine}</p>
@@ -251,7 +251,10 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                         <Star size={10} className="text-brand-orange fill-brand-orange mr-1" />
                         <span className="text-[10px] font-black text-brand-dark">{restaurant.rating || '---'}</span>
                     </div>
-                </Link>
+                    {restaurant.is_sponsored && (
+                        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-brand-orange text-[7px] font-black px-2 py-0.5 rounded-lg uppercase tracking-[0.2em] shadow-lg border border-white/50">Sponsored</div>
+                    )}
+                </div>
             </motion.div>
         );
     }
@@ -259,8 +262,11 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
     // default: list-photos
     const content = (
         <div
-            onClick={() => navigate(`/restaurant/${restaurant.id}`)}
-            className="block bg-white border border-gray-50 transition-all hover:shadow-2xl relative cursor-pointer"
+            onClick={() => !restaurant.is_sponsored && navigate(`/restaurant/${restaurant.id}`)}
+            className={clsx(
+                "block bg-white border transition-all hover:shadow-2xl relative cursor-pointer overflow-hidden",
+                restaurant.is_sponsored ? "border-brand-orange/20" : "border-gray-50"
+            )}
         >
             <div className="relative group">
                 <CardCarousel />
@@ -274,6 +280,9 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                         <span className="bg-brand-orange text-white px-2 py-0.5 rounded-lg text-[8px]">{restaurant.meal_type}</span>
                     )}
                 </div>
+                {restaurant.is_sponsored && (
+                    <div className="absolute top-6 left-6 bg-brand-orange text-white text-[10px] font-black px-4 py-2 rounded-[1.2rem] uppercase tracking-[0.3em] shadow-2xl">Sponsored Place</div>
+                )}
             </div>
 
             <div className="p-8">
@@ -288,31 +297,33 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                             )}
                         </div>
                         <div className="flex items-center text-gray-400 text-[10px] gap-4 font-black uppercase tracking-widest">
-                            <span className="flex items-center gap-2"><MapPin size={14} className="text-brand-orange" /> {restaurant.zone || 'Explore City'}</span>
-                            <span className="flex items-center gap-2 h-1.5 w-1.5 bg-brand-orange/20 rounded-full"></span>
-                            <span className="flex items-center gap-2"><Calendar size={14} /> {new Date(restaurant.date_added).toLocaleDateString()}</span>
+                            <span className="flex items-center gap-2"><MapPin size={14} className="text-brand-orange" /> {restaurant.zone || (restaurant.is_sponsored ? restaurant.zone : 'Explore City')}</span>
                         </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                        <span className="text-xl font-black text-brand-orange drop-shadow-sm">{restaurant.price}</span>
-                        <EditButton />
-                    </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-6 border-t border-slate-100 mt-2">
-                    <div className="flex items-center gap-3 text-[10px] text-gray-400 font-black uppercase tracking-[0.25em]">
-                        <div className="w-8 h-8 bg-brand-orange/5 rounded-2xl flex items-center justify-center text-brand-orange">
-                            <User size={14} />
-                        </div>
-                        <span>Rec by: <span className="text-brand-dark">{restaurant.recommended_by || 'Me'}</span></span>
-                    </div>
-                    {restaurant.club_name && (
-                        <div className="flex bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 flex items-center gap-3 text-[10px] text-brand-dark font-black uppercase tracking-widest">
-                            <Users size={14} className="text-brand-orange" />
-                            <span>{restaurant.club_name}</span>
+                    {!restaurant.is_sponsored && (
+                        <div className="flex flex-col items-end gap-2">
+                            <span className="text-xl font-black text-brand-orange drop-shadow-sm">{restaurant.price}</span>
+                            <EditButton />
                         </div>
                     )}
                 </div>
+
+                {!restaurant.is_sponsored && (
+                    <div className="flex items-center justify-between pt-6 border-t border-slate-100 mt-2">
+                        <div className="flex items-center gap-3 text-[10px] text-gray-400 font-black uppercase tracking-[0.25em]">
+                            <div className="w-8 h-8 bg-brand-orange/5 rounded-2xl flex items-center justify-center text-brand-orange">
+                                <User size={14} />
+                            </div>
+                            <span>Rec by: <span className="text-brand-dark">{restaurant.recommended_by || 'Me'}</span></span>
+                        </div>
+                        {restaurant.club_name && (
+                            <div className="flex bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 items-center gap-3 text-[10px] text-brand-dark font-black uppercase tracking-widest">
+                                <Users size={14} className="text-brand-orange" />
+                                <span>{restaurant.club_name}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

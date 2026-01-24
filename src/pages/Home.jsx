@@ -14,7 +14,15 @@ export default function Home() {
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState(() => localStorage.getItem('foodie_view_mode') || 'list');
     const [sortBy, setSortBy] = useState('distance');
-    const [filterCuisine, setFilterCuisine] = useState('All');
+
+    // Advanced Filters
+    const [activeArea, setActiveArea] = useState('All');
+    const [activeCuisine, setActiveCuisine] = useState('All');
+    const [activePrice, setActivePrice] = useState('All');
+    const [activeRating, setActiveRating] = useState('All');
+    const [activeRecommender, setActiveRecommender] = useState('All');
+    const [openFilter, setOpenFilter] = useState(null);
+
     const [userCoords, setUserCoords] = useState(null);
     const [onlyFavorites, setOnlyFavorites] = useState(false);
     const navigate = useNavigate();
@@ -58,10 +66,7 @@ export default function Home() {
         let list = [...restaurants];
         list = list.filter(r => !r.is_visited);
 
-        if (filterCuisine !== 'All') {
-            list = list.filter(r => r.cuisine?.toLowerCase().includes(filterCuisine.toLowerCase()));
-        }
-
+        // Apply Search
         if (searchQuery) {
             list = list.filter(r =>
                 r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -70,6 +75,29 @@ export default function Home() {
             );
         }
 
+        // Apply Advanced Filters
+        if (activeCuisine !== 'All') {
+            list = list.filter(r => r.cuisine?.toLowerCase().includes(activeCuisine.toLowerCase()));
+        }
+        if (activeArea !== 'All') {
+            list = list.filter(r => r.zone?.toLowerCase().includes(activeArea.toLowerCase()));
+        }
+        if (activePrice !== 'All') {
+            list = list.filter(r => r.price === activePrice);
+        }
+        if (activeRating !== 'All') {
+            const minRating = parseFloat(activeRating);
+            list = list.filter(r => (r.rating || 0) >= minRating);
+        }
+        if (activeRecommender !== 'All') {
+            list = list.filter(r => (r.recommended_by || 'Me').toLowerCase() === activeRecommender.toLowerCase());
+        }
+
+        if (onlyFavorites) {
+            list = list.filter(r => r.is_favorite);
+        }
+
+        // Sorting
         list.sort((a, b) => {
             if (sortBy === 'date') return new Date(b.date_added) - new Date(a.date_added);
             if (sortBy === 'distance') return calculateDistance(a) - calculateDistance(b);
@@ -79,13 +107,9 @@ export default function Home() {
             return 0;
         });
 
-        if (onlyFavorites) {
-            list = list.filter(r => r.is_favorite);
-        }
-
         // Inject Sponsored Items
         const withAds = [];
-        const adFrequency = 3; // Every 3 items
+        const adFrequency = 3;
 
         const mockAds = [
             { id: 'ad1', name: 'RESTAURANTE EKILORE', zone: 'POLANCO, CIUDAD DE MÉXICO, MX', cuisine: 'VASCO', rating: 4.7, is_sponsored: true, image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000&auto=format&fit=crop' },
@@ -101,7 +125,7 @@ export default function Home() {
         });
 
         return withAds;
-    }, [restaurants, searchQuery, sortBy, filterCuisine, userCoords, onlyFavorites]);
+    }, [restaurants, searchQuery, sortBy, activeArea, activeCuisine, activePrice, activeRating, activeRecommender, userCoords, onlyFavorites]);
 
     const recommended = useMemo(() => {
         if (!profile?.favorite_cuisines?.length) return null;
@@ -122,8 +146,48 @@ export default function Home() {
         { label: 'Favorites', count: favoritesCount, color: 'bg-blue-400', link: null, action: () => setOnlyFavorites(true) },
     ];
 
+    // Filter Options
+    const areas = useMemo(() => ['All', ...new Set(restaurants.map(r => r.zone).filter(Boolean))], [restaurants]);
+    const cuisines = useMemo(() => ['All', ...new Set(restaurants.map(r => r.cuisine).filter(Boolean))], [restaurants]);
+    const recommenders = useMemo(() => ['All', ...new Set(restaurants.map(r => r.recommended_by || 'Me').filter(Boolean))], [restaurants]);
 
-    const cuisines = ['All', ...new Set(restaurants.map(r => r.cuisine).filter(Boolean))];
+    const FilterDropdown = ({ label, current, options, onSelect, isOpen, onToggle }) => (
+        <div className="relative">
+            <button
+                onClick={onToggle}
+                className={clsx(
+                    "px-5 py-3.5 rounded-full whitespace-nowrap border-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all",
+                    current !== 'All' ? "bg-brand-orange text-white border-brand-orange" : "bg-[#F1F3F6] text-brand-dark border-white/50"
+                )}
+            >
+                {current === 'All' ? label : current}
+                <ChevronDown size={14} className={clsx("transition-transform", isOpen && "rotate-180", current !== 'All' ? "text-white" : "text-gray-400")} />
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute top-full left-0 mt-2 bg-white rounded-3xl shadow-2xl border border-gray-100 p-2 z-[100] min-w-[160px] max-h-[300px] overflow-y-auto no-scrollbar"
+                    >
+                        {options.map(opt => (
+                            <button
+                                key={opt}
+                                onClick={() => { onSelect(opt); onToggle(); }}
+                                className={clsx(
+                                    "w-full text-left px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-colors",
+                                    current === opt ? "bg-brand-orange/10 text-brand-orange" : "text-brand-dark hover:bg-slate-50"
+                                )}
+                            >
+                                {opt}
+                            </button>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
 
     return (
         <div className="pb-24 bg-[#F8FAFC] min-h-screen">
@@ -216,21 +280,46 @@ export default function Home() {
 
             {/* Filters */}
             <div className="px-6 mb-8 flex gap-3 overflow-x-auto no-scrollbar py-2">
-                {[
-                    { label: 'Area', icon: ChevronDown },
-                    { label: 'Cuisine', icon: ChevronDown },
-                    { label: '$', icon: ChevronDown },
-                    { label: '***', icon: ChevronDown },
-                    { label: 'Recommended By', icon: ChevronDown }
-                ].map((filter, i) => (
-                    <button
-                        key={i}
-                        className="px-5 py-3.5 bg-[#F1F3F6] rounded-full whitespace-nowrap border-2 border-white/50 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-brand-dark active:scale-95 transition-all"
-                    >
-                        {filter.label}
-                        <filter.icon size={14} className="text-gray-400" />
-                    </button>
-                ))}
+                <FilterDropdown
+                    label="Area"
+                    current={activeArea}
+                    options={areas}
+                    onSelect={setActiveArea}
+                    isOpen={openFilter === 'area'}
+                    onToggle={() => setOpenFilter(openFilter === 'area' ? null : 'area')}
+                />
+                <FilterDropdown
+                    label="Cuisine"
+                    current={activeCuisine}
+                    options={cuisines}
+                    onSelect={setActiveCuisine}
+                    isOpen={openFilter === 'cuisine'}
+                    onToggle={() => setOpenFilter(openFilter === 'cuisine' ? null : 'cuisine')}
+                />
+                <FilterDropdown
+                    label="Price"
+                    current={activePrice}
+                    options={['All', '$', '$$', '$$$', '$$$$']}
+                    onSelect={setActivePrice}
+                    isOpen={openFilter === 'price'}
+                    onToggle={() => setOpenFilter(openFilter === 'price' ? null : 'price')}
+                />
+                <FilterDropdown
+                    label="Rating"
+                    current={activeRating}
+                    options={['All', '5.0', '4.0', '3.0', '2.0']}
+                    onSelect={setActiveRating}
+                    isOpen={openFilter === 'rating'}
+                    onToggle={() => setOpenFilter(openFilter === 'rating' ? null : 'rating')}
+                />
+                <FilterDropdown
+                    label="Recommended By"
+                    current={activeRecommender}
+                    options={recommenders}
+                    onSelect={setActiveRecommender}
+                    isOpen={openFilter === 'recommender'}
+                    onToggle={() => setOpenFilter(openFilter === 'recommender' ? null : 'recommender')}
+                />
             </div>
 
             {/* Feed */}
@@ -263,8 +352,8 @@ export default function Home() {
                             <div className="w-24 h-24 bg-white rounded-[2.5rem] shadow-xl flex items-center justify-center mx-auto mb-6 transform rotate-6 border border-gray-50">
                                 <BrandLogo size={56} className="grayscale opacity-20" animate={false} />
                             </div>
-                            <p className="text-brand-dark font-black uppercase tracking-tight text-lg">Your Feed is empty</p>
-                            <p className="text-[10px] text-gray-400 mt-2 uppercase font-black tracking-[0.2em]">Add places to see them here.</p>
+                            <p className="text-brand-dark font-black uppercase tracking-tight text-lg">No results found</p>
+                            <p className="text-[10px] text-gray-400 mt-2 uppercase font-black tracking-[0.2em]">Try adjusting your filters.</p>
                         </div>
                     )}
                 </AnimatePresence>
