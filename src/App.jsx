@@ -16,6 +16,8 @@ import { LoadScriptNext } from '@react-google-maps/api';
 import { useStore } from './lib/store';
 import { checkProximity, sendNotification, checkMealTime, requestNotificationPermission } from './lib/notifications';
 
+import Visited from './pages/Visited';
+import Badges from './pages/Badges';
 import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
 import Trash from './pages/Trash';
