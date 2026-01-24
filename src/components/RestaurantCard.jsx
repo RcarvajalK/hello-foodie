@@ -189,32 +189,41 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
             <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <SwipeWrapper>
                     <div
-                        onClick={() => navigate(`/restaurant/${restaurant.id}`)}
-                        className="flex items-center gap-4 bg-white p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden active:scale-98 cursor-pointer"
+                        onClick={() => !restaurant.is_sponsored && navigate(`/restaurant/${restaurant.id}`)}
+                        className={clsx(
+                            "flex items-center gap-4 bg-white p-4 rounded-[2rem] border shadow-sm transition-all relative overflow-hidden active:scale-98 cursor-pointer",
+                            restaurant.is_sponsored ? "border-brand-orange/20" : "border-gray-100"
+                        )}
                     >
-                        <div className="w-16 h-16 rounded-2xl bg-slate-50 overflow-hidden flex-shrink-0 border border-slate-100">
+                        <div className="w-20 h-20 rounded-2xl bg-slate-50 overflow-hidden flex-shrink-0 border border-slate-100 relative">
                             <img
                                 src={getRestaurantImage(restaurant.image_url || restaurant.image)}
                                 alt={restaurant.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => e.target.src = getDiverseFallbackImage(restaurant.name)}
                             />
+                            {restaurant.is_sponsored && (
+                                <div className="absolute top-1 left-1 bg-brand-orange text-white text-[6px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-[0.2em]">Ad</div>
+                            )}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                                <h3 className="font-black text-brand-dark text-sm truncate uppercase tracking-tight">{restaurant.name}</h3>
+                            <div className="flex items-center gap-2 mb-0.5">
+                                <h3 className="font-black text-brand-dark text-[13px] truncate uppercase tracking-tight">{restaurant.name}</h3>
                                 {isVisited && <BrandTag />}
                             </div>
-                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
-                                {restaurant.zone || 'No Zone'} • {restaurant.cuisine}
+                            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest leading-tight">
+                                {restaurant.zone || 'No Zone'}
+                            </p>
+                            <p className="text-[8px] text-brand-orange/60 font-black uppercase tracking-[0.2em] mt-1">
+                                {restaurant.cuisine}
                             </p>
                         </div>
-                        <div className="flex flex-col items-end gap-1.5 px-2">
-                            <div className="flex items-center gap-1.5 text-brand-orange bg-brand-orange/5 px-2.5 py-1 rounded-full">
+                        <div className="flex flex-col items-end gap-2 px-2">
+                            <div className="flex items-center gap-1.5 text-brand-orange bg-brand-orange/5 px-3 py-1.5 rounded-full border border-brand-orange/10">
                                 <Star size={10} fill="currentColor" />
-                                <span className="text-[11px] font-black tabular-nums">{restaurant.rating || '---'}</span>
+                                <span className="text-xs font-black tabular-nums">{restaurant.rating || '---'}</span>
                             </div>
-                            <EditButton />
+                            {!restaurant.is_sponsored && <EditButton />}
                         </div>
                     </div>
                 </SwipeWrapper>

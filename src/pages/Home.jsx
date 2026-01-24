@@ -83,7 +83,24 @@ export default function Home() {
             list = list.filter(r => r.is_favorite);
         }
 
-        return list;
+        // Inject Sponsored Items
+        const withAds = [];
+        const adFrequency = 3; // Every 3 items
+
+        const mockAds = [
+            { id: 'ad1', name: 'RESTAURANTE EKILORE', zone: 'POLANCO, CIUDAD DE MÉXICO, MX', cuisine: 'VASCO', rating: 4.7, is_sponsored: true, image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000&auto=format&fit=crop' },
+            { id: 'ad2', name: 'RUFUS', zone: 'ROMA NORTE, CIUDAD DE MÉXICO, MX', cuisine: 'RESTAURANT', rating: 4.3, is_sponsored: true, image: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=1000&auto=format&fit=crop' },
+        ];
+
+        list.forEach((r, idx) => {
+            withAds.push(r);
+            if ((idx + 1) % adFrequency === 0) {
+                const ad = mockAds[Math.floor(idx / adFrequency) % mockAds.length];
+                withAds.push({ ...ad, id: `${ad.id}-${idx}` });
+            }
+        });
+
+        return withAds;
     }, [restaurants, searchQuery, sortBy, filterCuisine, userCoords, onlyFavorites]);
 
     const recommended = useMemo(() => {
@@ -96,177 +113,130 @@ export default function Home() {
 
     const visitedCount = restaurants.filter(r => r.is_visited).length;
     const badgesCount = BADGE_LEVELS.filter(b => visitedCount >= b.minVisits).length;
+    const favoritesCount = restaurants.filter(r => r.is_favorite).length;
 
     const stats = [
-        { label: 'To Visit', count: restaurants.filter(r => !r.is_visited).length, color: 'bg-brand-orange', link: '/' },
-        { label: 'Visited', count: visitedCount, color: 'bg-brand-green', link: '/visited' },
-        { label: 'Badges', count: badgesCount, color: 'bg-brand-yellow', link: '/badges' },
+        { label: 'To Visit', count: restaurants.filter(r => !r.is_visited).length, color: 'bg-brand-orange', link: '/', action: () => setOnlyFavorites(false) },
+        { label: 'Visited', count: visitedCount, color: 'bg-brand-green', link: '/visited', action: null },
+        { label: 'Badges', count: badgesCount, color: 'bg-brand-yellow', link: '/badges', action: null },
+        { label: 'Favorites', count: favoritesCount, color: 'bg-blue-400', link: null, action: () => setOnlyFavorites(true) },
     ];
 
 
     const cuisines = ['All', ...new Set(restaurants.map(r => r.cuisine).filter(Boolean))];
 
     return (
-        <div className="pb-24 bg-brand-light min-h-screen">
-            <header className="bg-white p-6 pt-12 rounded-b-[3rem] shadow-xl shadow-slate-200/50 relative z-10 border-b border-gray-100">
-                <div className="flex justify-between items-center mb-8">
-                    <div className="flex items-center gap-4">
+        <div className="pb-24 bg-[#F8FAFC] min-h-screen">
+            <header className="bg-white px-6 pt-12 pb-8 rounded-b-[4rem] shadow-sm relative z-10">
+                <div className="flex justify-between items-center mb-6">
+                    <div className="flex items-center gap-3">
                         <BrandLogo size={48} animate={false} />
                         <div>
-                            <h1 className="text-2xl font-black tracking-tighter text-brand-dark uppercase leading-none">Hello Foodie!</h1>
-                            <p className="text-[9px] font-black uppercase tracking-[0.35em] text-gray-300 mt-1">Your Culinary Journey</p>
+                            <h1 className="text-xl font-black tracking-tight text-brand-dark uppercase leading-none">Hello Foodie!</h1>
+                            <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400 mt-1">Your Culinary Journey</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setOnlyFavorites(!onlyFavorites)}
-                            className={clsx(
-                                "w-12 h-12 rounded-[1.2rem] flex items-center justify-center transition-all shadow-inner active:scale-95",
-                                onlyFavorites ? "bg-red-500 text-white shadow-red-200" : "bg-slate-50 text-red-400 border-2 border-red-50/50"
-                            )}
+                            className="p-3 rounded-2xl bg-white shadow-xl shadow-red-100/20 border border-gray-50 text-red-500 active:scale-90 transition-all flex items-center justify-center h-12 w-12"
                         >
                             <Heart size={22} fill={onlyFavorites ? "currentColor" : "none"} strokeWidth={onlyFavorites ? 0 : 2.5} />
                         </button>
-                        <div className="relative group" onClick={() => navigate('/profile')}>
-                            <div className="w-12 h-12 bg-slate-50 border-2 border-brand-orange/20 rounded-[1.2rem] flex items-center justify-center font-black text-brand-orange shadow-inner group-hover:scale-110 transition-transform cursor-pointer overflow-hidden">
-                                {profile?.avatar_url ? (
-                                    <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
-                                ) : (
-                                    profile?.full_name?.charAt(0) || 'U'
-                                )}
-                            </div>
+                        <div
+                            className="w-12 h-12 bg-slate-100 rounded-2xl overflow-hidden border-2 border-white shadow-xl cursor-pointer"
+                            onClick={() => navigate('/profile')}
+                        >
+                            {profile?.avatar_url ? (
+                                <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center font-black text-brand-orange text-lg">
+                                    {profile?.full_name?.charAt(0) || 'U'}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                <div className="relative">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-brand-orange/40" size={18} />
+                <div className="relative mx-1">
+                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
                     <input
                         type="text"
                         placeholder="Search my restaurants..."
-                        className="w-full bg-slate-50 py-5 pl-14 pr-6 rounded-[2rem] text-brand-dark placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all text-sm font-bold border border-slate-100 shadow-inner"
+                        className="w-full bg-white py-5 px-14 rounded-full text-brand-dark placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange/10 transition-all text-sm font-bold border-2 border-slate-100/50 shadow-inner"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
             </header>
 
-            {/* Stats Section */}
-            <div className="px-6 -mt-8 grid grid-cols-3 gap-4 mb-8 relative z-20">
+            {/* Stats Cards */}
+            <div className="px-5 -mt-6 grid grid-cols-4 gap-2 mb-10 relative z-20">
                 {stats.map((stat) => (
                     <div
                         key={stat.label}
-                        onClick={() => stat.link && navigate(stat.link)}
-                        className="bg-white p-5 rounded-3xl shadow-xl shadow-slate-200/40 border border-gray-50 flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform"
+                        onClick={() => {
+                            if (stat.action) stat.action();
+                            if (stat.link) navigate(stat.link);
+                        }}
+                        className={clsx(
+                            "bg-white p-4 rounded-[1.5rem] shadow-xl shadow-slate-200/40 border border-gray-50 flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all",
+                            onlyFavorites && stat.label === 'Favorites' ? "ring-2 ring-blue-400/50" : ""
+                        )}
                     >
-                        <span className={clsx("w-2 h-2 rounded-full mb-2.5", stat.color)}></span>
-                        <span className="text-2xl font-black text-brand-dark tabular-nums">{stat.count}</span>
-                        <span className="text-[9px] font-black text-gray-400 uppercase mt-1.5 tracking-widest">{stat.label}</span>
+                        <span className={clsx("w-2 h-2 rounded-full mb-2", stat.color)}></span>
+                        <span className="text-xl font-black text-brand-dark">{stat.count}</span>
+                        <span className="text-[7px] font-black text-gray-400 uppercase mt-1 tracking-widest">{stat.label}</span>
                     </div>
                 ))}
             </div>
 
-            {/* Recommendations Section */}
-            {recommended?.length > 0 && (
-                <div className="px-6 mb-10">
-                    <div className="flex items-center justify-between mb-5 px-1">
-                        <h3 className="text-[10px] font-black uppercase text-brand-dark tracking-[0.25em]">Recommended for you</h3>
-                        <div className="flex gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-brand-orange"></div>
-                            <div className="w-1.5 h-1.5 rounded-full bg-slate-200"></div>
-                            <div className="w-1.5 h-1.5 rounded-full bg-slate-200"></div>
-                        </div>
-                    </div>
-                    <div className="flex gap-5 overflow-x-auto pb-6 no-scrollbar snap-x snap-mandatory">
-                        {recommended.map(r => (
-                            <div
-                                key={r.id}
-                                onClick={() => navigate(`/restaurant/${r.id}`)}
-                                className="flex-shrink-0 w-[80vw] bg-white p-4 rounded-[2.5rem] shadow-2xl shadow-slate-200/40 border border-gray-50 active:scale-95 transition-all snap-center relative overflow-hidden"
-                            >
-                                <div className="h-48 rounded-[2rem] overflow-hidden mb-4 relative">
-                                    <img
-                                        src={getRestaurantImage(r.image_url || r.image)}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => e.target.src = DEFAULT_RESTAURANT_IMAGE}
-                                    />
-                                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center shadow-lg">
-                                        <Star size={12} className="text-brand-orange fill-brand-orange mr-1" />
-                                        <span className="text-[10px] font-black text-brand-dark">{r.rating || '---'}</span>
-                                    </div>
-                                </div>
-                                <div className="px-2">
-                                    <h4 className="font-black text-sm text-brand-dark uppercase truncate mb-1 tracking-tight">{r.name}</h4>
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{r.cuisine}</p>
-                                        <span className="text-xs font-black text-brand-orange">{r.price}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            <div className="px-6 mb-8 flex flex-col gap-4">
-                <div className="flex overflow-x-auto gap-2 no-scrollbar py-1">
-                    {cuisines.map(c => (
+            {/* View Mode Switcher */}
+            <div className="px-6 mb-8">
+                <div className="bg-[#EFEEF1] p-1.5 rounded-[2rem] flex border border-gray-100 shadow-sm">
+                    {[
+                        { id: 'list', label: 'List', icon: List },
+                        { id: 'list-photos', label: 'Mosaic', icon: LayoutGrid },
+                        { id: 'gallery', label: 'Gallery', icon: ImageIcon }
+                    ].map(mode => (
                         <button
-                            key={c}
-                            onClick={() => setFilterCuisine(c)}
+                            key={mode.id}
+                            onClick={() => setViewMode(mode.id)}
                             className={clsx(
-                                "px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm",
-                                filterCuisine === c ? "bg-brand-orange text-white" : "bg-white text-gray-400 border border-gray-100"
+                                "flex-1 flex items-center justify-center gap-3 py-3.5 rounded-[1.5rem] transition-all duration-300",
+                                viewMode === mode.id ? "bg-white text-brand-orange shadow-lg scale-[1.02]" : "text-gray-400"
                             )}
                         >
-                            {c}
+                            <mode.icon size={18} className={clsx(viewMode === mode.id ? "text-brand-orange" : "text-gray-400")} />
+                            <span className="text-[10px] font-black uppercase tracking-widest leading-none mt-0.5">{mode.label}</span>
                         </button>
                     ))}
                 </div>
-
-                <div className="flex justify-between items-center">
-                    <div className="flex bg-slate-200/40 p-1.5 rounded-[1.5rem] backdrop-blur-sm border border-slate-100">
-                        {[
-                            { id: 'list', icon: List },
-                            { id: 'list-photos', icon: LayoutGrid },
-                            { id: 'gallery', icon: ImageIcon }
-                        ].map(modeItem => {
-                            const Icon = modeItem.icon;
-                            return (
-                                <button
-                                    key={modeItem.id}
-                                    onClick={() => setViewMode(modeItem.id)}
-                                    className={clsx(
-                                        "p-2.5 rounded-2xl transition-all",
-                                        viewMode === modeItem.id ? "bg-white text-brand-orange shadow-lg scale-110" : "text-gray-400"
-                                    )}
-                                >
-                                    <Icon size={22} />
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    <div className="relative">
-                        <select
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
-                            className="appearance-none bg-white border border-gray-100 rounded-2xl px-5 py-3 pr-11 text-[10px] font-black text-brand-dark shadow-sm focus:outline-none ring-4 ring-slate-50 cursor-pointer uppercase tracking-widest"
-                        >
-                            <option value="date">Added Date</option>
-                            <option value="distance">Nearest</option>
-                            <option value="zone">Zone/City</option>
-                            <option value="club">By Club</option>
-                            <option value="recommender">Rec by</option>
-                        </select>
-                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-orange pointer-events-none" size={16} />
-                    </div>
-                </div>
             </div>
 
+            {/* Filters */}
+            <div className="px-6 mb-8 flex gap-3 overflow-x-auto no-scrollbar py-2">
+                {[
+                    { label: 'Area', icon: ChevronDown },
+                    { label: 'Cuisine', icon: ChevronDown },
+                    { label: '$', icon: ChevronDown },
+                    { label: '***', icon: ChevronDown },
+                    { label: 'Recommended By', icon: ChevronDown }
+                ].map((filter, i) => (
+                    <button
+                        key={i}
+                        className="px-5 py-3.5 bg-[#F1F3F6] rounded-full whitespace-nowrap border-2 border-white/50 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-brand-dark active:scale-95 transition-all"
+                    >
+                        {filter.label}
+                        <filter.icon size={14} className="text-gray-400" />
+                    </button>
+                ))}
+            </div>
+
+            {/* Feed */}
             <div className={clsx(
                 "px-6 pb-32 transition-all duration-300",
-                viewMode === 'gallery' ? "grid grid-cols-2 gap-5" : "flex flex-col gap-6"
+                viewMode === 'gallery' ? "grid grid-cols-2 gap-5" : "flex flex-col gap-5"
             )}>
                 <AnimatePresence mode="popLayout" initial={false}>
                     {loading ? (
@@ -276,8 +246,8 @@ export default function Home() {
                             <motion.div
                                 key={restaurant.id}
                                 layout
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9 }}
                                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
                             >
