@@ -144,7 +144,7 @@ export default function Home() {
 
     const visitedCount = restaurants.filter(r => r.is_visited).length;
     const badgesCount = BADGE_LEVELS.filter(b => visitedCount >= b.minVisits).length;
-    const favoritesCount = restaurants.filter(r => r.is_favorite).length;
+    const favoritesCount = restaurants.filter(r => r.is_favorite && !r.is_visited).length;
 
     const stats = [
         { label: 'To Visit', count: restaurants.filter(r => !r.is_visited).length, color: 'bg-brand-orange', link: '/', action: () => setOnlyFavorites(false) },
