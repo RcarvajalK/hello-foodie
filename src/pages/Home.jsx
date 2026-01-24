@@ -168,24 +168,39 @@ export default function Home() {
     }, [restaurants]);
 
     const FilterDropdown = ({ label, current, options, onSelect, isOpen, onToggle }) => {
-        const dropdownRef = useRef(null);
+        const buttonRef = useRef(null);
+        const [menuStyle, setMenuStyle] = useState({});
 
         useEffect(() => {
-            const handleClickOutside = (event) => {
-                if (isOpen && dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                    onToggle();
-                }
-            };
-            document.addEventListener("mousedown", handleClickOutside);
-            return () => document.removeEventListener("mousedown", handleClickOutside);
+            if (isOpen && buttonRef.current) {
+                const rect = buttonRef.current.getBoundingClientRect();
+                // Ensure menu doesn't go off-screen horizontally
+                const left = Math.min(rect.left, window.innerWidth - 220);
+                setMenuStyle({
+                    position: 'fixed',
+                    top: rect.bottom + 12,
+                    left: Math.max(16, left),
+                    zIndex: 1000
+                });
+            }
         }, [isOpen]);
 
+        // Close menu on scroll to prevent misalignment
+        useEffect(() => {
+            if (isOpen) {
+                const handleScroll = () => onToggle();
+                window.addEventListener('scroll', handleScroll, true);
+                return () => window.removeEventListener('scroll', handleScroll, true);
+            }
+        }, [isOpen, onToggle]);
+
         return (
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative">
                 <button
+                    ref={buttonRef}
                     onClick={onToggle}
                     className={clsx(
-                        "px-5 py-3.5 rounded-full whitespace-nowrap border-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all",
+                        "px-5 py-3.5 rounded-full whitespace-nowrap border-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all outline-none",
                         current !== 'All' ? "bg-brand-orange text-white border-brand-orange shadow-lg shadow-brand-orange/20" : "bg-[#F1F3F6] text-brand-dark border-white/50"
                     )}
                 >
@@ -194,25 +209,30 @@ export default function Home() {
                 </button>
                 <AnimatePresence>
                     {isOpen && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute top-full left-0 mt-3 bg-white rounded-3xl shadow-2xl border border-gray-100 p-2 z-[100] min-w-[200px] max-h-[350px] overflow-y-auto no-scrollbar"
-                        >
-                            {options.map(opt => (
-                                <button
-                                    key={opt}
-                                    onClick={() => { onSelect(opt); onToggle(); }}
-                                    className={clsx(
-                                        "w-full text-left px-5 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
-                                        current === opt ? "bg-brand-orange text-white shadow-md" : "text-brand-dark hover:bg-slate-50"
-                                    )}
-                                >
-                                    {opt}
-                                </button>
-                            ))}
-                        </motion.div>
+                        <>
+                            {/* Backdrop to catch clicks */}
+                            <div className="fixed inset-0 z-[999]" onClick={onToggle} />
+                            <motion.div
+                                initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                                style={menuStyle}
+                                className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 p-2 min-w-[200px] max-h-[350px] overflow-y-auto no-scrollbar pointer-events-auto"
+                            >
+                                {options.map(opt => (
+                                    <button
+                                        key={opt}
+                                        onClick={() => { onSelect(opt); onToggle(); }}
+                                        className={clsx(
+                                            "w-full text-left px-5 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all mb-1 last:mb-0",
+                                            current === opt ? "bg-brand-orange text-white shadow-md" : "text-brand-dark hover:bg-slate-50"
+                                        )}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        </>
                     )}
                 </AnimatePresence>
             </div>
@@ -309,7 +329,7 @@ export default function Home() {
             </div>
 
             {/* Filters */}
-            <div className="px-6 mb-6 relative z-50 flex gap-2.5 overflow-x-auto no-scrollbar py-2 pb-80 -mb-80">
+            <div className="px-6 mb-6 relative z-50 flex gap-2.5 overflow-x-auto no-scrollbar py-1">
                 <FilterDropdown
                     label="Area"
                     current={activeArea}
