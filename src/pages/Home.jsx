@@ -55,10 +55,11 @@ export default function Home() {
     }, []);
 
     const calculateDistance = (r) => {
-        if (!userCoords || !r.coordinates) return Infinity;
-        // Simple distance calculation (not accounting for curvature but fine for local)
-        const dx = (r.coordinates.x || 0) - userCoords.lat;
-        const dy = (r.coordinates.y || 0) - userCoords.lng;
+        if (!userCoords || !r.coordinates || typeof r.coordinates.lat !== 'number') return Infinity;
+        // Simplified Haversine or simple Euclidean is fine for local, 
+        // but let's at least handle the prop names correctly
+        const dx = r.coordinates.lat - userCoords.lat;
+        const dy = r.coordinates.lng - userCoords.lng;
         return Math.sqrt(dx * dx + dy * dy);
     };
 
@@ -100,7 +101,13 @@ export default function Home() {
         // Sorting
         list.sort((a, b) => {
             if (sortBy === 'date') return new Date(b.date_added) - new Date(a.date_added);
-            if (sortBy === 'distance') return calculateDistance(a) - calculateDistance(b);
+            if (sortBy === 'distance') {
+                const distA = calculateDistance(a);
+                const distB = calculateDistance(b);
+                // Push Infinity (no coordinates) to the bottom
+                if (distA === distB) return 0;
+                return distA - distB;
+            }
             if (sortBy === 'zone') return (a.zone || '').localeCompare(b.zone || '');
             if (sortBy === 'recommender') return (a.recommended_by || '').localeCompare(b.recommended_by || '');
             if (sortBy === 'club') return (a.club_name || '').localeCompare(b.club_name || '');

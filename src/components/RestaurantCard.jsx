@@ -139,95 +139,56 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
         );
     };
 
-    const SwipeWrapper = ({ children, rounded = "rounded-[2rem]" }) => {
-        const [isOpen, setIsOpen] = useState(false);
-        if (!onDelete) return children;
-
-        const handleDragEnd = (_, info) => {
-            // Threshold for snapping: 60px or high velocity
-            const threshold = -60;
-            const velocity = info.velocity.x;
-
-            if (info.offset.x < threshold || velocity < -500) {
-                setIsOpen(true);
-            } else {
-                setIsOpen(false);
-            }
-        };
-
-        return (
-            <div className={clsx("relative overflow-hidden", rounded)}>
-                {/* Delete Action Background */}
-                <div
-                    className="absolute inset-0 bg-red-500 flex items-center justify-end px-12 text-white"
-                    onClick={(e) => { e.stopPropagation(); onDelete(restaurant.id); }}
-                >
-                    <div className="flex flex-col items-center gap-1">
-                        <Trash2 size={24} />
-                        <span className="text-[8px] font-black uppercase tracking-widest">Delete</span>
-                    </div>
-                </div>
-
-                <motion.div
-                    drag="x"
-                    dragDirectionLock
-                    dragConstraints={{ left: -120, right: 0 }}
-                    dragElastic={0.4}
-                    animate={{ x: isOpen ? -120 : 0 }}
-                    onDragEnd={handleDragEnd}
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                    className="relative z-10"
-                >
-                    {children}
-                </motion.div>
-            </div>
-        );
-    };
-
     if (variant === 'list') {
         return (
             <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <SwipeWrapper>
-                    <div
-                        onClick={() => !restaurant.is_sponsored && navigate(`/restaurant/${restaurant.id}`)}
-                        className={clsx(
-                            "flex items-center gap-3 bg-white p-2.5 rounded-[2rem] border shadow-sm transition-all relative overflow-hidden active:scale-98 cursor-pointer",
-                            restaurant.is_sponsored ? "border-brand-orange/20" : "border-gray-50"
+                <div
+                    onClick={() => !restaurant.is_sponsored && navigate(`/restaurant/${restaurant.id}`)}
+                    className={clsx(
+                        "flex items-center gap-3 bg-white p-2.5 rounded-[2rem] border shadow-sm transition-all relative overflow-hidden active:scale-98 cursor-pointer",
+                        restaurant.is_sponsored ? "border-brand-orange/20" : "border-gray-50"
+                    )}
+                >
+                    <div className="w-16 h-16 rounded-2xl bg-slate-50 overflow-hidden flex-shrink-0 border border-slate-100 relative">
+                        <img
+                            src={getRestaurantImage(restaurant.image_url || restaurant.image)}
+                            alt={restaurant.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => e.target.src = getDiverseFallbackImage(restaurant.name)}
+                        />
+                        {restaurant.is_sponsored && (
+                            <div className="absolute top-1 left-1 bg-brand-orange text-white text-[6px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-[0.2em]">Ad</div>
                         )}
-                    >
-                        <div className="w-16 h-16 rounded-2xl bg-slate-50 overflow-hidden flex-shrink-0 border border-slate-100 relative">
-                            <img
-                                src={getRestaurantImage(restaurant.image_url || restaurant.image)}
-                                alt={restaurant.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => e.target.src = getDiverseFallbackImage(restaurant.name)}
-                            />
-                            {restaurant.is_sponsored && (
-                                <div className="absolute top-1 left-1 bg-brand-orange text-white text-[6px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-[0.2em]">Ad</div>
-                            )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5">
-                                <h3 className="font-black text-brand-dark text-[11px] truncate uppercase tracking-tight">{restaurant.name}</h3>
-                                {isVisited && <BrandTag />}
-                            </div>
-                            <p className="text-[7.5px] text-gray-400 font-bold uppercase tracking-widest leading-none">
-                                {restaurant.zone || 'No Zone'}
-                            </p>
-                            <p className="text-[7px] text-brand-orange/60 font-black uppercase tracking-[0.1em] mt-1 leading-none">
-                                {restaurant.cuisine}
-                            </p>
-                        </div>
-                        <div className="flex flex-col items-end gap-1.5 px-1.5">
-                            <div className="flex items-center gap-1 text-brand-orange bg-brand-orange/5 px-2 py-1 rounded-full border border-brand-orange/10">
-                                <Star size={9} fill="currentColor" />
-                                <span className="text-[10px] font-black tabular-nums leading-none mt-0.5">{restaurant.rating || '---'}</span>
-                            </div>
-                            {!restaurant.is_sponsored && <EditButton />}
-                        </div>
                     </div>
-                </SwipeWrapper>
-                <QuickEditModal isVisible={isEditing} onClose={() => setIsEditing(false)} data={editData} setData={setEditData} onSave={handleSave} />
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                            <h3 className="font-black text-brand-dark text-[11px] truncate uppercase tracking-tight">{restaurant.name}</h3>
+                            {isVisited && <BrandTag />}
+                        </div>
+                        <p className="text-[7.5px] text-gray-400 font-bold uppercase tracking-widest leading-none">
+                            {restaurant.zone || 'No Zone'}
+                        </p>
+                        <p className="text-[7px] text-brand-orange/60 font-black uppercase tracking-[0.1em] mt-1 leading-none">
+                            {restaurant.cuisine}
+                        </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5 px-1.5">
+                        <div className="flex items-center gap-1 text-brand-orange bg-brand-orange/5 px-2 py-1 rounded-full border border-brand-orange/10">
+                            <Star size={9} fill="currentColor" />
+                            <span className="text-[10px] font-black tabular-nums leading-none mt-0.5">{restaurant.rating || '---'}</span>
+                        </div>
+                        {!restaurant.is_sponsored && <EditButton />}
+                    </div>
+                </div>
+                <QuickEditModal
+                    isVisible={isEditing}
+                    onClose={() => setIsEditing(false)}
+                    data={editData}
+                    setData={setEditData}
+                    onSave={handleSave}
+                    onDelete={() => onDelete(restaurant.id)}
+                    restaurantName={restaurant.name}
+                />
             </motion.div>
         );
     }
@@ -255,6 +216,17 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                         <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-brand-orange text-[7px] font-black px-2 py-0.5 rounded-lg uppercase tracking-[0.2em] shadow-lg border border-white/50">Sponsored</div>
                     )}
                 </div>
+                {!restaurant.is_sponsored && (
+                    <QuickEditModal
+                        isVisible={isEditing}
+                        onClose={() => setIsEditing(false)}
+                        data={editData}
+                        setData={setEditData}
+                        onSave={handleSave}
+                        onDelete={() => onDelete(restaurant.id)}
+                        restaurantName={restaurant.name}
+                    />
+                )}
             </motion.div>
         );
     }
@@ -329,18 +301,24 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
     );
 
     return (
-        <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} whileTap={{ scale: 0.98 }}>
-            {variant === 'list' ? (
-                <SwipeWrapper rounded="rounded-[3.5rem]">
-                    {content}
-                </SwipeWrapper>
-            ) : content}
-            <QuickEditModal isVisible={isEditing} onClose={() => setIsEditing(false)} data={editData} setData={setEditData} onSave={handleSave} />
+        <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} whileTap={restaurant.is_sponsored ? {} : { scale: 0.98 }}>
+            {content}
+            <QuickEditModal
+                isVisible={isEditing}
+                onClose={() => setIsEditing(false)}
+                data={editData}
+                setData={setEditData}
+                onSave={handleSave}
+                onDelete={() => onDelete(restaurant.id)}
+                restaurantName={restaurant.name}
+            />
         </motion.div>
     );
 }
 
-function QuickEditModal({ isVisible, onClose, data, setData, onSave }) {
+function QuickEditModal({ isVisible, onClose, data, setData, onSave, onDelete, restaurantName }) {
+    const [confirmDelete, setConfirmDelete] = useState(false);
+
     return (
         <AnimatePresence>
             {isVisible && (
@@ -386,13 +364,39 @@ function QuickEditModal({ isVisible, onClose, data, setData, onSave }) {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={onSave}
-                                className="w-full bg-brand-dark text-white font-black py-4 rounded-[1.5rem] flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all"
-                            >
-                                <Save size={18} />
-                                Update Place
-                            </button>
+                            <div className="flex flex-col gap-3 pt-4">
+                                <button
+                                    onClick={onSave}
+                                    className="w-full bg-brand-dark text-white font-black py-4 rounded-[1.5rem] flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all"
+                                >
+                                    <Save size={18} />
+                                    Update Place
+                                </button>
+
+                                {confirmDelete ? (
+                                    <div className="flex gap-2 animate-in fade-in zoom-in duration-200">
+                                        <button
+                                            onClick={onDelete}
+                                            className="flex-1 bg-red-500 text-white font-black py-3 rounded-xl text-xs flex items-center justify-center gap-2"
+                                        >
+                                            <Trash2 size={14} /> Confirm
+                                        </button>
+                                        <button
+                                            onClick={() => setConfirmDelete(false)}
+                                            className="flex-1 bg-slate-100 text-gray-500 font-black py-3 rounded-xl text-xs"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => setConfirmDelete(true)}
+                                        className="w-full text-red-400 font-black py-2 rounded-xl text-[10px] uppercase tracking-widest hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Trash2 size={12} /> Remove Place
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </motion.div>
                 </div>

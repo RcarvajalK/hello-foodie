@@ -170,7 +170,7 @@ export const useStore = create((set, get) => ({
 
         if (typeof newData.coordinates === 'string' && newData.coordinates.includes('(')) {
             const [lng, lat] = newData.coordinates.replace(/[()]/g, '').split(',').map(Number);
-            newData = { ...newData, coordinates: { x: lat, y: lng } };
+            newData = { ...newData, coordinates: { lat, lng } };
         }
 
         set((state) => ({
