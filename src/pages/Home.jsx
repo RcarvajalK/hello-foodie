@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, List, LayoutGrid, Image as ImageIcon, ChevronDown, Heart } from 'lucide-react';
 import { useStore } from '../lib/store';
@@ -147,47 +147,77 @@ export default function Home() {
     ];
 
     // Filter Options
-    const areas = useMemo(() => ['All', ...new Set(restaurants.map(r => r.zone).filter(Boolean))], [restaurants]);
-    const cuisines = useMemo(() => ['All', ...new Set(restaurants.map(r => r.cuisine).filter(Boolean))], [restaurants]);
-    const recommenders = useMemo(() => ['All', ...new Set(restaurants.map(r => r.recommended_by || 'Me').filter(Boolean))], [restaurants]);
+    const areas = useMemo(() => {
+        const set = new Set(restaurants.map(r => r.zone).filter(Boolean).map(z => z.trim()));
+        return ['All', ...[...set].sort()];
+    }, [restaurants]);
 
-    const FilterDropdown = ({ label, current, options, onSelect, isOpen, onToggle }) => (
-        <div className="relative">
-            <button
-                onClick={onToggle}
-                className={clsx(
-                    "px-5 py-3.5 rounded-full whitespace-nowrap border-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all",
-                    current !== 'All' ? "bg-brand-orange text-white border-brand-orange" : "bg-[#F1F3F6] text-brand-dark border-white/50"
-                )}
-            >
-                {current === 'All' ? label : current}
-                <ChevronDown size={14} className={clsx("transition-transform", isOpen && "rotate-180", current !== 'All' ? "text-white" : "text-gray-400")} />
-            </button>
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute top-full left-0 mt-2 bg-white rounded-3xl shadow-2xl border border-gray-100 p-2 z-[100] min-w-[160px] max-h-[300px] overflow-y-auto no-scrollbar"
-                    >
-                        {options.map(opt => (
-                            <button
-                                key={opt}
-                                onClick={() => { onSelect(opt); onToggle(); }}
-                                className={clsx(
-                                    "w-full text-left px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-colors",
-                                    current === opt ? "bg-brand-orange/10 text-brand-orange" : "text-brand-dark hover:bg-slate-50"
-                                )}
-                            >
-                                {opt}
-                            </button>
-                        ))}
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    );
+    const cuisines = useMemo(() => {
+        const all = [];
+        restaurants.forEach(r => {
+            if (r.cuisine) {
+                r.cuisine.split(',').forEach(c => all.push(c.trim()));
+            }
+        });
+        return ['All', ...[...new Set(all)].sort()];
+    }, [restaurants]);
+
+    const recommenders = useMemo(() => {
+        const set = new Set(restaurants.map(r => r.recommended_by || 'Me').filter(Boolean).map(rec => rec.trim()));
+        return ['All', ...[...set].sort()];
+    }, [restaurants]);
+
+    const FilterDropdown = ({ label, current, options, onSelect, isOpen, onToggle }) => {
+        const dropdownRef = useRef(null);
+
+        useEffect(() => {
+            const handleClickOutside = (event) => {
+                if (isOpen && dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                    onToggle();
+                }
+            };
+            document.addEventListener("mousedown", handleClickOutside);
+            return () => document.removeEventListener("mousedown", handleClickOutside);
+        }, [isOpen]);
+
+        return (
+            <div className="relative" ref={dropdownRef}>
+                <button
+                    onClick={onToggle}
+                    className={clsx(
+                        "px-5 py-3.5 rounded-full whitespace-nowrap border-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all",
+                        current !== 'All' ? "bg-brand-orange text-white border-brand-orange shadow-lg shadow-brand-orange/20" : "bg-[#F1F3F6] text-brand-dark border-white/50"
+                    )}
+                >
+                    {current === 'All' ? label : current}
+                    <ChevronDown size={14} className={clsx("transition-transform", isOpen && "rotate-180", current !== 'All' ? "text-white" : "text-gray-400")} />
+                </button>
+                <AnimatePresence>
+                    {isOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            className="absolute top-full left-0 mt-3 bg-white rounded-3xl shadow-2xl border border-gray-100 p-2 z-[100] min-w-[200px] max-h-[350px] overflow-y-auto no-scrollbar"
+                        >
+                            {options.map(opt => (
+                                <button
+                                    key={opt}
+                                    onClick={() => { onSelect(opt); onToggle(); }}
+                                    className={clsx(
+                                        "w-full text-left px-5 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                        current === opt ? "bg-brand-orange text-white shadow-md" : "text-brand-dark hover:bg-slate-50"
+                                    )}
+                                >
+                                    {opt}
+                                </button>
+                            ))}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        );
+    };
 
     return (
         <div className="pb-24 bg-[#F8FAFC] min-h-screen">
