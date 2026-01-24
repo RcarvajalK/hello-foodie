@@ -191,11 +191,11 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                     <div
                         onClick={() => !restaurant.is_sponsored && navigate(`/restaurant/${restaurant.id}`)}
                         className={clsx(
-                            "flex items-center gap-4 bg-white p-4 rounded-[2rem] border shadow-sm transition-all relative overflow-hidden active:scale-98 cursor-pointer",
-                            restaurant.is_sponsored ? "border-brand-orange/20" : "border-gray-100"
+                            "flex items-center gap-3 bg-white p-2.5 rounded-[2rem] border shadow-sm transition-all relative overflow-hidden active:scale-98 cursor-pointer",
+                            restaurant.is_sponsored ? "border-brand-orange/20" : "border-gray-50"
                         )}
                     >
-                        <div className="w-20 h-20 rounded-2xl bg-slate-50 overflow-hidden flex-shrink-0 border border-slate-100 relative">
+                        <div className="w-16 h-16 rounded-2xl bg-slate-50 overflow-hidden flex-shrink-0 border border-slate-100 relative">
                             <img
                                 src={getRestaurantImage(restaurant.image_url || restaurant.image)}
                                 alt={restaurant.name}
@@ -208,20 +208,20 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                         </div>
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-0.5">
-                                <h3 className="font-black text-brand-dark text-[13px] truncate uppercase tracking-tight">{restaurant.name}</h3>
+                                <h3 className="font-black text-brand-dark text-[11px] truncate uppercase tracking-tight">{restaurant.name}</h3>
                                 {isVisited && <BrandTag />}
                             </div>
-                            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest leading-tight">
+                            <p className="text-[7.5px] text-gray-400 font-bold uppercase tracking-widest leading-none">
                                 {restaurant.zone || 'No Zone'}
                             </p>
-                            <p className="text-[8px] text-brand-orange/60 font-black uppercase tracking-[0.2em] mt-1">
+                            <p className="text-[7px] text-brand-orange/60 font-black uppercase tracking-[0.1em] mt-1 leading-none">
                                 {restaurant.cuisine}
                             </p>
                         </div>
-                        <div className="flex flex-col items-end gap-2 px-2">
-                            <div className="flex items-center gap-1.5 text-brand-orange bg-brand-orange/5 px-3 py-1.5 rounded-full border border-brand-orange/10">
-                                <Star size={10} fill="currentColor" />
-                                <span className="text-xs font-black tabular-nums">{restaurant.rating || '---'}</span>
+                        <div className="flex flex-col items-end gap-1.5 px-1.5">
+                            <div className="flex items-center gap-1 text-brand-orange bg-brand-orange/5 px-2 py-1 rounded-full border border-brand-orange/10">
+                                <Star size={9} fill="currentColor" />
+                                <span className="text-[10px] font-black tabular-nums leading-none mt-0.5">{restaurant.rating || '---'}</span>
                             </div>
                             {!restaurant.is_sponsored && <EditButton />}
                         </div>

@@ -191,24 +191,24 @@ export default function Home() {
 
     return (
         <div className="pb-24 bg-[#F8FAFC] min-h-screen">
-            <header className="bg-white px-6 pt-12 pb-8 rounded-b-[4rem] shadow-sm relative z-10">
-                <div className="flex justify-between items-center mb-6">
+            <header className="bg-white px-6 pt-10 pb-4 rounded-b-[3.5rem] shadow-sm relative z-10 transition-all">
+                <div className="flex justify-between items-center mb-5">
                     <div className="flex items-center gap-3">
-                        <BrandLogo size={48} animate={false} />
+                        <BrandLogo size={40} animate={false} />
                         <div>
-                            <h1 className="text-xl font-black tracking-tight text-brand-dark uppercase leading-none">Hello Foodie!</h1>
-                            <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400 mt-1">Your Culinary Journey</p>
+                            <h1 className="text-lg font-black tracking-tight text-brand-dark uppercase leading-none">Hello Foodie!</h1>
+                            <p className="text-[7px] font-black uppercase tracking-[0.3em] text-gray-400 mt-0.5 whitespace-nowrap">Your Culinary Journey</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setOnlyFavorites(!onlyFavorites)}
-                            className="p-3 rounded-2xl bg-white shadow-xl shadow-red-100/20 border border-gray-50 text-red-500 active:scale-90 transition-all flex items-center justify-center h-12 w-12"
+                            className="p-2.5 rounded-2xl bg-white shadow-lg shadow-red-100/30 border border-gray-50 text-red-500 active:scale-90 transition-all flex items-center justify-center h-10 w-10"
                         >
-                            <Heart size={22} fill={onlyFavorites ? "currentColor" : "none"} strokeWidth={onlyFavorites ? 0 : 2.5} />
+                            <Heart size={18} fill={onlyFavorites ? "currentColor" : "none"} strokeWidth={onlyFavorites ? 0 : 2.5} />
                         </button>
                         <div
-                            className="w-12 h-12 bg-slate-100 rounded-2xl overflow-hidden border-2 border-white shadow-xl cursor-pointer"
+                            className="w-10 h-10 bg-slate-100 rounded-2xl overflow-hidden border-2 border-white shadow-xl cursor-pointer"
                             onClick={() => navigate('/profile')}
                         >
                             {profile?.avatar_url ? (
@@ -223,11 +223,11 @@ export default function Home() {
                 </div>
 
                 <div className="relative mx-1">
-                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
                     <input
                         type="text"
                         placeholder="Search my restaurants..."
-                        className="w-full bg-white py-5 px-14 rounded-full text-brand-dark placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange/10 transition-all text-sm font-bold border-2 border-slate-100/50 shadow-inner"
+                        className="w-full bg-[#FAFAFA] py-3.5 px-14 rounded-full text-brand-dark placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange/10 transition-all text-xs font-bold border border-slate-100 shadow-inner"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -235,7 +235,7 @@ export default function Home() {
             </header>
 
             {/* Stats Cards */}
-            <div className="px-5 -mt-6 grid grid-cols-4 gap-2 mb-10 relative z-20">
+            <div className="px-5 -mt-4 grid grid-cols-4 gap-2 mb-6 relative z-20">
                 {stats.map((stat) => (
                     <div
                         key={stat.label}
@@ -244,20 +244,20 @@ export default function Home() {
                             if (stat.link) navigate(stat.link);
                         }}
                         className={clsx(
-                            "bg-white p-4 rounded-[1.5rem] shadow-xl shadow-slate-200/40 border border-gray-50 flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all",
+                            "bg-white p-2.5 rounded-[1.5rem] shadow-xl shadow-slate-200/40 border border-gray-50 flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all",
                             onlyFavorites && stat.label === 'Favorites' ? "ring-2 ring-blue-400/50" : ""
                         )}
                     >
-                        <span className={clsx("w-2 h-2 rounded-full mb-2", stat.color)}></span>
-                        <span className="text-xl font-black text-brand-dark">{stat.count}</span>
-                        <span className="text-[7px] font-black text-gray-400 uppercase mt-1 tracking-widest">{stat.label}</span>
+                        <span className={clsx("w-1.5 h-1.5 rounded-full mb-1.5", stat.color)}></span>
+                        <span className="text-base font-black text-brand-dark leading-none">{stat.count}</span>
+                        <span className="text-[6px] font-black text-gray-400 uppercase mt-1 tracking-widest leading-none">{stat.label}</span>
                     </div>
                 ))}
             </div>
 
             {/* View Mode Switcher */}
-            <div className="px-6 mb-8">
-                <div className="bg-[#EFEEF1] p-1.5 rounded-[2rem] flex border border-gray-100 shadow-sm">
+            <div className="px-6 mb-4">
+                <div className="bg-[#EFEEF1] p-1.5 rounded-[2rem] flex border border-gray-100/50 shadow-sm">
                     {[
                         { id: 'list', label: 'List', icon: List },
                         { id: 'list-photos', label: 'Mosaic', icon: LayoutGrid },
@@ -267,19 +267,19 @@ export default function Home() {
                             key={mode.id}
                             onClick={() => setViewMode(mode.id)}
                             className={clsx(
-                                "flex-1 flex items-center justify-center gap-3 py-3.5 rounded-[1.5rem] transition-all duration-300",
-                                viewMode === mode.id ? "bg-white text-brand-orange shadow-lg scale-[1.02]" : "text-gray-400"
+                                "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[1.5rem] transition-all duration-300",
+                                viewMode === mode.id ? "bg-white text-brand-orange shadow-md scale-[1.02]" : "text-gray-400 hover:text-gray-500"
                             )}
                         >
-                            <mode.icon size={18} className={clsx(viewMode === mode.id ? "text-brand-orange" : "text-gray-400")} />
-                            <span className="text-[10px] font-black uppercase tracking-widest leading-none mt-0.5">{mode.label}</span>
+                            <mode.icon size={16} className={clsx(viewMode === mode.id ? "text-brand-orange" : "text-gray-400")} />
+                            <span className="text-[9px] font-black uppercase tracking-widest leading-none">{mode.label}</span>
                         </button>
                     ))}
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="px-6 mb-8 flex gap-3 overflow-x-auto no-scrollbar py-2">
+            <div className="px-6 mb-6 flex gap-2.5 overflow-x-auto no-scrollbar py-1">
                 <FilterDropdown
                     label="Area"
                     current={activeArea}
@@ -313,7 +313,7 @@ export default function Home() {
                     onToggle={() => setOpenFilter(openFilter === 'rating' ? null : 'rating')}
                 />
                 <FilterDropdown
-                    label="Recommended By"
+                    label="Recommender"
                     current={activeRecommender}
                     options={recommenders}
                     onSelect={setActiveRecommender}
@@ -325,7 +325,7 @@ export default function Home() {
             {/* Feed */}
             <div className={clsx(
                 "px-6 pb-32 transition-all duration-300",
-                viewMode === 'gallery' ? "grid grid-cols-2 gap-5" : "flex flex-col gap-5"
+                viewMode === 'gallery' ? "grid grid-cols-2 gap-5" : "flex flex-col gap-3.5"
             )}>
                 <AnimatePresence mode="popLayout" initial={false}>
                     {loading ? (
