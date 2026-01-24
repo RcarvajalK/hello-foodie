@@ -309,7 +309,7 @@ export default function Home() {
             </div>
 
             {/* Filters */}
-            <div className="px-6 mb-6 flex gap-2.5 overflow-x-auto no-scrollbar py-1">
+            <div className="px-6 mb-6 relative z-50 flex gap-2.5 overflow-x-auto no-scrollbar py-2 pb-80 -mb-80">
                 <FilterDropdown
                     label="Area"
                     current={activeArea}
