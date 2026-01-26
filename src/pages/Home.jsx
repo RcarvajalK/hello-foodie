@@ -1,13 +1,13 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, List, LayoutGrid, Image as ImageIcon, ChevronDown, Heart } from 'lucide-react';
+import { Search, List, LayoutGrid, Image as ImageIcon, ChevronDown, Heart, Trophy } from 'lucide-react';
 import { useStore } from '../lib/store';
 import RestaurantCard from '../components/RestaurantCard';
 import BrandLogo from '../components/BrandLogo';
 import clsx from 'clsx';
 import { getRestaurantImage, DEFAULT_RESTAURANT_IMAGE } from '../lib/images';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BADGE_LEVELS } from '../lib/badges';
+import { BADGE_LEVELS, calculateXP, getLevelFromXP } from '../lib/badges';
 
 
 export default function Home() {
@@ -41,7 +41,7 @@ export default function Home() {
     }, [viewMode]);
 
     const handleDelete = async (id) => {
-        if (window.confirm('¿Borrar este restaurante de tu lista?')) {
+        if (window.confirm('Delete this restaurant from your list?')) {
             await deleteRestaurant(id);
         }
     };
@@ -59,8 +59,6 @@ export default function Home() {
 
     const calculateDistance = (r) => {
         if (!userCoords || !r.coordinates || typeof r.coordinates.lat !== 'number') return Infinity;
-        // Simplified Haversine or simple Euclidean is fine for local, 
-        // but let's at least handle the prop names correctly
         const dx = r.coordinates.lat - userCoords.lat;
         const dy = r.coordinates.lng - userCoords.lng;
         return Math.sqrt(dx * dx + dy * dy);
@@ -107,7 +105,6 @@ export default function Home() {
             if (sortBy === 'distance') {
                 const distA = calculateDistance(a);
                 const distB = calculateDistance(b);
-                // Push Infinity (no coordinates) to the bottom
                 if (distA === distB) return 0;
                 return distA - distB;
             }
@@ -122,8 +119,8 @@ export default function Home() {
         const adFrequency = 3;
 
         const mockAds = [
-            { id: 'ad1', name: 'RESTAURANTE EKILORE', zone: 'POLANCO, CIUDAD DE MÉXICO, MX', cuisine: 'VASCO', rating: 4.7, is_sponsored: true, image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000&auto=format&fit=crop' },
-            { id: 'ad2', name: 'RUFUS', zone: 'ROMA NORTE, CIUDAD DE MÉXICO, MX', cuisine: 'RESTAURANT', rating: 4.3, is_sponsored: true, image: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=1000&auto=format&fit=crop' },
+            { id: 'ad1', name: 'EKILORE RESTAURANT', zone: 'POLANCO, MEXICO CITY, MX', cuisine: 'BASQUE', rating: 4.7, is_sponsored: true, image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000&auto=format&fit=crop' },
+            { id: 'ad2', name: 'RUFUS', zone: 'ROMA NORTE, MEXICO CITY, MX', cuisine: 'CONTEMPORARY', rating: 4.3, is_sponsored: true, image: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=1000&auto=format&fit=crop' },
         ];
 
         list.forEach((r, idx) => {
@@ -137,23 +134,19 @@ export default function Home() {
         return withAds;
     }, [restaurants, searchQuery, sortBy, activeArea, activeCuisine, activePrice, activeRating, activeRecommender, userCoords, onlyFavorites]);
 
-    const recommended = useMemo(() => {
-        if (!profile?.favorite_cuisines?.length) return null;
-        // Find saved restaurants that match user's favorite cuisines
-        return restaurants
-            .filter(r => !r.is_visited && profile.favorite_cuisines.some(c => r.cuisine?.toLowerCase().includes(c.toLowerCase())))
-            .slice(0, 3);
-    }, [restaurants, profile]);
+    const userXP = useMemo(() => calculateXP(restaurants), [restaurants]);
+    const currentLevel = useMemo(() => getLevelFromXP(userXP), [userXP]);
 
     const visitedCount = restaurants.filter(r => r.is_visited).length;
-    const badgesCount = BADGE_LEVELS.filter(b => visitedCount >= b.minVisits).length;
-    const favoritesCount = restaurants.filter(r => r.is_favorite && !r.is_visited).length;
+    const toVisitCount = restaurants.filter(r => !r.is_visited).length;
+    const badgesCount = BADGE_LEVELS.filter(b => userXP >= b.xpThreshold).length;
+    const favoritesCount = restaurants.filter(r => r.is_favorite).length;
 
     const stats = [
-        { label: 'To Visit', count: restaurants.filter(r => !r.is_visited).length, color: 'bg-brand-orange', link: '/', action: () => setOnlyFavorites(false) },
+        { label: 'To Visit', count: toVisitCount, color: 'bg-brand-orange', link: '/', action: () => setOnlyFavorites(false) },
         { label: 'Visited', count: visitedCount, color: 'bg-brand-green', link: '/visited', action: null },
         { label: 'Badges', count: badgesCount, color: 'bg-brand-yellow', link: '/badges', action: null },
-        { label: 'Favorites', count: favoritesCount, color: 'bg-blue-400', link: null, action: () => setOnlyFavorites(true) },
+        { label: 'Favs', count: favoritesCount, color: 'bg-blue-400', link: null, action: () => setOnlyFavorites(true) },
     ];
 
     // Filter Options
@@ -184,7 +177,6 @@ export default function Home() {
         useEffect(() => {
             if (isOpen && buttonRef.current) {
                 const rect = buttonRef.current.getBoundingClientRect();
-                // Ensure menu doesn't go off-screen horizontally
                 const left = Math.min(rect.left, window.innerWidth - 220);
                 setMenuStyle({
                     position: 'fixed',
@@ -195,7 +187,6 @@ export default function Home() {
             }
         }, [isOpen]);
 
-        // Close menu on scroll to prevent misalignment
         useEffect(() => {
             if (isOpen) {
                 const handleScroll = () => onToggle();
@@ -220,7 +211,6 @@ export default function Home() {
                 <AnimatePresence>
                     {isOpen && (
                         <>
-                            {/* Backdrop to catch clicks */}
                             <div className="fixed inset-0 z-[999]" onClick={onToggle} />
                             <motion.div
                                 initial={{ opacity: 0, y: 5, scale: 0.95 }}
@@ -251,8 +241,8 @@ export default function Home() {
 
     return (
         <div className="pb-24 bg-[#F8FAFC] min-h-screen">
-            <header className="bg-white px-6 pt-10 pb-4 rounded-b-[3.5rem] shadow-sm relative z-10 transition-all">
-                <div className="flex justify-between items-center mb-5">
+            <header className="bg-white px-6 pt-10 pb-8 rounded-b-[3.5rem] shadow-xl shadow-slate-200/20 relative z-10 transition-all border-b border-gray-50">
+                <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center gap-3">
                         <BrandLogo size={40} animate={false} />
                         <div>
@@ -263,12 +253,15 @@ export default function Home() {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setOnlyFavorites(!onlyFavorites)}
-                            className="p-2.5 rounded-2xl bg-white shadow-lg shadow-red-100/30 border border-gray-50 text-red-500 active:scale-90 transition-all flex items-center justify-center h-10 w-10"
+                            className={clsx(
+                                "p-2.5 rounded-2xl shadow-xl border transition-all flex items-center justify-center h-10 w-10",
+                                onlyFavorites ? "bg-red-500 text-white border-red-500 shadow-red-200/50" : "bg-white text-red-500 border-gray-50 shadow-red-100/30"
+                            )}
                         >
                             <Heart size={18} fill={onlyFavorites ? "currentColor" : "none"} strokeWidth={onlyFavorites ? 0 : 2.5} />
                         </button>
                         <div
-                            className="w-10 h-10 bg-slate-100 rounded-2xl overflow-hidden border-2 border-white shadow-xl cursor-pointer relative"
+                            className="w-10 h-10 bg-slate-100 rounded-2xl overflow-hidden border-2 border-white shadow-2xl cursor-pointer relative"
                             onClick={() => navigate('/profile')}
                         >
                             {profile?.avatar_url ? (
@@ -278,14 +271,11 @@ export default function Home() {
                                     {profile?.full_name?.charAt(0) || 'U'}
                                 </div>
                             )}
-                            {userRank && (
-                                <div
-                                    onClick={(e) => { e.stopPropagation(); navigate('/rankings'); }}
-                                    className="absolute -bottom-1 -right-1 bg-brand-dark text-white text-[8px] font-black w-5 h-5 rounded-lg flex items-center justify-center border-2 border-white shadow-lg"
-                                >
-                                    #{userRank}
-                                </div>
-                            )}
+                            <div
+                                className="absolute -bottom-1 -right-1 bg-brand-orange text-white text-[7px] font-black w-5 h-5 rounded-lg flex items-center justify-center border-2 border-white shadow-lg"
+                            >
+                                {currentLevel.level}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -295,7 +285,7 @@ export default function Home() {
                     <input
                         type="text"
                         placeholder="Search my restaurants..."
-                        className="w-full bg-[#FAFAFA] py-3.5 px-14 rounded-full text-brand-dark placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange/10 transition-all text-xs font-bold border border-slate-100 shadow-inner"
+                        className="w-full bg-[#FAFAFA] py-4 px-14 rounded-full text-brand-dark placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange/10 transition-all text-xs font-bold border border-slate-100 shadow-inner"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -303,29 +293,30 @@ export default function Home() {
             </header>
 
             {/* Stats Cards */}
-            <div className="px-5 -mt-4 grid grid-cols-4 gap-2 mb-6 relative z-20">
+            <div className="px-5 -mt-6 grid grid-cols-4 gap-2.5 mb-8 relative z-20">
                 {stats.map((stat) => (
-                    <div
+                    <motion.div
                         key={stat.label}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => {
                             if (stat.action) stat.action();
                             if (stat.link) navigate(stat.link);
                         }}
                         className={clsx(
-                            "bg-white p-2.5 rounded-[1.5rem] shadow-xl shadow-slate-200/40 border border-gray-50 flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all",
-                            onlyFavorites && stat.label === 'Favorites' ? "ring-2 ring-blue-400/50" : ""
+                            "bg-white p-3 rounded-[2rem] shadow-2xl shadow-slate-200/60 border border-white/50 flex flex-col items-center text-center cursor-pointer transition-all",
+                            onlyFavorites && stat.label === 'Favs' ? "ring-2 ring-blue-400" : ""
                         )}
                     >
-                        <span className={clsx("w-1.5 h-1.5 rounded-full mb-1.5", stat.color)}></span>
-                        <span className="text-base font-black text-brand-dark leading-none">{stat.count}</span>
-                        <span className="text-[6px] font-black text-gray-400 uppercase mt-1 tracking-widest leading-none">{stat.label}</span>
-                    </div>
+                        <span className={clsx("w-2 h-2 rounded-full mb-2", stat.color)}></span>
+                        <span className="text-lg font-black text-brand-dark leading-none">{stat.count}</span>
+                        <span className="text-[7px] font-black text-gray-400 uppercase mt-1 tracking-widest leading-none">{stat.label}</span>
+                    </motion.div>
                 ))}
             </div>
 
             {/* View Mode Switcher */}
-            <div className="px-6 mb-4">
-                <div className="bg-[#EFEEF1] p-1.5 rounded-[2rem] flex border border-gray-100/50 shadow-sm">
+            <div className="px-6 mb-6">
+                <div className="bg-[#EFEEF1] p-1.5 rounded-[2.5rem] flex border border-gray-100/50 shadow-inner">
                     {[
                         { id: 'list', label: 'List', icon: List },
                         { id: 'list-photos', label: 'Mosaic', icon: LayoutGrid },
@@ -335,8 +326,8 @@ export default function Home() {
                             key={mode.id}
                             onClick={() => setViewMode(mode.id)}
                             className={clsx(
-                                "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[1.5rem] transition-all duration-300",
-                                viewMode === mode.id ? "bg-white text-brand-orange shadow-md scale-[1.02]" : "text-gray-400 hover:text-gray-500"
+                                "flex-1 flex items-center justify-center gap-2 py-3 rounded-[2rem] transition-all duration-300",
+                                viewMode === mode.id ? "bg-white text-brand-orange shadow-md scale-[1.02]" : "text-gray-400 hover:text-gray-50"
                             )}
                         >
                             <mode.icon size={16} className={clsx(viewMode === mode.id ? "text-brand-orange" : "text-gray-400")} />
@@ -381,7 +372,7 @@ export default function Home() {
                     onToggle={() => setOpenFilter(openFilter === 'rating' ? null : 'rating')}
                 />
                 <FilterDropdown
-                    label="Recommender"
+                    label="Source"
                     current={activeRecommender}
                     options={recommenders}
                     onSelect={setActiveRecommender}
@@ -393,7 +384,7 @@ export default function Home() {
             {/* Feed */}
             <div className={clsx(
                 "px-6 pb-32 transition-all duration-300",
-                viewMode === 'gallery' ? "grid grid-cols-2 gap-5" : "flex flex-col gap-3.5"
+                viewMode === 'gallery' ? "grid grid-cols-2 gap-5" : "flex flex-col gap-4"
             )}>
                 <AnimatePresence mode="popLayout" initial={false}>
                     {loading ? (

@@ -3,7 +3,7 @@ import { useStore } from '../lib/store';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Users, Globe, ChevronRight, Medal, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getBadgeForVisitCount } from '../lib/badges';
+import { getLevelFromXP } from '../lib/badges';
 import BrandLogo from '../components/BrandLogo';
 import clsx from 'clsx';
 
@@ -100,7 +100,9 @@ export default function Rankings() {
                         <AnimatePresence mode="popLayout">
                             {filteredRankings.map((user, index) => {
                                 const isCurrentUser = user.id === profile?.id;
-                                const badge = getBadgeForVisitCount(user.visit_count);
+                                // Simplified XP for leaderboard: each visit is 100XP
+                                const estimatedXP = user.visit_count * 100;
+                                const userLevel = getLevelFromXP(estimatedXP);
 
                                 return (
                                     <motion.div
@@ -121,7 +123,7 @@ export default function Rankings() {
                                             {index + 1}
                                         </div>
 
-                                        <div className="w-12 h-12 bg-slate-100 rounded-2xl overflow-hidden border-2 border-white shadow-md shrink-0">
+                                        <div className="w-12 h-12 bg-slate-100 rounded-2xl overflow-hidden border-2 border-white shadow-md shrink-0 relative">
                                             {user.avatar_url ? (
                                                 <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover" />
                                             ) : (
@@ -129,6 +131,9 @@ export default function Rankings() {
                                                     {user.full_name?.charAt(0) || 'U'}
                                                 </div>
                                             )}
+                                            <div className="absolute -bottom-1 -right-1 bg-brand-orange text-white text-[7px] font-black w-5 h-5 rounded-lg flex items-center justify-center border-2 border-white">
+                                                {userLevel.level}
+                                            </div>
                                         </div>
 
                                         <div className="flex-1 min-w-0">
@@ -139,7 +144,7 @@ export default function Rankings() {
                                                 {isCurrentUser && <span className="bg-brand-orange/10 text-brand-orange text-[7px] font-black px-1.5 py-0.5 rounded-md uppercase">You</span>}
                                             </div>
                                             <div className="flex items-center gap-1.5 mt-0.5">
-                                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">{badge.name}</span>
+                                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">{userLevel.name}</span>
                                                 <span className="w-1 h-1 bg-gray-200 rounded-full" />
                                                 <span className="text-[8px] font-black text-brand-orange uppercase tabular-nums">{user.visit_count} Visited</span>
                                             </div>
@@ -147,7 +152,7 @@ export default function Rankings() {
 
                                         <div className="flex items-center gap-1 px-3 py-1.5 bg-slate-50 rounded-full">
                                             <Star size={10} className="text-yellow-500 fill-yellow-500" />
-                                            <span className="text-[10px] font-black tabular-nums">{user.visit_count * 10}</span>
+                                            <span className="text-[10px] font-black tabular-nums">{estimatedXP}</span>
                                         </div>
                                     </motion.div>
                                 );

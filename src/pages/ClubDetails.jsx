@@ -328,32 +328,50 @@ export default function ClubDetails() {
                                 <h3 className="text-2xl font-black uppercase italic leading-none">Who's the Top<br />Foodie?</h3>
                             </div>
 
-                            <div className="space-y-4">
-                                {(club.members || []).map((member, index) => (
-                                    <div key={member.user_id} className="bg-white p-5 rounded-[2.5rem] flex items-center gap-5 shadow-xl shadow-slate-200/20 border border-gray-50">
-                                        <div className={clsx(
-                                            "w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm",
-                                            index === 0 ? "bg-brand-orange text-white" : "bg-slate-100 text-slate-400"
+                            <div className="space-y-3">
+                                {(club.members || []).map((member, index) => {
+                                    const isCurrentUser = member.user_id === profile?.id;
+                                    // Simplified logic: only the current user shows their real level/XP for now
+                                    return (
+                                        <div key={member.user_id} className={clsx(
+                                            "bg-white p-4 rounded-[2.5rem] flex items-center gap-4 transition-all shadow-xl shadow-slate-200/20 border-2",
+                                            isCurrentUser ? "border-brand-orange scale-[1.02] shadow-brand-orange/10 z-10 relative" : "border-white"
                                         )}>
-                                            {index + 1}
+                                            <div className={clsx(
+                                                "w-10 h-10 rounded-2xl flex items-center justify-center font-black text-xs shadow-inner transition-colors",
+                                                index === 0 ? "bg-brand-orange text-white" : "bg-slate-50 text-slate-300"
+                                            )}>
+                                                {index + 1}
+                                            </div>
+                                            <div className="w-14 h-14 rounded-[1.5rem] overflow-hidden border-2 border-white shadow-md relative group">
+                                                <img
+                                                    src={member.profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.user_id}`}
+                                                    className="w-full h-full object-cover"
+                                                    alt={member.profile?.full_name}
+                                                />
+                                                {/* Representing the level badge in the leaderboard */}
+                                                <div className="absolute -bottom-1 -right-1 bg-brand-dark text-white text-[7px] font-black w-5 h-5 rounded-lg flex items-center justify-center border-2 border-white">
+                                                    {isCurrentUser ? currentLevel.level : '?'}
+                                                </div>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-black text-brand-dark text-[11px] uppercase truncate tracking-tight">
+                                                    {member.profile?.full_name || 'Incognito Foodie'}
+                                                    {isCurrentUser && <span className="ml-2 text-[8px] text-brand-orange">(You)</span>}
+                                                </h4>
+                                                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
+                                                    {isCurrentUser ? currentLevel.name : 'Vibing Member'}
+                                                </p>
+                                            </div>
+                                            <div className="text-right flex-shrink-0">
+                                                <p className="text-sm font-black text-brand-dark leading-none">
+                                                    {isCurrentUser ? visitedCount : '0'}
+                                                </p>
+                                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mt-1">Visits</p>
+                                            </div>
                                         </div>
-                                        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md">
-                                            <img
-                                                src={member.profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.user_id}`}
-                                                className="w-full h-full object-cover"
-                                                alt={member.profile?.full_name}
-                                            />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h4 className="font-black text-brand-dark text-xs uppercase">{member.profile?.full_name || 'Incognito Foodie'}</h4>
-                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{member.role}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-lg font-black text-brand-dark leading-none">0</p>
-                                            <p className="text-[8px] font-black text-gray-400 uppercase">Visits</p>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </motion.div>
                     )}

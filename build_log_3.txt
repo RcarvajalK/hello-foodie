@@ -1,0 +1,25 @@
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 2179 modules transformed.
+Γ£ù Build failed in 5.80s
+error during build:
+src/pages/Rankings.jsx (6:9): "getBadgeForVisitCount" is not exported by "src/lib/badges.js", imported by "src/pages/Rankings.jsx".
+file: C:/Users/rckor/dev/bucket_list_2026/src/pages/Rankings.jsx:6:9
+
+4: import { Trophy, Users, Globe, ChevronRight, Medal, Star } from 'lucide-react';
+5: import { useNavigate } from 'react-router-dom';
+6: import { getBadgeForVisitCount } from '../lib/badges';
+            ^
+7: import BrandLogo from '../components/BrandLogo';
+8: import clsx from 'clsx';
+
+    at getRollupError (file:///C:/Users/rckor/dev/bucket_list_2026/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at error (file:///C:/Users/rckor/dev/bucket_list_2026/node_modules/rollup/dist/es/shared/parseAst.js:397:42)
+    at Module.error (file:///C:/Users/rckor/dev/bucket_list_2026/node_modules/rollup/dist/es/shared/node-entry.js:17022:16)
+    at Module.traceVariable (file:///C:/Users/rckor/dev/bucket_list_2026/node_modules/rollup/dist/es/shared/node-entry.js:17478:29)
+    at ModuleScope.findVariable (file:///C:/Users/rckor/dev/bucket_list_2026/node_modules/rollup/dist/es/shared/node-entry.js:15141:39)
+    at FunctionScope.findVariable (file:///C:/Users/rckor/dev/bucket_list_2026/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
+    at FunctionBodyScope.findVariable (file:///C:/Users/rckor/dev/bucket_list_2026/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
+    at ReturnValueScope.findVariable (file:///C:/Users/rckor/dev/bucket_list_2026/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
+    at FunctionBodyScope.findVariable (file:///C:/Users/rckor/dev/bucket_list_2026/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
+    at Identifier.bind (file:///C:/Users/rckor/dev/bucket_list_2026/node_modules/rollup/dist/es/shared/node-entry.js:5462:40)

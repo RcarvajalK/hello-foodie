@@ -1,8 +1,8 @@
 import { BarChart3, TrendingUp, MapPin, Award, PieChart, Sparkles } from 'lucide-react';
 import { useStore } from '../lib/store';
-import { getBadgeForVisitCount } from '../lib/badges';
+import { calculateXP, getLevelFromXP } from '../lib/badges';
 import { motion } from 'framer-motion';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 export default function Stats() {
     const restaurants = useStore(state => state.restaurants);
@@ -12,7 +12,9 @@ export default function Stats() {
 
     const visitedCount = restaurants.filter(r => r.is_visited).length;
     const explorationPercent = restaurants.length > 0 ? Math.round((visitedCount / restaurants.length) * 100) : 0;
-    const currentBadge = getBadgeForVisitCount(visitedCount);
+
+    const userXP = useMemo(() => calculateXP(restaurants), [restaurants]);
+    const currentLevel = useMemo(() => getLevelFromXP(userXP), [userXP]);
 
     useEffect(() => {
         fetchRestaurants();
@@ -22,7 +24,7 @@ export default function Stats() {
     const stats = [
         { label: 'Exploration %', value: `${explorationPercent}%`, icon: TrendingUp, color: 'text-brand-orange', bg: 'bg-brand-orange/10' },
         { label: 'Top Zone', value: restaurants[0]?.zone || 'Explore', icon: MapPin, color: 'text-brand-green', bg: 'bg-brand-green/10' },
-        { label: 'Level', value: currentBadge.name, icon: Award, color: 'text-brand-dark', bg: 'bg-brand-yellow/30' },
+        { label: 'Current Level', value: currentLevel.name, icon: Award, color: 'text-brand-dark', bg: 'bg-brand-yellow/30' },
     ];
 
     return (

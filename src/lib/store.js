@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from './supabase';
+import { calculateXP, getLevelFromXP } from './badges';
 
 export const useStore = create((set, get) => ({
     restaurants: [],
@@ -10,6 +11,8 @@ export const useStore = create((set, get) => ({
         lunch: true,
         dinner: true
     },
+    showLevelUpModal: null, // { oldLevel, newLevel }
+    setLevelUpModal: (data) => set({ showLevelUpModal: data }),
 
     uploadImage: async (file, path = null) => {
         try {
@@ -173,10 +176,13 @@ export const useStore = create((set, get) => ({
             newData = { ...newData, coordinates: { lat, lng } };
         }
 
-        set((state) => ({
-            restaurants: [newData, ...state.restaurants],
-            loading: false
-        }));
+        set((state) => {
+            const newRestaurants = [newData, ...state.restaurants];
+            return {
+                restaurants: newRestaurants,
+                loading: false
+            };
+        });
         return { success: true, data: newData };
     },
 
@@ -203,11 +209,22 @@ export const useStore = create((set, get) => ({
         console.log("Supabase Update Result:", { data, error, count });
 
         if (!error && data?.length > 0) {
-            set((state) => ({
-                restaurants: state.restaurants.map((r) =>
-                    r.id === id ? { ...r, ...updateData } : r
-                )
-            }));
+            const oldXP = calculateXP(get().restaurants);
+            const oldLevel = getLevelFromXP(oldXP);
+
+            const updatedRestaurants = get().restaurants.map((r) =>
+                r.id === id ? { ...r, ...updateData } : r
+            );
+
+            const newXP = calculateXP(updatedRestaurants);
+            const newLevel = getLevelFromXP(newXP);
+
+            set({ restaurants: updatedRestaurants });
+
+            if (newLevel.level > oldLevel.level) {
+                set({ showLevelUpModal: { oldLevel, newLevel } });
+            }
+
             return { success: true };
         }
 

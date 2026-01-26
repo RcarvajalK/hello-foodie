@@ -22,6 +22,7 @@ import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
 import Trash from './pages/Trash';
 import Rankings from './pages/Rankings';
+import LevelUpModal from './components/LevelUpModal';
 
 const libraries = ['places'];
 
@@ -120,6 +121,7 @@ export default function App() {
     <>
       <SplashScreen isVisible={showSplash} />
       <BrowserRouter>
+        <LevelUpModal />
         <ScrollToTop />
         <LoadScriptNext
           googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
