@@ -309,6 +309,54 @@ export const useStore = create((set, get) => ({
         return { success: false, error: error.message };
     },
 
+    refreshRestaurantImages: async (id, googlePlaceId) => {
+        if (!googlePlaceId || !window.google) return { success: false, error: 'No Google Place ID or Maps API not loaded' };
+
+        try {
+            const service = new window.google.maps.places.PlacesService(document.createElement('div'));
+
+            const place = await new Promise((resolve, reject) => {
+                service.getDetails({
+                    placeId: googlePlaceId,
+                    fields: ['photo', 'photos']
+                }, (result, status) => {
+                    if (status === window.google.maps.places.PlacesServiceStatus.OK) resolve(result);
+                    else reject(status);
+                });
+            });
+
+            if (!place || !place.photos) return { success: false, error: 'No photos found' };
+
+            const photoUrl = place.photos[0].getUrl({ maxWidth: 1200 });
+            const extraPhotos = place.photos.slice(1, 5).map(p => p.getUrl({ maxWidth: 1200 }));
+
+            const updates = {
+                image_url: photoUrl,
+                additional_images: extraPhotos
+            };
+
+            const { data, error } = await supabase
+                .from('restaurants')
+                .update(updates)
+                .eq('id', id)
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            set((state) => ({
+                restaurants: state.restaurants.map((r) =>
+                    r.id === id ? { ...r, ...updates } : r
+                )
+            }));
+
+            return { success: true, data };
+        } catch (error) {
+            console.error("refreshRestaurantImages Error:", error);
+            return { success: false, error: typeof error === 'string' ? error : error.message };
+        }
+    },
+
     // --- Trash Bin Actions ---
     deletedRestaurants: [],
     fetchDeletedRestaurants: async () => {

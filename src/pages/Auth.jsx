@@ -16,10 +16,31 @@ export default function Auth() {
     const [errorType, setErrorType] = useState('info');
     const navigate = useNavigate();
 
+    const validateEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!re.test(email)) return { valid: false, message: 'Please enter a valid email format.' };
+
+        const invalidDomains = ['test.com', 'example.com', 'fake.com', 'asdf.com'];
+        const domain = email.split('@')[1];
+        if (invalidDomains.includes(domain)) {
+            return { valid: false, message: 'Please use a real email address. Test domains cause deliverability issues.' };
+        }
+        return { valid: true };
+    };
+
     const handleEmailAuth = async (e) => {
         e.preventDefault();
         setLoading(true);
         setMessage('');
+
+        const validation = validateEmail(email);
+        if (!validation.valid) {
+            setErrorType('error');
+            setMessage(validation.message);
+            setLoading(false);
+            return;
+        }
+
         try {
             if (isPasswordMode) {
                 if (isSignUp) {

@@ -27,6 +27,7 @@ export default function RestaurantDetails() {
     const toggleFavorite = useStore(state => state.toggleFavorite);
     const deleteRestaurant = useStore(state => state.deleteRestaurant);
     const updateRestaurant = useStore(state => state.updateRestaurant);
+    const refreshRestaurantImages = useStore(state => state.refreshRestaurantImages);
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
@@ -193,10 +194,10 @@ export default function RestaurantDetails() {
 
     const allImages = useMemo(() => {
         if (!restaurant) return [];
-        return livePhotos.length > 0
-            ? livePhotos
-            : filterRestaurantImages(restaurant.additional_images, restaurant.image_url || restaurant.image);
-    }, [livePhotos, restaurant]);
+        return filterRestaurantImages(restaurant.additional_images, restaurant.image_url || restaurant.image);
+    }, [restaurant]);
+
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     const handleScroll = (e) => {
         const scrollLeft = e.target.scrollLeft;
@@ -233,7 +234,14 @@ export default function RestaurantDetails() {
                                     src={img}
                                     alt={`${restaurant.name} ${idx + 1}`}
                                     className="w-full h-full object-cover"
-                                    onError={(e) => e.target.src = DEFAULT_RESTAURANT_IMAGE}
+                                    onError={(e) => {
+                                        if (restaurant.google_place_id && !isRefreshing) {
+                                            setIsRefreshing(true);
+                                            refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
+                                        } else {
+                                            e.target.src = DEFAULT_RESTAURANT_IMAGE;
+                                        }
+                                    }}
                                 />
                             </div>
                         ))

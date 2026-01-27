@@ -11,7 +11,9 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
     const navigate = useNavigate();
     const isVisited = restaurant.is_visited;
     const updateRestaurant = useStore(state => state.updateRestaurant);
+    const refreshRestaurantImages = useStore(state => state.refreshRestaurantImages);
     const [isEditing, setIsEditing] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [editData, setEditData] = useState({ cuisine: restaurant.cuisine, price: restaurant.price });
 
     const handleSave = async (e) => {
@@ -72,7 +74,14 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                         src={allImages[0] || DEFAULT_RESTAURANT_IMAGE}
                         alt={restaurant.name}
                         className="w-full h-full object-cover"
-                        onError={(e) => e.target.src = getDiverseFallbackImage(restaurant.name)}
+                        onError={(e) => {
+                            if (restaurant.google_place_id && !isRefreshing) {
+                                setIsRefreshing(true);
+                                refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
+                            } else {
+                                e.target.src = getDiverseFallbackImage(restaurant.name);
+                            }
+                        }}
                     />
                 </div>
             );
@@ -92,7 +101,12 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                                 alt={`${restaurant.name} ${idx + 1}`}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
-                                    e.target.src = getDiverseFallbackImage(`${restaurant.name}-${idx}`);
+                                    if (restaurant.google_place_id && !isRefreshing) {
+                                        setIsRefreshing(true);
+                                        refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
+                                    } else {
+                                        e.target.src = getDiverseFallbackImage(`${restaurant.name}-${idx}`);
+                                    }
                                 }}
                             />
                         </div>
