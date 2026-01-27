@@ -53,52 +53,8 @@ export default function RestaurantDetails() {
 
     const [livePhotos, setLivePhotos] = useState([]);
 
-    useEffect(() => {
-        if (typeof google === 'undefined') return;
-        const service = new google.maps.places.PlacesService(document.createElement('div'));
-
-        const fetchPhotosForId = (placeId) => {
-            service.getDetails(
-                { placeId, fields: ['photos'] },
-                (place, status) => {
-                    if (status === google.maps.places.PlacesServiceStatus.OK && place.photos) {
-                        const newPhotos = place.photos.map(p => p.getUrl());
-                        setLivePhotos(newPhotos);
-
-                        // Update Supabase with new photos and the Place ID if it was missing
-                        const updates = {
-                            image_url: newPhotos[0],
-                            additional_images: newPhotos.slice(1, 5)
-                        };
-
-                        // Ensure we use the current restaurant ID
-                        if (!restaurant.google_place_id) updates.google_place_id = placeId;
-
-                        updateRestaurant(restaurant.id, updates);
-                    }
-                }
-            );
-        };
-
-        if (restaurant?.google_place_id) {
-            // Case A: Has ID, fetch photos
-            fetchPhotosForId(restaurant.google_place_id);
-        } else if (restaurant?.name) {
-            // Case B: Missing ID, heal by searching
-            const searchQuery = `${restaurant.name} ${restaurant.zone || ''} ${restaurant.address || ''}`;
-            service.findPlaceFromQuery(
-                {
-                    query: searchQuery,
-                    fields: ['place_id']
-                },
-                (results, status) => {
-                    if (status === google.maps.places.PlacesServiceStatus.OK && results?.[0]?.place_id) {
-                        fetchPhotosForId(results[0].place_id);
-                    }
-                }
-            );
-        }
-    }, [restaurant?.id, restaurant?.google_place_id, typeof google]);
+    // Unified photo refresh logic (Centralized in store)
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     const handleSaveEdit = async () => {
         const payload = {
@@ -235,7 +191,7 @@ export default function RestaurantDetails() {
                                     alt={`${restaurant.name} ${idx + 1}`}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                        if (restaurant.google_place_id && !isRefreshing) {
+                                        if (!isRefreshing) {
                                             setIsRefreshing(true);
                                             refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
                                         } else {

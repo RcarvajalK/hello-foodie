@@ -75,7 +75,7 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                         alt={restaurant.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                            if (restaurant.google_place_id && !isRefreshing) {
+                            if (!isRefreshing) {
                                 setIsRefreshing(true);
                                 refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
                             } else {
@@ -101,7 +101,7 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                                 alt={`${restaurant.name} ${idx + 1}`}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
-                                    if (restaurant.google_place_id && !isRefreshing) {
+                                    if (!isRefreshing) {
                                         setIsRefreshing(true);
                                         refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
                                     } else {

@@ -309,15 +309,39 @@ export const useStore = create((set, get) => ({
         return { success: false, error: error.message };
     },
 
-    refreshRestaurantImages: async (id, googlePlaceId) => {
-        if (!googlePlaceId || !window.google) return { success: false, error: 'No Google Place ID or Maps API not loaded' };
+    refreshRestaurantImages: async (id, googlePlaceId = null) => {
+        if (!window.google) return { success: false, error: 'Maps API not loaded' };
 
         try {
             const service = new window.google.maps.places.PlacesService(document.createElement('div'));
+            let activePlaceId = googlePlaceId;
+
+            // Healing logic: if no Place ID, try to find it
+            if (!activePlaceId) {
+                const currentRes = get().restaurants.find(r => r.id === id);
+                if (!currentRes) return { success: false, error: 'Restaurant not found locally' };
+
+                const searchQuery = `${currentRes.name} ${currentRes.zone || ''} ${currentRes.address || ''}`;
+                const searchResult = await new Promise((resolve) => {
+                    service.findPlaceFromQuery({
+                        query: searchQuery,
+                        fields: ['place_id']
+                    }, (results, status) => {
+                        if (status === window.google.maps.places.PlacesServiceStatus.OK && results?.[0]?.place_id) {
+                            resolve(results[0].place_id);
+                        } else {
+                            resolve(null);
+                        }
+                    });
+                });
+
+                if (!searchResult) return { success: false, error: 'Could not find Place ID for healing' };
+                activePlaceId = searchResult;
+            }
 
             const place = await new Promise((resolve, reject) => {
                 service.getDetails({
-                    placeId: googlePlaceId,
+                    placeId: activePlaceId,
                     fields: ['photo', 'photos']
                 }, (result, status) => {
                     if (status === window.google.maps.places.PlacesServiceStatus.OK) resolve(result);
@@ -328,11 +352,12 @@ export const useStore = create((set, get) => ({
             if (!place || !place.photos) return { success: false, error: 'No photos found' };
 
             const photoUrl = place.photos[0].getUrl({ maxWidth: 1200 });
-            const extraPhotos = place.photos.slice(1, 5).map(p => p.getUrl({ maxWidth: 1200 }));
+            const extraPhotos = place.photos.slice(1, 4).map(p => p.getUrl({ maxWidth: 1200 }));
 
             const updates = {
                 image_url: photoUrl,
-                additional_images: extraPhotos
+                additional_images: extraPhotos,
+                google_place_id: activePlaceId // Persistent healing
             };
 
             const { data, error } = await supabase
