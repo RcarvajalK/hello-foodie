@@ -355,22 +355,21 @@ export const useStore = create((set, get) => ({
                 return { success: false, error: 'No photos found' };
             }
 
-            const photoUrl = place.photos[0].getUrl({ maxWidth: 1200 });
-            const extraPhotos = place.photos.slice(1, 4).map(p => p.getUrl({ maxWidth: 1200 }));
-            console.log(`[Refresh] Successfully fetched new URLs for ${id}`);
+            const allFetchedPhotos = place.photos.map(p => p.getUrl({ maxWidth: 1200 }));
+            const validPhotos = allFetchedPhotos.filter(url => !isBrokenImage(url));
 
-            const isNewImageBroken = isBrokenImage(photoUrl);
+            if (validPhotos.length === 0) {
+                console.warn(`[Refresh] All ${allFetchedPhotos.length} photos for ${activePlaceId} look like placeholders.`);
+                return { success: false, error: 'No valid photos found' };
+            }
 
             const updates = {
+                image_url: validPhotos[0],
+                additional_images: validPhotos.slice(1, 4),
                 google_place_id: activePlaceId // Persistent healing
             };
 
-            if (!isNewImageBroken) {
-                updates.image_url = photoUrl;
-                updates.additional_images = extraPhotos;
-            } else {
-                console.warn(`[Refresh] Google returned a broken URL for ${activePlaceId}. Not updating image_url.`);
-            }
+            console.log(`[Refresh] Found ${validPhotos.length} valid photos for ${id}`);
 
             const { data, error } = await supabase
                 .from('restaurants')

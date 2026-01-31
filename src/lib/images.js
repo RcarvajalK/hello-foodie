@@ -44,11 +44,25 @@ export function isBrokenImage(url) {
         'lh3.googleusercontent.com/p/AF1QipO',
         'lh3.googleusercontent.com/p/AF1QipS',
         'lh3.googleusercontent.com/p/AF1QipQ',
+        'lh3.googleusercontent.com/p/AF1QipR',
         'lh3.googleusercontent.com/p/AF1QipT',
-        'lh3.googleusercontent.com/p/AF1QipU'
+        'lh3.googleusercontent.com/p/AF1QipU',
+        'lh3.googleusercontent.com/p/AF1QipV',
+        'lh3.googleusercontent.com/p/AF1QipW',
+        'lh3.googleusercontent.com/p/AF1QipY',
+        'lh3.googleusercontent.com/p/AF1QipZ',
+        'logo_goog_2x.png'
     ];
 
     return brokenPatterns.some(pattern => url.includes(pattern));
+}
+
+/**
+ * Checks if a URL is from a volatile Google source (likely to expire).
+ */
+export function isVolatileImage(url) {
+    if (!url || typeof url !== 'string') return false;
+    return url.includes('googleusercontent.com') || url.includes('google.com/maps');
 }
 
 /**
