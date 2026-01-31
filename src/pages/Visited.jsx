@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 
 import { List, LayoutGrid, Image as ImageIcon } from 'lucide-react';
+import { isBrokenImage } from '../lib/images';
 
 export default function Visited() {
     const navigate = useNavigate();
@@ -33,14 +34,38 @@ export default function Visited() {
         );
     }, []);
 
+    // Automatic Background Healing (Same as Home)
+    const refreshRestaurantImages = useStore(state => state.refreshRestaurantImages);
+    useEffect(() => {
+        if (restaurants.length > 0 && window.google) {
+            const healedInSession = JSON.parse(sessionStorage.getItem('foodie_healed') || '[]');
+
+            // Only heal those that are definitely broken or missing Place ID
+            const candidate = restaurants.find(r =>
+                r.is_visited &&
+                !healedInSession.includes(r.id) &&
+                (!r.google_place_id || isBrokenImage(r.image_url))
+            );
+
+            if (candidate && healedInSession.length < 15) { // Increased limit for healing
+                const timer = setTimeout(() => {
+                    console.log(`[Auto-Heal-Visited] Healing: ${candidate.name}`);
+                    refreshRestaurantImages(candidate.id, candidate.google_place_id);
+                    sessionStorage.setItem('foodie_healed', JSON.stringify([...healedInSession, candidate.id]));
+                }, 3000);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [restaurants.length, !!window.google]);
+
     useEffect(() => {
         localStorage.setItem('foodie_view_mode', viewMode);
     }, [viewMode]);
 
     const calculateDistance = (r) => {
-        if (!userCoords || !r.coordinates) return Infinity;
-        const dx = (r.coordinates.x || 0) - userCoords.lat;
-        const dy = (r.coordinates.y || 0) - userCoords.lng;
+        if (!userCoords || !r.coordinates || typeof r.coordinates.lat !== 'number') return Infinity;
+        const dx = r.coordinates.lat - userCoords.lat;
+        const dy = r.coordinates.lng - userCoords.lng;
         return Math.sqrt(dx * dx + dy * dy);
     };
 

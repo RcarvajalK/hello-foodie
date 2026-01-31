@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Star, MapPin, Calendar, User, Users, CheckCircle, Edit3, X, Save, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, MapPin, Calendar, User, Users, CheckCircle, Edit3, X, Save, Trash2, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { useStore } from '../lib/store';
@@ -208,7 +208,16 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                             <Star size={9} fill="currentColor" />
                             <span className="text-[10px] font-black tabular-nums leading-none mt-0.5">{restaurant.rating || '---'}</span>
                         </div>
-                        {!restaurant.is_sponsored && <EditButton />}
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setIsRefreshing(true); refreshRestaurantImages(restaurant.id, restaurant.google_place_id); }}
+                                className="p-2 bg-slate-50 text-brand-orange rounded-xl hover:bg-white transition-all shadow-sm active:scale-90"
+                                title="Refresh photo"
+                            >
+                                <Sparkles size={12} />
+                            </button>
+                            {!restaurant.is_sponsored && <EditButton />}
+                        </div>
                     </div>
                 </div>
                 <QuickEditModal
@@ -239,9 +248,17 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                         </div>
                         <p className="text-[8px] text-brand-orange-light font-black uppercase tracking-[0.2em]">{restaurant.cuisine}</p>
                     </div>
-                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full flex items-center shadow-lg pointer-events-none">
-                        <Star size={10} className="text-brand-orange fill-brand-orange mr-1" />
-                        <span className="text-[10px] font-black text-brand-dark">{restaurant.rating || '---'}</span>
+                    <div className="absolute top-4 right-4 flex gap-1.5">
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setIsRefreshing(true); refreshRestaurantImages(restaurant.id, restaurant.google_place_id); }}
+                            className="bg-white/95 backdrop-blur-sm p-2 rounded-full flex items-center shadow-lg text-brand-orange active:scale-95 transition-all"
+                        >
+                            <Sparkles size={12} />
+                        </button>
+                        <div className="bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full flex items-center shadow-lg pointer-events-none">
+                            <Star size={10} className="text-brand-orange fill-brand-orange mr-1" />
+                            <span className="text-[10px] font-black text-brand-dark">{restaurant.rating || '---'}</span>
+                        </div>
                     </div>
                     {restaurant.is_sponsored && (
                         <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-brand-orange text-[7px] font-black px-2 py-0.5 rounded-lg uppercase tracking-[0.2em] shadow-lg border border-white/50">Sponsored</div>
@@ -273,9 +290,17 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
         >
             <div className="relative group">
                 <CardCarousel />
-                <div className="absolute top-6 right-6 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-[1.5rem] flex items-center shadow-2xl border border-white/50 pointer-events-none">
-                    <Star size={18} className="text-brand-orange fill-brand-orange mr-2" />
-                    <span className="text-base font-black text-brand-dark tabular-nums">{restaurant.rating || '---'}</span>
+                <div className="absolute top-6 right-6 flex gap-3">
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setIsRefreshing(true); refreshRestaurantImages(restaurant.id, restaurant.google_place_id); }}
+                        className="bg-white/95 backdrop-blur-md p-3 rounded-[1.2rem] flex items-center shadow-2xl border border-white/50 text-brand-orange active:scale-95 transition-all"
+                    >
+                        <Sparkles size={20} />
+                    </button>
+                    <div className="bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-[1.5rem] flex items-center shadow-2xl border border-white/50 pointer-events-none">
+                        <Star size={18} className="text-brand-orange fill-brand-orange mr-2" />
+                        <span className="text-base font-black text-brand-dark tabular-nums">{restaurant.rating || '---'}</span>
+                    </div>
                 </div>
                 <div className="absolute bottom-6 left-6 bg-brand-dark/40 backdrop-blur-md text-white px-5 py-2.5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl border border-white/10 flex items-center gap-3 pointer-events-none">
                     {restaurant.cuisine}

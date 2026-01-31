@@ -40,7 +40,12 @@ export function isBrokenImage(url) {
         'place_photo_no_image',
         'lh3.googleusercontent.com/p/AF1QipM',
         'lh3.googleusercontent.com/p/AF1QipP',
-        'lh3.googleusercontent.com/p/AF1QipN'
+        'lh3.googleusercontent.com/p/AF1QipN',
+        'lh3.googleusercontent.com/p/AF1QipO',
+        'lh3.googleusercontent.com/p/AF1QipS',
+        'lh3.googleusercontent.com/p/AF1QipQ',
+        'lh3.googleusercontent.com/p/AF1QipT',
+        'lh3.googleusercontent.com/p/AF1QipU'
     ];
 
     return brokenPatterns.some(pattern => url.includes(pattern));

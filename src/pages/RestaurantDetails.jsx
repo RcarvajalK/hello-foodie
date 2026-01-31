@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Star, Clock, MapPin, Heart, Share2, Trash2, Edit3,
-    MessageCircle, ChevronLeft, ChevronRight, Globe, Phone, CheckCircle, Save, X
+    MessageCircle, ChevronLeft, ChevronRight, Globe, Phone, CheckCircle, Save, X, Sparkles
 } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE, isBrokenImage } from '../lib/images';
@@ -257,13 +257,19 @@ export default function RestaurantDetails() {
                     </>
                 )}
 
-                {/* Back Button */}
+                {/* Top Actions */}
                 <div className="absolute top-0 left-0 right-0 p-4 pt-12 flex justify-between items-start transition-all">
                     <button
                         onClick={() => navigate(-1)}
                         className="w-10 h-10 bg-black/20 backdrop-blur-xl rounded-full flex items-center justify-center text-white shadow-lg border border-white/10"
                     >
                         <ArrowLeft size={20} />
+                    </button>
+                    <button
+                        onClick={() => { setIsRefreshing(true); refreshRestaurantImages(restaurant.id, restaurant.google_place_id); }}
+                        className="w-10 h-10 bg-black/20 backdrop-blur-xl rounded-full flex items-center justify-center text-brand-orange shadow-lg border border-white/10 active:scale-95 transition-all"
+                    >
+                        <Sparkles size={18} />
                     </button>
                 </div>
             </div>

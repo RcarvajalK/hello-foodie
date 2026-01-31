@@ -311,6 +311,7 @@ export const useStore = create((set, get) => ({
 
     refreshRestaurantImages: async (id, googlePlaceId = null) => {
         if (!window.google) return { success: false, error: 'Maps API not loaded' };
+        const { isBrokenImage } = await import('./images');
 
         try {
             const service = new window.google.maps.places.PlacesService(document.createElement('div'));
@@ -349,16 +350,27 @@ export const useStore = create((set, get) => ({
                 });
             });
 
-            if (!place || !place.photos) return { success: false, error: 'No photos found' };
+            if (!place || !place.photos || place.photos.length === 0) {
+                console.warn(`[Refresh] No photos found for Place ID: ${activePlaceId}`);
+                return { success: false, error: 'No photos found' };
+            }
 
             const photoUrl = place.photos[0].getUrl({ maxWidth: 1200 });
             const extraPhotos = place.photos.slice(1, 4).map(p => p.getUrl({ maxWidth: 1200 }));
+            console.log(`[Refresh] Successfully fetched new URLs for ${id}`);
+
+            const isNewImageBroken = isBrokenImage(photoUrl);
 
             const updates = {
-                image_url: photoUrl,
-                additional_images: extraPhotos,
                 google_place_id: activePlaceId // Persistent healing
             };
+
+            if (!isNewImageBroken) {
+                updates.image_url = photoUrl;
+                updates.additional_images = extraPhotos;
+            } else {
+                console.warn(`[Refresh] Google returned a broken URL for ${activePlaceId}. Not updating image_url.`);
+            }
 
             const { data, error } = await supabase
                 .from('restaurants')
@@ -375,9 +387,15 @@ export const useStore = create((set, get) => ({
                 )
             }));
 
+            console.group(`[Healer] Restaurant: ${id}`);
+            console.log("Status: OK", data);
+            console.groupEnd();
+
             return { success: true, data };
         } catch (error) {
-            console.error("refreshRestaurantImages Error:", error);
+            console.group(`[Healer] Restaurant: ${id}`);
+            console.error("Status: ERROR", error);
+            console.groupEnd();
             return { success: false, error: typeof error === 'string' ? error : error.message };
         }
     },
