@@ -57,6 +57,30 @@ export default function Home() {
         );
     }, []);
 
+    // Automatic Background Healing
+    const refreshRestaurantImages = useStore(state => state.refreshRestaurantImages);
+    useEffect(() => {
+        if (!loading && restaurants.length > 0 && window.google) {
+            // Only heal a few per session to save API quota
+            const healedInSession = JSON.parse(sessionStorage.getItem('foodie_healed') || '[]');
+
+            // Priority: 1. Missing Place ID, 2. Google-hosted volatile URLs
+            const candidate = restaurants.find(r =>
+                !healedInSession.includes(r.id) &&
+                (!r.google_place_id || (r.image_url && r.image_url.includes('lh3.google')))
+            );
+
+            if (candidate && healedInSession.length < 5) { // Limit to 5 per session
+                const timer = setTimeout(() => {
+                    console.log(`[Auto-Heal] Refreshing: ${candidate.name}`);
+                    refreshRestaurantImages(candidate.id, candidate.google_place_id);
+                    sessionStorage.setItem('foodie_healed', JSON.stringify([...healedInSession, candidate.id]));
+                }, 5000); // Wait 5s after load
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [loading, restaurants.length, !!window.google]);
+
     const calculateDistance = (r) => {
         if (!userCoords || !r.coordinates || typeof r.coordinates.lat !== 'number') return Infinity;
         const dx = r.coordinates.lat - userCoords.lat;

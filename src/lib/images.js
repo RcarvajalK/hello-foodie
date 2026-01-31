@@ -39,12 +39,21 @@ export function getRestaurantImage(url, fallback = null) {
     // Filter out known STATIC Google Maps placeholders (these are always "missing photo" icons)
     const brokenPatterns = [
         'maps.gstatic.com',
-        'default_geocode'
+        'default_geocode',
+        'error_images/no_photo',
+        'place_photo_no_image',
+        'lh3.googleusercontent.com/p/AF1QipM', // Common prefix for "image not found" results
+        'lh3.googleusercontent.com/p/AF1QipP',
+        'lh3.googleusercontent.com/p/AF1QipN'
     ];
 
     if (brokenPatterns.some(pattern => url.includes(pattern))) {
         return getDiverseFallback(url);
     }
+
+    // Google-hosted photos (lh3.googleusercontent.com) often expire if they are session-based.
+    // If we detect a very old or specific pattern, we might want to flag it for refresh, 
+    // but for now we just return it and let the onError handle the actual failure.
 
     return url;
 }

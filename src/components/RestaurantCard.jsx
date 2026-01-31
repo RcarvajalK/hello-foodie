@@ -168,7 +168,14 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                             src={getRestaurantImage(restaurant.image_url || restaurant.image)}
                             alt={restaurant.name}
                             className="w-full h-full object-cover"
-                            onError={(e) => e.target.src = getDiverseFallbackImage(restaurant.name)}
+                            onError={(e) => {
+                                if (!isRefreshing && restaurant.id) {
+                                    setIsRefreshing(true);
+                                    refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
+                                } else {
+                                    e.target.src = getDiverseFallbackImage(restaurant.name);
+                                }
+                            }}
                         />
                         {restaurant.is_sponsored && (
                             <div className="absolute top-1 left-1 bg-brand-orange text-white text-[6px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-[0.2em]">Ad</div>

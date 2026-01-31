@@ -55,7 +55,6 @@ export default function RestaurantDetails() {
 
     // Unified photo refresh logic (Centralized in store)
     const [isRefreshing, setIsRefreshing] = useState(false);
-
     const handleSaveEdit = async () => {
         const payload = {
             ...editData,
@@ -153,7 +152,7 @@ export default function RestaurantDetails() {
         return filterRestaurantImages(restaurant.additional_images, restaurant.image_url || restaurant.image);
     }, [restaurant]);
 
-    const [isRefreshing, setIsRefreshing] = useState(false);
+
 
     const handleScroll = (e) => {
         const scrollLeft = e.target.scrollLeft;
