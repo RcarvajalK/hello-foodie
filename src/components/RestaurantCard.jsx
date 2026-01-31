@@ -1,11 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Star, MapPin, Calendar, User, Users, CheckCircle, Edit3, X, Save, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { useStore } from '../lib/store';
 import clsx from 'clsx';
 import BrandLogo from './BrandLogo';
-import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE, getDiverseFallbackImage } from '../lib/images';
+import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE, getDiverseFallbackImage, isBrokenImage } from '../lib/images';
 
 export default function RestaurantCard({ restaurant, variant = 'list-photos', onDelete }) {
     const navigate = useNavigate();
@@ -15,6 +15,16 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
     const [isEditing, setIsEditing] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [editData, setEditData] = useState({ cuisine: restaurant.cuisine, price: restaurant.price });
+
+    // Proactive healing on mount if URL is known to be broken
+    useEffect(() => {
+        const imageUrl = restaurant.image_url || restaurant.image;
+        if (imageUrl && isBrokenImage(imageUrl) && !isRefreshing && restaurant.id) {
+            setIsRefreshing(true);
+            console.log(`[Proactive-Heal] Triggered for: ${restaurant.name}`);
+            refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
+        }
+    }, [restaurant.id]);
 
     const handleSave = async (e) => {
         e.preventDefault();

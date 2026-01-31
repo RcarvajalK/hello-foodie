@@ -5,7 +5,7 @@ import {
     MessageCircle, ChevronLeft, ChevronRight, Globe, Phone, CheckCircle, Save, X
 } from 'lucide-react';
 import { useStore } from '../lib/store';
-import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE } from '../lib/images';
+import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE, isBrokenImage } from '../lib/images';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -55,6 +55,16 @@ export default function RestaurantDetails() {
 
     // Unified photo refresh logic (Centralized in store)
     const [isRefreshing, setIsRefreshing] = useState(false);
+
+    // Proactive healing on mount
+    useEffect(() => {
+        const imageUrl = restaurant?.image_url || restaurant?.image;
+        if (imageUrl && isBrokenImage(imageUrl) && !isRefreshing && restaurant?.id) {
+            setIsRefreshing(true);
+            console.log(`[Proactive-Heal-Details] Triggered for: ${restaurant.name}`);
+            refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
+        }
+    }, [restaurant?.id]);
     const handleSaveEdit = async () => {
         const payload = {
             ...editData,
