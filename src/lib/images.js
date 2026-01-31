@@ -28,6 +28,25 @@ function getDiverseFallback(seed) {
 }
 
 /**
+ * Checks if a URL matches known broken Google Maps placeholders.
+ */
+export function isBrokenImage(url) {
+    if (!url || typeof url !== 'string') return true;
+
+    const brokenPatterns = [
+        'maps.gstatic.com',
+        'default_geocode',
+        'error_images/no_photo',
+        'place_photo_no_image',
+        'lh3.googleusercontent.com/p/AF1QipM',
+        'lh3.googleusercontent.com/p/AF1QipP',
+        'lh3.googleusercontent.com/p/AF1QipN'
+    ];
+
+    return brokenPatterns.some(pattern => url.includes(pattern));
+}
+
+/**
  * Validates and returns a restaurant image URL.
  * Filters out known broken domains and returns a fallback if the URL is invalid.
  */
@@ -36,18 +55,7 @@ export function getRestaurantImage(url, fallback = null) {
 
     if (!url || typeof url !== 'string') return defaultFallback;
 
-    // Filter out known STATIC Google Maps placeholders (these are always "missing photo" icons)
-    const brokenPatterns = [
-        'maps.gstatic.com',
-        'default_geocode',
-        'error_images/no_photo',
-        'place_photo_no_image',
-        'lh3.googleusercontent.com/p/AF1QipM', // Common prefix for "image not found" results
-        'lh3.googleusercontent.com/p/AF1QipP',
-        'lh3.googleusercontent.com/p/AF1QipN'
-    ];
-
-    if (brokenPatterns.some(pattern => url.includes(pattern))) {
+    if (isBrokenImage(url)) {
         return getDiverseFallback(url);
     }
 

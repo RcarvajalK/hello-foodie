@@ -5,7 +5,7 @@ import { useStore } from '../lib/store';
 import RestaurantCard from '../components/RestaurantCard';
 import BrandLogo from '../components/BrandLogo';
 import clsx from 'clsx';
-import { getRestaurantImage, DEFAULT_RESTAURANT_IMAGE } from '../lib/images';
+import { getRestaurantImage, DEFAULT_RESTAURANT_IMAGE, isBrokenImage } from '../lib/images';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BADGE_LEVELS, calculateXP, getLevelFromXP } from '../lib/badges';
 
@@ -64,18 +64,18 @@ export default function Home() {
             // Only heal a few per session to save API quota
             const healedInSession = JSON.parse(sessionStorage.getItem('foodie_healed') || '[]');
 
-            // Priority: 1. Missing Place ID, 2. Google-hosted volatile URLs
+            // Priority: 1. Missing Place ID, 2. Known Broken Patterns, 3. Volatile URLs
             const candidate = restaurants.find(r =>
                 !healedInSession.includes(r.id) &&
-                (!r.google_place_id || (r.image_url && r.image_url.includes('lh3.google')))
+                (!r.google_place_id || isBrokenImage(r.image_url) || (r.image_url && r.image_url.includes('lh3.google')))
             );
 
-            if (candidate && healedInSession.length < 5) { // Limit to 5 per session
+            if (candidate && healedInSession.length < 10) { // Limit to 10 per session
                 const timer = setTimeout(() => {
                     console.log(`[Auto-Heal] Refreshing: ${candidate.name}`);
                     refreshRestaurantImages(candidate.id, candidate.google_place_id);
                     sessionStorage.setItem('foodie_healed', JSON.stringify([...healedInSession, candidate.id]));
-                }, 5000); // Wait 5s after load
+                }, 3000); // Wait 3s after load
                 return () => clearTimeout(timer);
             }
         }
