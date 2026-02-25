@@ -2,10 +2,10 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Star, Clock, MapPin, Heart, Share2, Trash2, Edit3,
-    MessageCircle, ChevronLeft, ChevronRight, Globe, Phone, CheckCircle, Save, X, Sparkles
+    MessageCircle, ChevronLeft, ChevronRight, Globe, Phone, CheckCircle, Save, X
 } from 'lucide-react';
 import { useStore } from '../lib/store';
-import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE, isBrokenImage } from '../lib/images';
+import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE } from '../lib/images';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -27,7 +27,6 @@ export default function RestaurantDetails() {
     const toggleFavorite = useStore(state => state.toggleFavorite);
     const deleteRestaurant = useStore(state => state.deleteRestaurant);
     const updateRestaurant = useStore(state => state.updateRestaurant);
-    const refreshRestaurantImages = useStore(state => state.refreshRestaurantImages);
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
@@ -56,15 +55,6 @@ export default function RestaurantDetails() {
     // Unified photo refresh logic (Centralized in store)
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    // Proactive healing on mount
-    useEffect(() => {
-        const imageUrl = restaurant?.image_url || restaurant?.image;
-        if (imageUrl && isBrokenImage(imageUrl) && !isRefreshing && restaurant?.id) {
-            setIsRefreshing(true);
-            console.log(`[Proactive-Heal-Details] Triggered for: ${restaurant.name}`);
-            refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
-        }
-    }, [restaurant?.id]);
     const handleSaveEdit = async () => {
         const payload = {
             ...editData,
@@ -199,14 +189,7 @@ export default function RestaurantDetails() {
                                     src={img}
                                     alt={`${restaurant.name} ${idx + 1}`}
                                     className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                        if (!isRefreshing) {
-                                            setIsRefreshing(true);
-                                            refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
-                                        } else {
-                                            e.target.src = DEFAULT_RESTAURANT_IMAGE;
-                                        }
-                                    }}
+                                    onError={(e) => { e.target.src = DEFAULT_RESTAURANT_IMAGE; }}
                                 />
                             </div>
                         ))
@@ -264,12 +247,6 @@ export default function RestaurantDetails() {
                         className="w-10 h-10 bg-black/20 backdrop-blur-xl rounded-full flex items-center justify-center text-white shadow-lg border border-white/10"
                     >
                         <ArrowLeft size={20} />
-                    </button>
-                    <button
-                        onClick={() => { setIsRefreshing(true); refreshRestaurantImages(restaurant.id, restaurant.google_place_id); }}
-                        className="w-10 h-10 bg-black/20 backdrop-blur-xl rounded-full flex items-center justify-center text-brand-orange shadow-lg border border-white/10 active:scale-95 transition-all"
-                    >
-                        <Sparkles size={18} />
                     </button>
                 </div>
             </div>

@@ -4,9 +4,40 @@ import { Camera, MapPin, Plus, X, Star, Search, Heart, Globe, Phone } from 'luci
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../lib/store';
+import { supabase } from '../lib/supabase';
 import { Autocomplete } from '@react-google-maps/api';
 import clsx from 'clsx';
 import { DEFAULT_RESTAURANT_IMAGE, getRestaurantImage } from '../lib/images';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/fetch-place-photo`;
+
+/**
+ * Calls the Edge Function to permanently store Google photo URLs in Supabase Storage.
+ * Falls back gracefully to the original URLs if it fails.
+ */
+async function permanentizePhotosForNew(googleUrls, session) {
+    if (!session || googleUrls.length === 0) return googleUrls;
+    try {
+        const res = await fetch(EDGE_FUNCTION_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`,
+            },
+            // Use 'new' as a temp ID — the Edge Function uses it as a folder prefix.
+            // After addRestaurant returns the real ID, the files will be migrated on
+            // the next refresh if needed; for now 'new' is fine.
+            body: JSON.stringify({ photoUrls: googleUrls, restaurantId: 'new' }),
+        });
+        if (!res.ok) return googleUrls;
+        const result = await res.json();
+        return result.photos?.length > 0 ? result.photos : googleUrls;
+    } catch {
+        return googleUrls; // graceful fallback
+    }
+}
+
 
 export default function AddRestaurant() {
     const navigate = useNavigate();
@@ -104,17 +135,36 @@ export default function AddRestaurant() {
         }
 
         setLoading(true);
-        // Convert meal_type array to comma-separated string for DB
+
+        // Step 1: Permanentize photos (only for Google-sourced URLs)
+        let finalImageUrl = formData.image_url;
+        let finalExtraPhotos = formData.additional_images || [];
+
+        const isGoogleUrl = (u) => u && (u.includes('googleusercontent.com') || u.includes('ggpht.com') || u.includes('googleapis.com'));
+
+        if (isGoogleUrl(formData.image_url)) {
+            const allGooglePhotos = [
+                formData.image_url,
+                ...(formData.additional_images || []).filter(isGoogleUrl)
+            ];
+            const { data: { session } } = await supabase.auth.getSession();
+            const permanentUrls = await permanentizePhotosForNew(allGooglePhotos, session);
+            finalImageUrl = permanentUrls[0] || formData.image_url;
+            finalExtraPhotos = permanentUrls.slice(1);
+        }
+
+        // Step 2: Save to database with permanent URLs
         const { group_ids, ...rest } = formData;
         const result = await addRestaurant({
             ...rest,
+            image_url: finalImageUrl,
+            additional_images: finalExtraPhotos,
             meal_type: formData.meal_type.join(', ')
         });
 
         setLoading(false);
 
         if (result.success) {
-            // Add to selected clubs
             if (formData.group_ids.length > 0) {
                 await Promise.all(formData.group_ids.map(clubId =>
                     addRestaurantToClub(clubId, result.data.id)

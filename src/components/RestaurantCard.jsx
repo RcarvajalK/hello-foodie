@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Star, MapPin, Calendar, User, Users, CheckCircle, Edit3, X, Save, Trash2, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { Star, MapPin, Calendar, User, Users, CheckCircle, Edit3, X, Save, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { useStore } from '../lib/store';
@@ -84,14 +84,7 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                         src={allImages[0] || DEFAULT_RESTAURANT_IMAGE}
                         alt={restaurant.name}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                            if (!isRefreshing) {
-                                setIsRefreshing(true);
-                                refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
-                            } else {
-                                e.target.src = getDiverseFallbackImage(restaurant.name);
-                            }
-                        }}
+                        onError={(e) => { e.target.src = getDiverseFallbackImage(restaurant.name); }}
                     />
                 </div>
             );
@@ -110,14 +103,7 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                                 src={img}
                                 alt={`${restaurant.name} ${idx + 1}`}
                                 className="w-full h-full object-cover"
-                                onError={(e) => {
-                                    if (!isRefreshing) {
-                                        setIsRefreshing(true);
-                                        refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
-                                    } else {
-                                        e.target.src = getDiverseFallbackImage(`${restaurant.name}-${idx}`);
-                                    }
-                                }}
+                                onError={(e) => { e.target.src = getDiverseFallbackImage(`${restaurant.name}-${idx}`); }}
                             />
                         </div>
                     ))}
@@ -178,14 +164,7 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                             src={getRestaurantImage(restaurant.image_url || restaurant.image)}
                             alt={restaurant.name}
                             className="w-full h-full object-cover"
-                            onError={(e) => {
-                                if (!isRefreshing && restaurant.id) {
-                                    setIsRefreshing(true);
-                                    refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
-                                } else {
-                                    e.target.src = getDiverseFallbackImage(restaurant.name);
-                                }
-                            }}
+                            onError={(e) => { e.target.src = getDiverseFallbackImage(restaurant.name); }}
                         />
                         {restaurant.is_sponsored && (
                             <div className="absolute top-1 left-1 bg-brand-orange text-white text-[6px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-[0.2em]">Ad</div>
@@ -209,13 +188,6 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                             <span className="text-[10px] font-black tabular-nums leading-none mt-0.5">{restaurant.rating || '---'}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setIsRefreshing(true); refreshRestaurantImages(restaurant.id, restaurant.google_place_id); }}
-                                className="p-2 bg-slate-50 text-brand-orange rounded-xl hover:bg-white transition-all shadow-sm active:scale-90"
-                                title="Refresh photo"
-                            >
-                                <Sparkles size={12} />
-                            </button>
                             {!restaurant.is_sponsored && <EditButton />}
                         </div>
                     </div>
@@ -249,12 +221,6 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                         <p className="text-[8px] text-brand-orange-light font-black uppercase tracking-[0.2em]">{restaurant.cuisine}</p>
                     </div>
                     <div className="absolute top-4 right-4 flex gap-1.5">
-                        <button
-                            onClick={(e) => { e.stopPropagation(); setIsRefreshing(true); refreshRestaurantImages(restaurant.id, restaurant.google_place_id); }}
-                            className="bg-white/95 backdrop-blur-sm p-2 rounded-full flex items-center shadow-lg text-brand-orange active:scale-95 transition-all"
-                        >
-                            <Sparkles size={12} />
-                        </button>
                         <div className="bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full flex items-center shadow-lg pointer-events-none">
                             <Star size={10} className="text-brand-orange fill-brand-orange mr-1" />
                             <span className="text-[10px] font-black text-brand-dark">{restaurant.rating || '---'}</span>
@@ -291,12 +257,6 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
             <div className="relative group">
                 <CardCarousel />
                 <div className="absolute top-6 right-6 flex gap-3">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); setIsRefreshing(true); refreshRestaurantImages(restaurant.id, restaurant.google_place_id); }}
-                        className="bg-white/95 backdrop-blur-md p-3 rounded-[1.2rem] flex items-center shadow-2xl border border-white/50 text-brand-orange active:scale-95 transition-all"
-                    >
-                        <Sparkles size={20} />
-                    </button>
                     <div className="bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-[1.5rem] flex items-center shadow-2xl border border-white/50 pointer-events-none">
                         <Star size={18} className="text-brand-orange fill-brand-orange mr-2" />
                         <span className="text-base font-black text-brand-dark tabular-nums">{restaurant.rating || '---'}</span>

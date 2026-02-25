@@ -2,6 +2,46 @@ import { create } from 'zustand';
 import { supabase } from './supabase';
 import { calculateXP, getLevelFromXP } from './badges';
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/fetch-place-photo`;
+
+/**
+ * Downloads Google photo URLs via the Edge Function and stores them
+ * permanently in Supabase Storage. Returns the permanent public URLs.
+ * Falls back to original URLs if the Edge Function fails.
+ */
+async function permanentizePhotos(googleUrls, restaurantId) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return { photos: googleUrls }; // no auth, return as-is
+
+    try {
+        const res = await fetch(EDGE_FUNCTION_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ photoUrls: googleUrls, restaurantId }),
+        });
+
+        if (!res.ok) {
+            console.warn('[permanentizePhotos] Edge function returned', res.status);
+            return { photos: googleUrls }; // fallback
+        }
+
+        const result = await res.json();
+        // If Edge Function got at least one photo, use them; otherwise keep originals
+        if (result.photos && result.photos.length > 0) {
+            return { photos: result.photos };
+        }
+        return { photos: googleUrls };
+    } catch (err) {
+        console.warn('[permanentizePhotos] Failed, using original URLs:', err.message);
+        return { photos: googleUrls }; // fallback gracefully
+    }
+}
+
+
 export const useStore = create((set, get) => ({
     restaurants: [],
     profile: null,
@@ -317,7 +357,7 @@ export const useStore = create((set, get) => ({
             const service = new window.google.maps.places.PlacesService(document.createElement('div'));
             let activePlaceId = googlePlaceId;
 
-            // Healing logic: if no Place ID, try to find it
+            // If no Place ID, try to find it
             if (!activePlaceId) {
                 const currentRes = get().restaurants.find(r => r.id === id);
                 if (!currentRes) return { success: false, error: 'Restaurant not found locally' };
@@ -356,20 +396,23 @@ export const useStore = create((set, get) => ({
             }
 
             const allFetchedPhotos = place.photos.map(p => p.getUrl({ maxWidth: 1200 }));
-            const validPhotos = allFetchedPhotos.filter(url => !isBrokenImage(url));
+            const validGoogleUrls = allFetchedPhotos.filter(url => !isBrokenImage(url));
 
-            if (validPhotos.length === 0) {
-                console.warn(`[Refresh] All ${allFetchedPhotos.length} photos for ${activePlaceId} look like placeholders.`);
+            if (validGoogleUrls.length === 0) {
+                console.warn(`[Refresh] All ${allFetchedPhotos.length} photos look like placeholders.`);
                 return { success: false, error: 'No valid photos found' };
             }
 
-            const updates = {
-                image_url: validPhotos[0],
-                additional_images: validPhotos.slice(1, 4),
-                google_place_id: activePlaceId // Persistent healing
-            };
+            console.log(`[Refresh] Found ${validGoogleUrls.length} Google URLs. Permanentizing via Edge Function...`);
 
-            console.log(`[Refresh] Found ${validPhotos.length} valid photos for ${id}`);
+            // *** KEY CHANGE: Permanentize via Edge Function instead of saving raw Google URLs ***
+            const { photos: permanentUrls } = await permanentizePhotos(validGoogleUrls, id);
+
+            const updates = {
+                image_url: permanentUrls[0],
+                additional_images: permanentUrls.slice(1, 5),
+                google_place_id: activePlaceId
+            };
 
             const { data, error } = await supabase
                 .from('restaurants')
@@ -386,15 +429,10 @@ export const useStore = create((set, get) => ({
                 )
             }));
 
-            console.group(`[Healer] Restaurant: ${id}`);
-            console.log("Status: OK", data);
-            console.groupEnd();
-
+            console.log(`[Refresh] Permanently stored ${permanentUrls.length} photos for restaurant ${id}`);
             return { success: true, data };
         } catch (error) {
-            console.group(`[Healer] Restaurant: ${id}`);
-            console.error("Status: ERROR", error);
-            console.groupEnd();
+            console.error(`[Refresh] Error for restaurant ${id}:`, error);
             return { success: false, error: typeof error === 'string' ? error : error.message };
         }
     },

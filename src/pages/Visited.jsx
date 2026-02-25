@@ -7,8 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 
-import { List, LayoutGrid, Image as ImageIcon, Sparkles } from 'lucide-react';
-import { isBrokenImage, isVolatileImage } from '../lib/images';
+import { List, LayoutGrid, Image as ImageIcon } from 'lucide-react';
 
 export default function Visited() {
     const navigate = useNavigate();
@@ -33,36 +32,6 @@ export default function Visited() {
             (err) => console.log('Geolocation error', err)
         );
     }, []);
-
-    // Automatic Background Healing (Same as Home)
-    const refreshRestaurantImages = useStore(state => state.refreshRestaurantImages);
-    useEffect(() => {
-        if (restaurants.length > 0 && window.google) {
-            const healedInSession = JSON.parse(sessionStorage.getItem('foodie_healed_alt') || '[]');
-
-            // Priority: 1. Confirmed Broken, 2. Missing Place ID, 3. Volatile
-            const candidate = restaurants.find(r =>
-                r.is_visited &&
-                !healedInSession.includes(r.id) &&
-                (isBrokenImage(r.image_url) || !r.google_place_id || isVolatileImage(r.image_url))
-            );
-
-            if (candidate && healedInSession.length < 30) { // High limit for visited
-                const timer = setTimeout(() => {
-                    console.log(`[Visited-Aggressive] Healing: ${candidate.name}`);
-                    refreshRestaurantImages(candidate.id, candidate.google_place_id);
-                    sessionStorage.setItem('foodie_healed_alt', JSON.stringify([...healedInSession, candidate.id]));
-                }, 800);
-                return () => clearTimeout(timer);
-            }
-        }
-    }, [restaurants.length, !!window.google]);
-
-    const healAll = () => {
-        sessionStorage.removeItem('foodie_healed_alt');
-        fetchRestaurants();
-        alert("¡Limpieza iniciada en Visitados!");
-    };
 
     useEffect(() => {
         localStorage.setItem('foodie_view_mode', viewMode);
@@ -120,14 +89,6 @@ export default function Visited() {
                 </div>
 
                 <div className="flex items-center gap-2 bg-slate-200/40 p-1.5 rounded-[1.5rem] backdrop-blur-sm border border-slate-100 w-fit mx-auto">
-                    <button
-                        onClick={healAll}
-                        className="p-2.5 rounded-2xl transition-all bg-white/50 text-brand-orange hover:bg-white active:scale-95 shadow-sm"
-                        title="Heal all pictures"
-                    >
-                        <Sparkles size={22} />
-                    </button>
-                    <div className="w-px h-6 bg-gray-300/30 mx-1" />
                     {[
                         { id: 'list', icon: List },
                         { id: 'list-photos', icon: LayoutGrid },

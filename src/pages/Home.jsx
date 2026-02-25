@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, List, LayoutGrid, Image as ImageIcon, ChevronDown, Heart, Trophy, Sparkles } from 'lucide-react';
+import { Search, List, LayoutGrid, Image as ImageIcon, ChevronDown, Heart, Trophy } from 'lucide-react';
 import { useStore } from '../lib/store';
 import RestaurantCard from '../components/RestaurantCard';
 import BrandLogo from '../components/BrandLogo';
 import clsx from 'clsx';
-import { getRestaurantImage, DEFAULT_RESTAURANT_IMAGE, isBrokenImage, isVolatileImage } from '../lib/images';
+import { getRestaurantImage, DEFAULT_RESTAURANT_IMAGE } from '../lib/images';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BADGE_LEVELS, calculateXP, getLevelFromXP } from '../lib/badges';
 
@@ -56,38 +56,6 @@ export default function Home() {
             (err) => console.log('Geolocation error', err)
         );
     }, []);
-
-    // Automatic Background Healing
-    const refreshRestaurantImages = useStore(state => state.refreshRestaurantImages);
-    useEffect(() => {
-        if (!loading && restaurants.length > 0 && window.google) {
-            // Only heal a few per session to save API quota
-            const healedInSession = JSON.parse(sessionStorage.getItem('foodie_healed_alt') || '[]');
-
-            // Priority: 1. Confirmed Broken, 2. Missing Place ID, 3. Volatile
-            const candidate = restaurants.find(r =>
-                !healedInSession.includes(r.id) &&
-                (isBrokenImage(r.image_url) || !r.google_place_id || isVolatileImage(r.image_url))
-            );
-
-            if (candidate && healedInSession.length < 50) { // Limit to 50 per session for safety
-                const timer = setTimeout(() => {
-                    console.log(`[Aggressive-Heal] Healing: ${candidate.name}`);
-                    refreshRestaurantImages(candidate.id, candidate.google_place_id);
-                    sessionStorage.setItem('foodie_healed_alt', JSON.stringify([...healedInSession, candidate.id]));
-                }, 500); // Very fast (500ms)
-                return () => clearTimeout(timer);
-            }
-        }
-    }, [loading, restaurants.length, !!window.google]);
-
-    const healAll = () => {
-        sessionStorage.removeItem('foodie_healed');
-        sessionStorage.removeItem('foodie_healed_alt');
-        // Force refresh by toggling a local state or just letting the useEffect pick it up
-        fetchRestaurants(); // Refresh local list to trigger candidates
-        alert("¡Limpieza iniciada! Las fotos se irán recuperando una a una en los próximos segundos.");
-    };
 
     const calculateDistance = (r) => {
         if (!userCoords || !r.coordinates || typeof r.coordinates.lat !== 'number') return Infinity;
@@ -349,14 +317,6 @@ export default function Home() {
             {/* View Mode Switcher */}
             <div className="px-6 mb-6">
                 <div className="bg-[#EFEEF1] p-1.5 rounded-[2.5rem] flex items-center border border-gray-100/50 shadow-inner">
-                    <button
-                        onClick={healAll}
-                        className="w-12 h-10 flex items-center justify-center bg-white/50 text-brand-orange rounded-2xl mx-1 hover:bg-white active:scale-95 transition-all shadow-sm"
-                        title="Heal All Photos"
-                    >
-                        <Sparkles size={18} />
-                    </button>
-                    <div className="w-px h-6 bg-gray-300/30 mx-1" />
                     {[
                         { id: 'list', label: 'List', icon: List },
                         { id: 'list-photos', label: 'Mosaic', icon: LayoutGrid },
