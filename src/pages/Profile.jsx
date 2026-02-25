@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useStore } from '../lib/store';
 import { BADGE_LEVELS, getLevelFromXP, getNextLevelFromXP, calculateXP, SPECIAL_BADGES } from '../lib/badges';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Trophy, MapPin, Star, Settings, Plus, ChevronRight, Heart, Bell, X, Share2, Users, Globe } from 'lucide-react';
+import { LogOut, Trophy, MapPin, Star, Settings, Plus, ChevronRight, Heart, Bell, X, Share2, Users, Globe, Database, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import BrandLogo from '../components/BrandLogo';
@@ -21,12 +21,14 @@ export default function Profile() {
     const uploadImage = useStore(state => state.uploadImage);
     const fetchRankings = useStore(state => state.fetchRankings);
     const fetchClubs = useStore(state => state.fetchClubs);
+    const refreshRestaurantImages = useStore(state => state.refreshRestaurantImages);
     const navigate = useNavigate();
 
     const fileInputRef = useRef(null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [leaderboardTab, setLeaderboardTab] = useState('global');
+    const [migrationState, setMigrationState] = useState(null); // null | { total, done, current, success, errors }
 
     const [editData, setEditData] = useState({
         full_name: '',
@@ -100,6 +102,35 @@ export default function Profile() {
         const { error } = await updateProfile(editData);
         if (error) alert(`Error: ${error.message}`);
         else setIsSettingsOpen(false);
+    };
+
+    const handleMigratePhotos = async () => {
+        const isGoogleUrl = (u) => u && (u.includes('googleusercontent.com') || u.includes('ggpht.com') || u.includes('googleapis.com'));
+        const toMigrate = restaurants.filter(r => isGoogleUrl(r.image_url));
+
+        if (toMigrate.length === 0) {
+            alert('¡Todas las fotos ya están almacenadas permanentemente!');
+            return;
+        }
+
+        setMigrationState({ total: toMigrate.length, done: 0, current: toMigrate[0]?.name, success: 0, errors: 0 });
+
+        let success = 0;
+        let errors = 0;
+
+        for (let i = 0; i < toMigrate.length; i++) {
+            const r = toMigrate[i];
+            setMigrationState(prev => ({ ...prev, done: i, current: r.name }));
+
+            const result = await refreshRestaurantImages(r.id, r.google_place_id);
+            if (result.success) success++;
+            else errors++;
+
+            // Small delay between requests to avoid rate limiting
+            if (i < toMigrate.length - 1) await new Promise(res => setTimeout(res, 1200));
+        }
+
+        setMigrationState({ total: toMigrate.length, done: toMigrate.length, current: null, success, errors, finished: true });
     };
 
     return (
@@ -401,6 +432,46 @@ export default function Profile() {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+
+                            {/* Section: Migrate Photos */}
+                            <div className="space-y-4 mb-12">
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-300">Photos</h4>
+                                {migrationState?.finished ? (
+                                    <div className="bg-green-50 p-5 rounded-2xl border border-green-100 text-center">
+                                        <CheckCircle2 className="text-green-500 mx-auto mb-2" size={28} />
+                                        <p className="text-sm font-black text-green-700">{migrationState.success} fotos migradas</p>
+                                        {migrationState.errors > 0 && <p className="text-[10px] text-slate-400 mt-1">{migrationState.errors} sin foto disponible en Google</p>}
+                                        <button
+                                            onClick={() => setMigrationState(null)}
+                                            className="mt-3 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                                        >Cerrar</button>
+                                    </div>
+                                ) : migrationState ? (
+                                    <div className="bg-slate-50 p-5 rounded-2xl">
+                                        <div className="flex justify-between text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
+                                            <span>Migrando fotos...</span>
+                                            <span>{migrationState.done}/{migrationState.total}</span>
+                                        </div>
+                                        <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden mb-3">
+                                            <div
+                                                className="h-full bg-brand-orange rounded-full transition-all duration-500"
+                                                style={{ width: `${(migrationState.done / migrationState.total) * 100}%` }}
+                                            />
+                                        </div>
+                                        {migrationState.current && (
+                                            <p className="text-[9px] text-slate-400 font-bold truncate">{migrationState.current}</p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={handleMigratePhotos}
+                                        className="w-full flex items-center justify-center gap-3 bg-slate-50 text-brand-dark font-black py-4 rounded-2xl uppercase tracking-widest text-[10px] border border-slate-100 hover:bg-slate-100 transition-all active:scale-95"
+                                    >
+                                        <Database size={16} className="text-brand-orange" />
+                                        Migrar fotos a Storage permanente
+                                    </button>
+                                )}
                             </div>
 
                             {/* Section: Danger Zone */}
