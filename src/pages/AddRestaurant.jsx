@@ -52,9 +52,20 @@ export default function AddRestaurant() {
     useEffect(() => {
         navigator.geolocation.getCurrentPosition(
             (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            (err) => console.log('Loc error', err)
+            // If geolocation denied, fall back to CDMX center
+            () => setUserLoc({ lat: 19.4326, lng: -99.1332 })
         );
     }, []);
+
+    // Build a ~50km bounding box around the user to strongly bias autocomplete results
+    const autocompleteBounds = useMemo(() => {
+        if (!userLoc || typeof google === 'undefined') return undefined;
+        const OFFSET = 0.45; // ~50km in degrees
+        return new google.maps.LatLngBounds(
+            { lat: userLoc.lat - OFFSET, lng: userLoc.lng - OFFSET },
+            { lat: userLoc.lat + OFFSET, lng: userLoc.lng + OFFSET }
+        );
+    }, [userLoc]);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -218,10 +229,12 @@ export default function AddRestaurant() {
                         <div className="relative group">
                             <label className="text-[10px] font-black uppercase text-gray-400 ml-4 tracking-widest block mb-2">Search with Google Places</label>
                             <Autocomplete
+                                key={userLoc ? `${userLoc.lat},${userLoc.lng}` : 'no-loc'}
                                 onLoad={onLoad}
                                 onPlaceChanged={onPlaceChanged}
                                 options={{
-                                    locationBias: userLoc ? { lat: userLoc.lat, lng: userLoc.lng } : undefined,
+                                    bounds: autocompleteBounds,
+                                    strictBounds: false,
                                     types: ['restaurant', 'food', 'cafe', 'bakery']
                                 }}
                             >
