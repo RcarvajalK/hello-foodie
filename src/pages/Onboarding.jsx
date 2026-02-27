@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../lib/store';
 import { useNavigate } from 'react-router-dom';
-import { ChefHat, Bell, MapPin, Sparkles, ChevronRight, X } from 'lucide-react';
+import { ChefHat, Bell, MapPin, Sparkles, ChevronRight, X, Search, Plus } from 'lucide-react';
 import clsx from 'clsx';
 import BrandLogo from '../components/BrandLogo';
+import { Autocomplete } from '@react-google-maps/api';
 
 const CUISINES = ['Italian', 'Japanese', 'Mexican', 'French', 'Seafood', 'Steakhouse', 'Cafe', 'Street Food', 'Bakery', 'Healthy', 'Indian', 'Basque'];
 
@@ -21,6 +22,11 @@ export default function Onboarding() {
         favorite_cuisines: profile?.favorite_cuisines || [],
         example_places: profile?.example_places || ''
     });
+    const [selectedPlaces, setSelectedPlaces] = useState(
+        profile?.example_places ? profile.example_places.split(',').map(s => s.trim()).filter(Boolean) : []
+    );
+    const [autocomplete, setAutocomplete] = useState(null);
+    const autocompleteInputRef = useRef(null);
 
     const handleNext = () => setStep(s => s + 1);
     const handleSkip = async () => {
@@ -31,6 +37,7 @@ export default function Onboarding() {
     const handleFinish = async () => {
         await updateProfile({
             ...data,
+            example_places: selectedPlaces.join(', '),
             has_onboarded: true
         });
         navigate('/');
@@ -93,16 +100,73 @@ export default function Onboarding() {
         },
         {
             title: "Top Places",
-            desc: "Any restaurants you already love? We use this for AI recommendations.",
+            desc: "Any restaurants you already love? We'll use this to recommend similar spots.",
             icon: <MapPin className="text-brand-orange" size={40} />,
             content: (
                 <div className="space-y-4">
-                    <textarea
-                        value={data.example_places}
-                        onChange={(e) => setData({ ...data, example_places: e.target.value })}
-                        className="w-full bg-slate-50 border-2 border-brand-orange/10 p-6 rounded-[2rem] text-sm font-bold text-brand-dark min-h-[150px] focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all shadow-inner"
-                        placeholder="e.g. Grano de Oro, Tandoor, local gems..."
-                    />
+                    {/* Google Places Autocomplete input */}
+                    {typeof google !== 'undefined' ? (
+                        <Autocomplete
+                            onLoad={(auto) => setAutocomplete(auto)}
+                            onPlaceChanged={() => {
+                                if (autocomplete) {
+                                    const place = autocomplete.getPlace();
+                                    const name = place.name || '';
+                                    if (name && !selectedPlaces.includes(name)) {
+                                        setSelectedPlaces(prev => [...prev, name]);
+                                    }
+                                    // Clear the input
+                                    if (autocompleteInputRef.current) {
+                                        autocompleteInputRef.current.value = '';
+                                    }
+                                }
+                            }}
+                            options={{ types: ['restaurant', 'food', 'cafe', 'bakery'] }}
+                        >
+                            <div className="relative">
+                                <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-brand-orange/50" />
+                                <input
+                                    ref={autocompleteInputRef}
+                                    type="text"
+                                    placeholder="Search a restaurant..."
+                                    className="w-full bg-slate-50 border-2 border-brand-orange/10 p-4 pl-12 rounded-[1.5rem] text-sm font-bold text-brand-dark focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all"
+                                />
+                            </div>
+                        </Autocomplete>
+                    ) : (
+                        <input
+                            type="text"
+                            placeholder="Start typing a restaurant name..."
+                            className="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-[1.5rem] text-sm font-bold text-gray-300 cursor-not-allowed"
+                            disabled
+                        />
+                    )}
+
+                    {/* Selected places chips */}
+                    {selectedPlaces.length > 0 && (
+                        <div className="flex flex-wrap gap-2 pt-2">
+                            {selectedPlaces.map((place, i) => (
+                                <span
+                                    key={i}
+                                    className="flex items-center gap-2 bg-brand-orange text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md shadow-brand-orange/20"
+                                >
+                                    {place}
+                                    <button
+                                        onClick={() => setSelectedPlaces(prev => prev.filter((_, idx) => idx !== i))}
+                                        className="text-white/70 hover:text-white transition-colors"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+                    )}
+
+                    {selectedPlaces.length === 0 && (
+                        <p className="text-center text-[10px] font-black text-gray-300 uppercase tracking-widest pt-2">
+                            Search and select your favorite spots
+                        </p>
+                    )}
                 </div>
             )
         },

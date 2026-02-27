@@ -406,7 +406,31 @@ export default function Home() {
                                 />
                             </motion.div>
                         ))
+                    ) : myRestaurants.length === 0 && restaurants.filter(r => !r.is_visited).length === 0 ? (
+                        // True empty state — no restaurants added yet
+                        <motion.div
+                            className="col-span-full py-24 text-center"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                        >
+                            <div className="w-28 h-28 bg-gradient-to-br from-brand-orange/20 to-brand-orange/5 rounded-[2.5rem] shadow-xl flex items-center justify-center mx-auto mb-8 border border-brand-orange/10">
+                                <BrandLogo size={64} animate={true} />
+                            </div>
+                            <h2 className="text-brand-dark font-black uppercase tracking-tight text-2xl leading-tight mb-3">
+                                Your culinary<br />journey starts here
+                            </h2>
+                            <p className="text-[11px] text-gray-400 uppercase font-black tracking-[0.2em] mb-8 px-8 leading-relaxed">
+                                Add your first restaurant and let the adventure begin
+                            </p>
+                            <button
+                                onClick={() => navigate('/add')}
+                                className="inline-flex items-center gap-3 bg-brand-orange text-white font-black py-4 px-8 rounded-[1.5rem] shadow-xl shadow-brand-orange/30 active:scale-95 transition-all text-[11px] uppercase tracking-widest"
+                            >
+                                + Add First Restaurant
+                            </button>
+                        </motion.div>
                     ) : (
+                        // Filters returned no results
                         <div className="col-span-full py-24 text-center">
                             <div className="w-24 h-24 bg-white rounded-[2.5rem] shadow-xl flex items-center justify-center mx-auto mb-6 transform rotate-6 border border-gray-50">
                                 <BrandLogo size={56} className="grayscale opacity-20" animate={false} />
