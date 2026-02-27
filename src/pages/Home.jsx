@@ -319,8 +319,8 @@ export default function Home() {
                 <div className="bg-[#EFEEF1] p-1.5 rounded-[2.5rem] flex items-center border border-gray-100/50 shadow-inner">
                     {[
                         { id: 'list', label: 'List', icon: List },
-                        { id: 'list-photos', label: 'Mosaic', icon: LayoutGrid },
-                        { id: 'gallery', label: 'Gallery', icon: ImageIcon }
+                        { id: 'gallery', label: 'Mosaic', icon: LayoutGrid },
+                        { id: 'list-photos', label: 'Gallery', icon: ImageIcon }
                     ].map(mode => (
                         <button
                             key={mode.id}

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Star, Clock, MapPin, Heart, Share2, Trash2, Edit3,
-    MessageCircle, ChevronLeft, ChevronRight, Globe, Phone, CheckCircle, Save, X
+    MessageCircle, ChevronLeft, ChevronRight, Globe, Phone, CheckCircle, Save, X, Link
 } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE } from '../lib/images';
@@ -32,6 +32,7 @@ export default function RestaurantDetails() {
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [showComparison, setShowComparison] = useState(false);
     const [levelUpData, setLevelUpData] = useState(null);
+    const [showCopiedToast, setShowCopiedToast] = useState(false);
 
     const restaurant = restaurants.find(r => r.id === id);
 
@@ -127,12 +128,13 @@ export default function RestaurantDetails() {
 
     const handleShare = async () => {
         const text = `Hey! Let's go to ${restaurant.name}! It's a ${restaurant.cuisine} place in ${restaurant.zone}. Check it out on Hello Foodie!`;
+        const shareUrl = window.location.href;
         if (navigator.share) {
             try {
                 await navigator.share({
                     title: 'Hungry?',
                     text: text,
-                    url: window.location.href,
+                    url: shareUrl,
                 });
             } catch (err) {
                 if (err.name !== 'AbortError') {
@@ -140,7 +142,20 @@ export default function RestaurantDetails() {
                 }
             }
         } else {
-            alert('Sharing not supported on this browser, but here is the text: ' + text);
+            // Desktop fallback: copy link to clipboard + toast
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+            } catch {
+                // last resort fallback
+                const el = document.createElement('textarea');
+                el.value = shareUrl;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+            }
+            setShowCopiedToast(true);
+            setTimeout(() => setShowCopiedToast(false), 2500);
         }
     };
 
@@ -263,11 +278,17 @@ export default function RestaurantDetails() {
                                 <span className="text-brand-green font-bold text-[10px] uppercase tracking-wider">{restaurant.cuisine}</span>
                             </div>
                         </div>
-                        <div className="flex flex-col items-end">
+                        <div className="flex flex-col items-end gap-1">
                             <span className="text-xl font-black text-brand-orange">{restaurant.price}</span>
-                            {restaurant.meal_type && (
-                                <span className="bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-tight mt-1">{restaurant.meal_type}</span>
-                            )}
+                            {/* Visited status badge */}
+                            <span className={clsx(
+                                "px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-tight",
+                                restaurant.is_visited
+                                    ? "bg-brand-green/15 text-brand-green"
+                                    : "bg-amber-50 text-amber-500"
+                            )}>
+                                {restaurant.is_visited ? '✓ Visited' : '○ To Visit'}
+                            </span>
                         </div>
                     </div>
 
@@ -283,16 +304,29 @@ export default function RestaurantDetails() {
                             <button onClick={() => setIsEditing(true)} className="w-11 h-11 bg-slate-50 text-slate-500 rounded-2xl flex items-center justify-center hover:bg-blue-50 hover:text-blue-500 transition-all">
                                 <Edit3 size={20} />
                             </button>
+                            {/* Favorite */}
+                            <button
+                                onClick={() => toggleFavorite(restaurant.id, restaurant.is_favorite)}
+                                className={clsx(
+                                    "w-11 h-11 rounded-2xl flex items-center justify-center transition-all",
+                                    restaurant.is_favorite ? "bg-red-500 text-white shadow-md shadow-red-200" : "bg-slate-50 text-red-400"
+                                )}
+                            >
+                                <Heart size={20} fill={restaurant.is_favorite ? "currentColor" : "none"} />
+                            </button>
                         </div>
+                        {/* Mark as Visited — prominent CTA in toolbar */}
                         <button
-                            onClick={() => toggleFavorite(restaurant.id, restaurant.is_favorite)}
+                            onClick={handleToggleVisited}
                             className={clsx(
-                                "h-11 px-6 rounded-2xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all",
-                                restaurant.is_favorite ? "bg-red-500 text-white shadow-lg shadow-red-200" : "bg-slate-50 text-red-500"
+                                "h-11 px-5 rounded-2xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95",
+                                restaurant.is_visited
+                                    ? "bg-brand-green/15 text-brand-green border border-brand-green/20"
+                                    : "bg-brand-orange text-white shadow-lg shadow-brand-orange/30"
                             )}
                         >
-                            <Heart size={18} fill={restaurant.is_favorite ? "currentColor" : "none"} />
-                            {restaurant.is_favorite ? "Saved" : "Save"}
+                            <CheckCircle size={16} fill={restaurant.is_visited ? "currentColor" : "none"} />
+                            {restaurant.is_visited ? 'Visited' : 'Mark Visited'}
                         </button>
                     </div>
                 </div>
@@ -417,14 +451,17 @@ export default function RestaurantDetails() {
                                 <p className="text-[8px] font-black text-brand-green uppercase mb-2">Your Rating</p>
                                 <div className="flex items-center gap-1.5 mb-1">
                                     <Star size={12} className="text-brand-green fill-brand-green" />
-                                    <span className="text-base font-black text-brand-green">{review.rating}</span>
+                                    <span className="text-base font-black text-brand-green">{restaurant.personal_rating ?? review.rating}</span>
                                 </div>
-                                <span className="text-sm font-black text-brand-green">{review.personal_price || restaurant.price}</span>
+                                <span className="text-sm font-black text-brand-green">{restaurant.personal_price || review.personal_price || restaurant.price}</span>
                             </div>
                         </div>
 
                         {restaurant.review_comment && (
-                            <div className="p-4 bg-white/40 rounded-2xl border border-white/60">
+                            <div className="p-5 bg-white rounded-2xl border border-brand-green/20 shadow-sm">
+                                <p className="text-[9px] font-black text-brand-green uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                    <MessageCircle size={12} /> My Review
+                                </p>
                                 <p className="text-sm text-brand-dark font-medium leading-relaxed italic">"{restaurant.review_comment}"</p>
                             </div>
                         )}
@@ -440,25 +477,32 @@ export default function RestaurantDetails() {
                     </div>
                 )}
 
-                <button
-                    onClick={handleToggleVisited}
-                    className={clsx(
-                        "w-full font-black py-5 rounded-[2rem] shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-[0.98] text-sm uppercase tracking-widest",
-                        restaurant.is_visited
-                            ? "bg-brand-green text-white shadow-brand-green/30"
-                            : "bg-brand-orange text-white shadow-brand-orange/40"
-                    )}
-                >
-                    {restaurant.is_visited ? (
-                        <>
-                            <CheckCircle size={24} />
-                            Already Visited
-                        </>
-                    ) : (
-                        "Mark as Visited"
-                    )}
-                </button>
+                {/* Secondary visited prompt — only shown when not yet visited, softer style */}
+                {!restaurant.is_visited && (
+                    <button
+                        onClick={handleToggleVisited}
+                        className="w-full font-black py-5 rounded-[2rem] bg-brand-orange text-white shadow-xl shadow-brand-orange/30 transition-all flex items-center justify-center gap-3 active:scale-[0.98] text-sm uppercase tracking-widest"
+                    >
+                        <CheckCircle size={22} />
+                        I visited this place!
+                    </button>
+                )}
             </div>
+
+            {/* Link Copied Toast */}
+            <AnimatePresence>
+                {showCopiedToast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] bg-brand-dark text-white px-6 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 text-[11px] font-black uppercase tracking-widest"
+                    >
+                        <CheckCircle size={16} className="text-brand-green" />
+                        Link copied!
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
 
             {/* Review Modal */}
