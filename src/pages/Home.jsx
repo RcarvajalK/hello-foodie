@@ -409,7 +409,8 @@ export default function Home() {
                     ) : myRestaurants.length === 0 && restaurants.filter(r => !r.is_visited).length === 0 ? (
                         // True empty state — no restaurants added yet
                         <motion.div
-                            className="col-span-full py-24 text-center"
+                            className="col-span-full flex flex-col items-center justify-center text-center"
+                            style={{ minHeight: 'calc(100vh - 440px)' }}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                         >
