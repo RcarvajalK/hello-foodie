@@ -88,26 +88,24 @@ export default function Visited() {
                     />
                 </div>
 
-                <div className="flex items-center gap-2 bg-slate-200/40 p-1.5 rounded-[1.5rem] backdrop-blur-sm border border-slate-100 w-fit mx-auto">
+                <div className="bg-[#EFEEF1] p-1.5 rounded-[2.5rem] flex items-center border border-gray-100/50 shadow-inner w-full">
                     {[
-                        { id: 'list', icon: List },
-                        { id: 'list-photos', icon: LayoutGrid },
-                        { id: 'gallery', icon: ImageIcon }
-                    ].map(modeItem => {
-                        const Icon = modeItem.icon;
-                        return (
-                            <button
-                                key={modeItem.id}
-                                onClick={() => setViewMode(modeItem.id)}
-                                className={clsx(
-                                    "p-2.5 rounded-2xl transition-all",
-                                    viewMode === modeItem.id ? "bg-white text-brand-green shadow-lg scale-110" : "text-gray-400"
-                                )}
-                            >
-                                <Icon size={22} />
-                            </button>
-                        );
-                    })}
+                        { id: 'list', label: 'List', icon: List },
+                        { id: 'gallery', label: 'Mosaic', icon: LayoutGrid },
+                        { id: 'list-photos', label: 'Gallery', icon: ImageIcon }
+                    ].map(mode => (
+                        <button
+                            key={mode.id}
+                            onClick={() => setViewMode(mode.id)}
+                            className={clsx(
+                                "flex-1 flex items-center justify-center gap-2 py-3 rounded-[2rem] transition-all duration-300",
+                                viewMode === mode.id ? "bg-white text-brand-orange shadow-md scale-[1.02]" : "text-gray-400"
+                            )}
+                        >
+                            <mode.icon size={16} className={clsx(viewMode === mode.id ? "text-brand-orange" : "text-gray-400")} />
+                            <span className="text-[9px] font-black uppercase tracking-widest leading-none">{mode.label}</span>
+                        </button>
+                    ))}
                 </div>
             </header>
 
