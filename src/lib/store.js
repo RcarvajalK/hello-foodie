@@ -497,39 +497,52 @@ export const useStore = create((set, get) => ({
     fetchClubs: async () => {
         const { data: { session } } = await supabase.auth.getSession();
 
-        const { data, error } = await supabase
-            .from('clubs')
-            .select(`
-                *,
-                club_members(count),
-                is_member:club_members!inner(user_id)
-            `)
-            .eq('club_members.user_id', session?.user?.id);
-
-        // The above query is tricky because !inner filters the parent. 
-        // Better approach: fetch all clubs and check membership separately or use a join.
-
-        const { data: allClubs, error: clubsError } = await supabase
-            .from('clubs')
-            .select('*, club_members(count)');
-
-        if (clubsError) return;
+        // Step 1: Get the clubs this user is a member of
+        const membershipQuery = supabase
+            .from('club_members')
+            .select('club_id');
 
         if (session?.user) {
-            const { data: memberships } = await supabase
-                .from('club_members')
-                .select('club_id')
-                .eq('user_id', session.user.id);
-
-            const memberClubIds = new Set(memberships?.map(m => m.club_id) || []);
-            const clubsWithStatus = (allClubs || []).map(club => ({
-                ...club,
-                is_member: memberClubIds.has(club.id)
-            }));
-            set({ clubs: clubsWithStatus });
-        } else {
-            set({ clubs: allClubs || [] });
+            membershipQuery.eq('user_id', session.user.id);
         }
+
+        const { data: memberships } = session?.user ? await membershipQuery : { data: [] };
+        const memberClubIds = new Set(memberships?.map(m => m.club_id) || []);
+
+        // Step 2: Fetch public clubs + private clubs the user belongs to
+        // We do two queries and merge them to avoid complex OR + join logic.
+
+        // 2a. All public clubs
+        const { data: publicClubs, error: publicErr } = await supabase
+            .from('clubs')
+            .select('*, club_members(count)')
+            .eq('type', 'public');
+
+        if (publicErr) return;
+
+        // 2b. Private clubs where user is a member
+        let privateClubs = [];
+        if (session?.user && memberClubIds.size > 0) {
+            const { data: priv } = await supabase
+                .from('clubs')
+                .select('*, club_members(count)')
+                .eq('type', 'private')
+                .in('id', [...memberClubIds]);
+            privateClubs = priv || [];
+        }
+
+        // Step 3: Merge, deduplicate, and annotate is_member
+        const allVisible = new Map();
+        [...(publicClubs || []), ...privateClubs].forEach(club => {
+            if (!allVisible.has(club.id)) {
+                allVisible.set(club.id, {
+                    ...club,
+                    is_member: memberClubIds.has(club.id)
+                });
+            }
+        });
+
+        set({ clubs: [...allVisible.values()] });
     },
 
     createClub: async (clubData) => {

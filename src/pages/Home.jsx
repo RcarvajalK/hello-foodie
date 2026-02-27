@@ -409,23 +409,22 @@ export default function Home() {
                     ) : myRestaurants.length === 0 && restaurants.filter(r => !r.is_visited).length === 0 ? (
                         // True empty state — no restaurants added yet
                         <motion.div
-                            className="col-span-full flex flex-col items-center justify-center text-center"
-                            style={{ minHeight: 'calc(100vh - 440px)' }}
+                            className="col-span-full flex flex-col items-center justify-center text-center py-10"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                         >
-                            <div className="w-28 h-28 bg-gradient-to-br from-brand-orange/20 to-brand-orange/5 rounded-[2.5rem] shadow-xl flex items-center justify-center mx-auto mb-8 border border-brand-orange/10">
-                                <BrandLogo size={64} animate={true} />
+                            <div className="w-20 h-20 bg-gradient-to-br from-brand-orange/20 to-brand-orange/5 rounded-[2rem] shadow-lg flex items-center justify-center mx-auto mb-5 border border-brand-orange/10">
+                                <BrandLogo size={44} animate={true} />
                             </div>
-                            <h2 className="text-brand-dark font-black uppercase tracking-tight text-2xl leading-tight mb-3">
+                            <h2 className="text-brand-dark font-black uppercase tracking-tight text-lg leading-tight mb-2">
                                 Your culinary<br />journey starts here
                             </h2>
-                            <p className="text-[11px] text-gray-400 uppercase font-black tracking-[0.2em] mb-8 px-8 leading-relaxed">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-[0.15em] mb-6 px-6 leading-relaxed">
                                 Add your first restaurant and let the adventure begin
                             </p>
                             <button
                                 onClick={() => navigate('/add')}
-                                className="inline-flex items-center gap-3 bg-brand-orange text-white font-black py-4 px-8 rounded-[1.5rem] shadow-xl shadow-brand-orange/30 active:scale-95 transition-all text-[11px] uppercase tracking-widest"
+                                className="inline-flex items-center gap-2 bg-brand-orange text-white font-black py-3 px-7 rounded-[1.2rem] shadow-lg shadow-brand-orange/30 active:scale-95 transition-all text-[10px] uppercase tracking-widest"
                             >
                                 + Add First Restaurant
                             </button>
