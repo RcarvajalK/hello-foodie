@@ -11,85 +11,89 @@ const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/fetch-place-photo`;
  * Gets fresh photo URLs from Google Places API using the Place ID or a name search,
  * then permanently stores them via the Edge Function.
  * Returns { status: 'ok', count } or { status: 'error', message }
+ * Never throws — all errors are returned as { status: 'error', message }.
  */
 async function refreshOneFresh(restaurant, session) {
-    if (!window.google) return { status: 'error', message: 'Google Maps API not loaded' };
+    try {
+        if (!window.google) return { status: 'error', message: 'Google Maps API not loaded' };
 
-    const service = new window.google.maps.places.PlacesService(document.createElement('div'));
+        const service = new window.google.maps.places.PlacesService(document.createElement('div'));
 
-    // Step 1: Get fresh photo URLs from Google Places
-    let placeId = restaurant.google_place_id;
+        // Step 1: Resolve Place ID (use stored or search by name)
+        let placeId = restaurant.google_place_id || null;
 
-    if (!placeId) {
-        // Try to find the place ID by name + zone
-        const query = `${restaurant.name} ${restaurant.zone || ''}`.trim();
-        placeId = await new Promise((resolve) => {
-            service.findPlaceFromQuery(
-                { query, fields: ['place_id'] },
-                (results, status) => {
-                    if (status === window.google.maps.places.PlacesServiceStatus.OK && results?.[0]?.place_id) {
-                        resolve(results[0].place_id);
-                    } else {
-                        resolve(null);
+        if (!placeId) {
+            const query = `${restaurant.name} ${restaurant.zone || ''}`.trim();
+            placeId = await new Promise((resolve) => {
+                service.findPlaceFromQuery(
+                    { query, fields: ['place_id'] },
+                    (results, status) => {
+                        if (status === window.google.maps.places.PlacesServiceStatus.OK && results?.[0]?.place_id) {
+                            resolve(results[0].place_id);
+                        } else {
+                            resolve(null);
+                        }
                     }
+                );
+            });
+        }
+
+        if (!placeId) return { status: 'error', message: 'Place ID not found' };
+
+        // Step 2: Get fresh photo objects from Places Details
+        const place = await new Promise((resolve, reject) => {
+            service.getDetails(
+                { placeId, fields: ['photos'] },
+                (result, status) => {
+                    if (status === window.google.maps.places.PlacesServiceStatus.OK) resolve(result);
+                    else reject(new Error(`Places status: ${status}`));
                 }
             );
+        }).catch(err => ({ error: err.message }));
+
+        if (place?.error) return { status: 'error', message: place.error };
+        if (!place?.photos?.length) return { status: 'error', message: 'No photos from Places API' };
+
+        // Step 3: Get actual fresh URLs (max 5)
+        const freshUrls = place.photos.slice(0, 5).map(p => p.getUrl({ maxWidth: 1200 }));
+
+        // Step 4: Permanently store via Edge Function
+        const res = await fetch(EDGE_FUNCTION_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ photoUrls: freshUrls, restaurantId: restaurant.id }),
         });
+
+        if (!res.ok) {
+            const txt = await res.text().catch(() => '');
+            return { status: 'error', message: `Edge Fn HTTP ${res.status}: ${txt.slice(0, 80)}` };
+        }
+
+        const result = await res.json();
+        if (!result.photos?.length) {
+            return { status: 'error', message: result.errors?.[0] || 'Edge Fn returned 0 photos' };
+        }
+
+        // Step 5: Update DB with permanent Supabase Storage URLs
+        const [newMain, ...newExtras] = result.photos;
+        const { error: dbErr } = await supabase
+            .from('restaurants')
+            .update({
+                image_url: newMain,
+                additional_images: newExtras.slice(0, 4),
+                google_place_id: placeId,
+            })
+            .eq('id', restaurant.id);
+
+        if (dbErr) return { status: 'error', message: dbErr.message };
+
+        return { status: 'ok', count: result.photos.length };
+    } catch (err) {
+        return { status: 'error', message: err?.message || 'Unknown error' };
     }
-
-    if (!placeId) return { status: 'error', message: 'Place ID not found' };
-
-    // Step 2: Get photo objects from Places Details
-    const place = await new Promise((resolve, reject) => {
-        service.getDetails(
-            { placeId, fields: ['photos'] },
-            (result, status) => {
-                if (status === window.google.maps.places.PlacesServiceStatus.OK) resolve(result);
-                else reject(new Error(`Places status: ${status}`));
-            }
-        );
-    }).catch(err => ({ error: err.message }));
-
-    if (place.error) return { status: 'error', message: place.error };
-    if (!place.photos || place.photos.length === 0) return { status: 'error', message: 'No photos from Places API' };
-
-    // Step 3: Get actual fresh URLs from the photo objects (max 5)
-    const freshUrls = place.photos.slice(0, 5).map(p => p.getUrl({ maxWidth: 1200 }));
-
-    // Step 4: Permanently store via Edge Function
-    const res = await fetch(EDGE_FUNCTION_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ photoUrls: freshUrls, restaurantId: restaurant.id }),
-    });
-
-    if (!res.ok) {
-        const txt = await res.text();
-        return { status: 'error', message: `Edge Fn HTTP ${res.status}: ${txt.slice(0, 80)}` };
-    }
-
-    const result = await res.json();
-    if (!result.photos || result.photos.length === 0) {
-        return { status: 'error', message: 'Edge Fn returned 0 permanent photos' };
-    }
-
-    // Step 5: Update DB with permanent Supabase Storage URLs
-    const [newMain, ...newExtras] = result.photos;
-    const { error: dbErr } = await supabase
-        .from('restaurants')
-        .update({
-            image_url: newMain,
-            additional_images: newExtras.slice(0, 4),
-            google_place_id: placeId,
-        })
-        .eq('id', restaurant.id);
-
-    if (dbErr) return { status: 'error', message: dbErr.message };
-
-    return { status: 'ok', count: result.photos.length };
 }
 
 export default function MigratePhotos() {
