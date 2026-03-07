@@ -5,7 +5,7 @@ import { useState, useRef, useMemo, useEffect } from 'react';
 import { useStore } from '../lib/store';
 import clsx from 'clsx';
 import BrandLogo from './BrandLogo';
-import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE, getDiverseFallbackImage, isBrokenImage } from '../lib/images';
+import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE, getDiverseFallbackImage, isVolatileImage } from '../lib/images';
 
 export default function RestaurantCard({ restaurant, variant = 'list-photos', onDelete }) {
     const navigate = useNavigate();
@@ -16,15 +16,17 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [editData, setEditData] = useState({ cuisine: restaurant.cuisine, price: restaurant.price });
 
-    // Proactive healing on mount if URL is known to be broken
+    // Proactive healing: only trigger when the main image is a volatile Google URL
+    // (Supabase Storage URLs are permanent — no healing needed)
     useEffect(() => {
         const imageUrl = restaurant.image_url || restaurant.image;
-        if (imageUrl && isBrokenImage(imageUrl) && !isRefreshing && restaurant.id) {
+        if (imageUrl && isVolatileImage(imageUrl) && !isRefreshing && restaurant.id) {
             setIsRefreshing(true);
             console.log(`[Proactive-Heal] Triggered for: ${restaurant.name}`);
             refreshRestaurantImages(restaurant.id, restaurant.google_place_id);
         }
     }, [restaurant.id]);
+
 
     const handleSave = async (e) => {
         e.preventDefault();

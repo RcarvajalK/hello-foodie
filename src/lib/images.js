@@ -21,35 +21,27 @@ function getDiverseFallback(seed) {
     let hash = 0;
     for (let i = 0; i < seed.length; i++) {
         hash = ((hash << 5) - hash) + seed.charCodeAt(i);
-        hash |= 0; // Convert to 32bit integer
+        hash |= 0;
     }
     const index = Math.abs(hash) % FALLBACK_IMAGES.length;
     return FALLBACK_IMAGES[index];
 }
 
 /**
- * Checks if a URL is from a Google source that is known to expire.
- * ALL Google-served image URLs are volatile (session-based), so we treat them
- * as invalid to force the healing/migration flow.
+ * Checks if a URL is clearly a Google error placeholder (not a real photo).
+ * We do NOT mark all googleusercontent.com as broken — those are real Google
+ * Places photos that may still be valid. The browser's onError handles actual
+ * expiry at render time.
  */
 export function isBrokenImage(url) {
     if (!url || typeof url !== 'string') return true;
-
-    // All Google-hosted images expire — treat them as broken to trigger refresh
-    if (
-        url.includes('googleusercontent.com') ||
-        url.includes('ggpht.com') ||
-        url.includes('googleapis.com/maps')
-    ) {
-        return true;
-    }
 
     const brokenPatterns = [
         'maps.gstatic.com',
         'default_geocode',
         'error_images/no_photo',
         'place_photo_no_image',
-        'logo_goog_2x.png'
+        'logo_goog_2x.png',
     ];
 
     return brokenPatterns.some(pattern => url.includes(pattern));
@@ -64,32 +56,34 @@ export function isVolatileImage(url) {
 }
 
 /**
- * Validates and returns a restaurant image URL.
- * Filters out known broken domains and returns a fallback if the URL is invalid.
+ * Returns the image URL if it looks valid, or a diverse fallback.
+ * Does NOT pre-convert Google URLs to fallbacks — lets the onError prop
+ * on <img> elements handle actual expiry at render time.
  */
 export function getRestaurantImage(url, fallback = null) {
-    const defaultFallback = fallback || getDiverseFallback(url || 'default');
-
-    if (!url || typeof url !== 'string') return defaultFallback;
-
-    if (isBrokenImage(url)) {
-        return getDiverseFallback(url);
+    if (!url || typeof url !== 'string') {
+        return fallback || getDiverseFallback(url || 'default');
     }
 
-    // Google-hosted photos (lh3.googleusercontent.com) often expire if they are session-based.
-    // If we detect a very old or specific pattern, we might want to flag it for refresh, 
-    // but for now we just return it and let the onError handle the actual failure.
+    if (isBrokenImage(url)) {
+        return fallback || getDiverseFallback(url);
+    }
 
     return url;
 }
 
 /**
- * Filters a list of images, keeping only the ones that appear to be valid.
+ * Returns the list of valid images for a restaurant's carousel.
+ * Keeps all non-broken URLs (including Google Places and Supabase Storage).
+ * Only uses a fallback if NO valid images exist at all.
  */
 export function filterRestaurantImages(images = [], mainImage = null) {
     const safeImages = Array.isArray(images) ? images : [];
     const all = [mainImage, ...safeImages].filter(Boolean);
-    const valid = all.map(img => getRestaurantImage(img)).filter(img => !FALLBACK_IMAGES.includes(img));
+
+    // Keep all URLs that are not clearly broken Google error placeholders.
+    // Google Places URLs that haven't expired yet are fine — onError handles expiry.
+    const valid = all.filter(img => img && typeof img === 'string' && !isBrokenImage(img));
 
     if (valid.length === 0) return [getDiverseFallback(mainImage || 'main')];
     return valid;

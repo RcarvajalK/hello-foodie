@@ -13,10 +13,11 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/fetch-place-photo`;
 
 /**
- * Calls the Edge Function to permanently store Google photo URLs in Supabase Storage.
+ * Calls the Edge Function to permanently store Google photo URLs in Supabase Storage
+ * using the real restaurant ID as the folder prefix.
  * Falls back gracefully to the original URLs if it fails.
  */
-async function permanentizePhotosForNew(googleUrls, session) {
+async function permanentizePhotos(googleUrls, restaurantId, session) {
     if (!session || googleUrls.length === 0) return googleUrls;
     try {
         const res = await fetch(EDGE_FUNCTION_URL, {
@@ -25,10 +26,7 @@ async function permanentizePhotosForNew(googleUrls, session) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${session.access_token}`,
             },
-            // Use 'new' as a temp ID — the Edge Function uses it as a folder prefix.
-            // After addRestaurant returns the real ID, the files will be migrated on
-            // the next refresh if needed; for now 'new' is fine.
-            body: JSON.stringify({ photoUrls: googleUrls, restaurantId: 'new' }),
+            body: JSON.stringify({ photoUrls: googleUrls, restaurantId }),
         });
         if (!res.ok) return googleUrls;
         const result = await res.json();
@@ -39,10 +37,13 @@ async function permanentizePhotosForNew(googleUrls, session) {
 }
 
 
+
+
 export default function AddRestaurant() {
     const navigate = useNavigate();
     const addRestaurant = useStore(state => state.addRestaurant);
     const addRestaurantToClub = useStore(state => state.addRestaurantToClub);
+    const updateRestaurant = useStore(state => state.updateRestaurant);
     const clubs = useStore(state => state.clubs);
     const restaurants = useStore(state => state.restaurants);
     const [userLoc, setUserLoc] = useState(null);
@@ -147,11 +148,27 @@ export default function AddRestaurant() {
 
         setLoading(true);
 
-        // Step 1: Permanentize photos (only for Google-sourced URLs)
-        let finalImageUrl = formData.image_url;
-        let finalExtraPhotos = formData.additional_images || [];
+        // Step 1: Save restaurant to DB first with original Google URLs
+        const { group_ids, ...rest } = formData;
+        const result = await addRestaurant({
+            ...rest,
+            meal_type: formData.meal_type.join(', ')
+        });
 
-        const isGoogleUrl = (u) => u && (u.includes('googleusercontent.com') || u.includes('ggpht.com') || u.includes('googleapis.com'));
+        if (!result.success) {
+            setLoading(false);
+            alert(result.error);
+            return;
+        }
+
+        const realId = result.data.id;
+
+        // Step 2: Permanentize photos using the REAL restaurant ID
+        const isGoogleUrl = (u) => u && (
+            u.includes('googleusercontent.com') ||
+            u.includes('ggpht.com') ||
+            u.includes('googleapis.com')
+        );
 
         if (isGoogleUrl(formData.image_url)) {
             const allGooglePhotos = [
@@ -159,32 +176,26 @@ export default function AddRestaurant() {
                 ...(formData.additional_images || []).filter(isGoogleUrl)
             ];
             const { data: { session } } = await supabase.auth.getSession();
-            const permanentUrls = await permanentizePhotosForNew(allGooglePhotos, session);
-            finalImageUrl = permanentUrls[0] || formData.image_url;
-            finalExtraPhotos = permanentUrls.slice(1);
+            const permanentUrls = await permanentizePhotos(allGooglePhotos, realId, session);
+
+            // Step 3: Update DB record with permanent Supabase Storage URLs
+            if (permanentUrls.length > 0 && permanentUrls[0] !== formData.image_url) {
+                await updateRestaurant(realId, {
+                    image_url: permanentUrls[0],
+                    additional_images: permanentUrls.slice(1),
+                });
+            }
         }
 
-        // Step 2: Save to database with permanent URLs
-        const { group_ids, ...rest } = formData;
-        const result = await addRestaurant({
-            ...rest,
-            image_url: finalImageUrl,
-            additional_images: finalExtraPhotos,
-            meal_type: formData.meal_type.join(', ')
-        });
+        // Step 4: Link to clubs if selected
+        if (formData.group_ids.length > 0) {
+            await Promise.all(formData.group_ids.map(clubId =>
+                addRestaurantToClub(clubId, realId)
+            ));
+        }
 
         setLoading(false);
-
-        if (result.success) {
-            if (formData.group_ids.length > 0) {
-                await Promise.all(formData.group_ids.map(clubId =>
-                    addRestaurantToClub(clubId, result.data.id)
-                ));
-            }
-            navigate('/');
-        } else {
-            alert(result.error);
-        }
+        navigate('/');
     };
 
     const toggleGroup = (clubId) => {
