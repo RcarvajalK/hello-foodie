@@ -23,6 +23,7 @@ import Onboarding from './pages/Onboarding';
 import Trash from './pages/Trash';
 import Rankings from './pages/Rankings';
 import LevelUpModal from './components/LevelUpModal';
+import MigratePhotos from './pages/MigratePhotos';
 
 const libraries = ['places'];
 
@@ -134,6 +135,12 @@ export default function App() {
             <Route
               path="/onboarding"
               element={session ? <Onboarding /> : <Navigate to="/auth" />}
+            />
+
+            {/* Admin tools */}
+            <Route
+              path="/admin/migrate-photos"
+              element={session ? <MigratePhotos /> : <Navigate to="/auth" />}
             />
 
             <Route path="/" element={session ? <Layout /> : <Navigate to="/auth" />}>

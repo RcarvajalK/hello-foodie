@@ -28,29 +28,27 @@ function getDiverseFallback(seed) {
 }
 
 /**
- * Checks if a URL matches known broken Google Maps placeholders.
+ * Checks if a URL is from a Google source that is known to expire.
+ * ALL Google-served image URLs are volatile (session-based), so we treat them
+ * as invalid to force the healing/migration flow.
  */
 export function isBrokenImage(url) {
     if (!url || typeof url !== 'string') return true;
+
+    // All Google-hosted images expire — treat them as broken to trigger refresh
+    if (
+        url.includes('googleusercontent.com') ||
+        url.includes('ggpht.com') ||
+        url.includes('googleapis.com/maps')
+    ) {
+        return true;
+    }
 
     const brokenPatterns = [
         'maps.gstatic.com',
         'default_geocode',
         'error_images/no_photo',
         'place_photo_no_image',
-        'lh3.googleusercontent.com/p/AF1QipM',
-        'lh3.googleusercontent.com/p/AF1QipP',
-        'lh3.googleusercontent.com/p/AF1QipN',
-        'lh3.googleusercontent.com/p/AF1QipO',
-        'lh3.googleusercontent.com/p/AF1QipS',
-        'lh3.googleusercontent.com/p/AF1QipQ',
-        'lh3.googleusercontent.com/p/AF1QipR',
-        'lh3.googleusercontent.com/p/AF1QipT',
-        'lh3.googleusercontent.com/p/AF1QipU',
-        'lh3.googleusercontent.com/p/AF1QipV',
-        'lh3.googleusercontent.com/p/AF1QipW',
-        'lh3.googleusercontent.com/p/AF1QipY',
-        'lh3.googleusercontent.com/p/AF1QipZ',
         'logo_goog_2x.png'
     ];
 
