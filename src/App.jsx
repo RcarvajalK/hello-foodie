@@ -24,6 +24,7 @@ import Trash from './pages/Trash';
 import Rankings from './pages/Rankings';
 import LevelUpModal from './components/LevelUpModal';
 import MigratePhotos from './pages/MigratePhotos';
+import FoodieWheel from './pages/FoodieWheel';
 
 const libraries = ['places'];
 
@@ -160,6 +161,7 @@ export default function App() {
               <Route path="rankings" element={<Rankings />} />
               <Route path="restaurant/:id" element={<RestaurantDetails />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="roulette" element={<FoodieWheel />} />
               <Route path="trash" element={<Trash />} />
             </Route>
           </Routes>

@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Settings, HelpCircle, LogOut, Info, Shield, Bell, Heart, CreditCard, Users, Share2, Star, Trash2, Trophy } from 'lucide-react';
+import { X, Settings, HelpCircle, LogOut, Info, Shield, Bell, Heart, CreditCard, Users, Share2, Star, Trash2, Trophy, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../lib/store';
 import { calculateXP, getLevelFromXP } from '../lib/badges';
@@ -18,6 +18,7 @@ export default function MoreMenu({ isOpen, onClose }) {
         { label: 'Clubs', icon: Users, path: '/clubs', color: 'text-purple-500' },
         { label: 'Badges', icon: Trophy, path: '/badges', color: 'text-brand-orange' },
         { label: 'Hall of Fame', icon: Star, path: '/rankings', color: 'text-yellow-500' },
+        { label: 'Foodie Roulette', icon: Sparkles, path: '/roulette', color: 'text-brand-orange' },
         { label: 'Trash Bin', icon: Trash2, path: '/trash', color: 'text-slate-400' },
         { label: 'Notifications', icon: Bell, path: '/profile', color: 'text-orange-500' },
         { label: 'Subscription', icon: CreditCard, path: '/profile', color: 'text-green-500' },

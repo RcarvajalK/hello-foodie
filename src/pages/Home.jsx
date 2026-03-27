@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, List, LayoutGrid, Image as ImageIcon, ChevronDown, Heart, Trophy } from 'lucide-react';
+import { Search, List, LayoutGrid, Image as ImageIcon, ChevronDown, Heart, Trophy, Sparkles } from 'lucide-react';
 import { useStore } from '../lib/store';
 import RestaurantCard from '../components/RestaurantCard';
 import BrandLogo from '../components/BrandLogo';
@@ -312,6 +312,31 @@ export default function Home() {
                         <span className="text-[7px] font-black text-gray-400 uppercase mt-1 tracking-widest leading-none">{stat.label}</span>
                     </motion.div>
                 ))}
+            </div>
+
+            {/* Foodie Roulette Banner */}
+            <div className="px-6 mb-6 mt-4">
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/roulette')}
+                    className="w-full bg-gradient-to-r from-brand-orange to-rose-500 p-4 rounded-3xl shadow-lg shadow-brand-orange/20 relative overflow-hidden group border border-white/20"
+                >
+                    <div className="flex items-center justify-between relative z-10">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30 group-hover:rotate-12 transition-transform">
+                                <Sparkles className="text-white" size={20} />
+                            </div>
+                            <div className="text-left">
+                                <h3 className="text-white font-black uppercase tracking-tight text-sm leading-tight">Can't Decide?</h3>
+                                <p className="text-white/80 text-[7px] font-black uppercase tracking-widest mt-0.5">Let the Roulette pick for you!</p>
+                            </div>
+                        </div>
+                        <div className="bg-white/20 px-4 py-2 rounded-xl backdrop-blur-md text-[8px] font-black uppercase tracking-widest text-white group-hover:bg-white group-hover:text-brand-orange transition-all">
+                            Spin Now
+                        </div>
+                    </div>
+                </motion.button>
             </div>
 
             {/* View Mode Switcher */}
