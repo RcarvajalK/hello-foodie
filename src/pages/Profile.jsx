@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useStore } from '../lib/store';
 import { BADGE_LEVELS, getLevelFromXP, getNextLevelFromXP, calculateXP, SPECIAL_BADGES } from '../lib/badges';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Trophy, MapPin, Star, Settings, Plus, ChevronRight, Heart, Bell, X, Share2, Users, Globe } from 'lucide-react';
+import { LogOut, Trophy, MapPin, Star, Settings, Plus, ChevronRight, Heart, Bell, X, Share2, Users, Globe, Camera } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import BrandLogo from '../components/BrandLogo';
@@ -105,6 +105,15 @@ export default function Profile() {
 
     return (
         <div className="pb-32 bg-white min-h-screen">
+            {/* Hidden Photo Input */}
+            <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleQuickUpload}
+            />
+
             {/* Main Header Area */}
             <div className="pt-16 pb-12 px-8 text-center flex flex-col items-center">
                 <div className="absolute top-12 right-8">
@@ -118,8 +127,18 @@ export default function Profile() {
 
                 {/* Avatar with Ring */}
                 <div className="relative mb-6">
-                    <div className="w-36 h-36 rounded-full p-1.5 bg-gradient-to-tr from-brand-orange to-brand-orange-light shadow-xl">
-                        <div className="w-full h-full rounded-full border-[6px] border-white overflow-hidden bg-slate-100">
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-36 h-36 rounded-full p-1.5 bg-gradient-to-tr from-brand-orange to-brand-orange-light shadow-xl cursor-pointer group relative"
+                    >
+                        <div className="w-full h-full rounded-full border-[6px] border-white overflow-hidden bg-slate-100 relative">
+                            {isUploading && (
+                                <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-20">
+                                    <div className="w-8 h-8 border-4 border-brand-orange border-t-transparent rounded-full animate-spin" />
+                                </div>
+                            )}
                             {profile?.avatar_url ? (
                                 <img src={profile.avatar_url} className="w-full h-full object-cover" alt="Profile" />
                             ) : (
@@ -127,10 +146,14 @@ export default function Profile() {
                                     {profile?.full_name?.charAt(0) || 'U'}
                                 </div>
                             )}
+                            {/* Hover Overlay */}
+                            <div className="absolute inset-0 bg-brand-dark/0 group-hover:bg-brand-dark/20 transition-all flex items-center justify-center">
+                                <Camera className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={32} />
+                            </div>
                         </div>
-                    </div>
+                    </motion.div>
                     {/* Level Label Overlay */}
-                    <div className="absolute -bottom-1 -right-1 bg-brand-orange text-white px-3 py-1 rounded-xl font-black text-[10px] border-4 border-white shadow-lg">
+                    <div className="absolute -bottom-1 -right-1 bg-brand-orange text-white px-3 py-1 rounded-xl font-black text-[10px] border-4 border-white shadow-lg pointer-events-none z-10">
                         LVL {currentLevel.level}
                     </div>
                 </div>
@@ -298,17 +321,8 @@ export default function Profile() {
                                     <X size={20} />
                                 </button>
                             </div>
-
-                            {/* Section: Avatar Change */}
                             <div className="flex flex-col items-center mb-10">
                                 <div className="relative group">
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        className="hidden"
-                                        accept="image/*"
-                                        onChange={handleQuickUpload}
-                                    />
                                     <motion.div
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
