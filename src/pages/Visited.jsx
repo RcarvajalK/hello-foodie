@@ -19,8 +19,10 @@ export default function Visited() {
     });
 
     const restaurants = useStore(state => state.restaurants);
+    const loading = useStore(state => state.loading);
     const fetchRestaurants = useStore(state => state.fetchRestaurants);
     const deleteRestaurant = useStore(state => state.deleteRestaurant);
+    const [hasRestoredScroll, setHasRestoredScroll] = useState(false);
 
     const handleDelete = async (id) => {
         if (window.confirm('¿Borrar este restaurante de tu historial?')) {
@@ -40,18 +42,24 @@ export default function Visited() {
             { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 } // 10 min cache
         );
 
-        // Restore scroll position
-        const savedScroll = sessionStorage.getItem('foodie_scroll_visited');
-        if (savedScroll) {
-            setTimeout(() => {
-                window.scrollTo(0, parseInt(savedScroll));
+        // Save scroll position on every scroll (debounced)
+        let timeoutId;
+        const handleScroll = () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                sessionStorage.setItem('foodie_scroll_visited', window.scrollY.toString());
             }, 100);
-        }
+        };
 
+        window.addEventListener('scroll', handleScroll);
         return () => {
+            window.removeEventListener('scroll', handleScroll);
+            clearTimeout(timeoutId);
+            // Final save attempt on unmount
             sessionStorage.setItem('foodie_scroll_visited', window.scrollY.toString());
         };
     }, []);
+
 
     useEffect(() => {
         localStorage.setItem('foodie_view_mode', viewMode);
@@ -80,6 +88,22 @@ export default function Visited() {
 
         return list;
     }, [restaurants, searchQuery, userCoords]);
+
+    // Robust scroll restoration
+    useEffect(() => {
+        if (!loading && !hasRestoredScroll && visitedRestaurants.length > 0) {
+            const savedScroll = sessionStorage.getItem('foodie_scroll_visited');
+            if (savedScroll) {
+                const timer = setTimeout(() => {
+                    window.scrollTo(0, parseInt(savedScroll));
+                    setHasRestoredScroll(true);
+                }, 250);
+                return () => clearTimeout(timer);
+            } else {
+                setHasRestoredScroll(true);
+            }
+        }
+    }, [loading, visitedRestaurants, hasRestoredScroll]);
 
     return (
         <div className="pb-24 bg-brand-light min-h-screen">

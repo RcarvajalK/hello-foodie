@@ -25,6 +25,7 @@ export default function Home() {
     const [activeRating, setActiveRating] = useState('All');
     const [activeRecommender, setActiveRecommender] = useState('All');
     const [openFilter, setOpenFilter] = useState(null);
+    const [hasRestoredScroll, setHasRestoredScroll] = useState(false);
 
     const [userCoords, setUserCoords] = useState(() => {
         const saved = localStorage.getItem('foodie_last_coords');
@@ -67,20 +68,23 @@ export default function Home() {
             { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 } // 10 min cache
         );
 
-        // Restore scroll position
-        const savedScroll = sessionStorage.getItem('foodie_scroll_home');
-        if (savedScroll) {
-            // Wait slightly for DOM to render
-            setTimeout(() => {
-                window.scrollTo(0, parseInt(savedScroll));
+        // Save scroll position on every scroll (debounced)
+        let timeoutId;
+        const handleScroll = () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                sessionStorage.setItem('foodie_scroll_home', window.scrollY.toString());
             }, 100);
-        }
+        };
 
+        window.addEventListener('scroll', handleScroll);
         return () => {
+            window.removeEventListener('scroll', handleScroll);
+            clearTimeout(timeoutId);
+            // Final save attempt on unmount
             sessionStorage.setItem('foodie_scroll_home', window.scrollY.toString());
         };
     }, []);
-
     const calculateDistance = (r) => {
         if (!userCoords || !r.coordinates || typeof r.coordinates.lat !== 'number') return Infinity;
         const dx = r.coordinates.lat - userCoords.lat;
@@ -162,6 +166,23 @@ export default function Home() {
 
         return withAds;
     }, [restaurants, searchQuery, sortBy, activeArea, activeCuisine, activePrice, activeRating, activeRecommender, userCoords, onlyFavorites]);
+
+    // Robust scroll restoration
+    useEffect(() => {
+        if (!loading && !hasRestoredScroll && myRestaurants.length > 0) {
+            const savedScroll = sessionStorage.getItem('foodie_scroll_home');
+            if (savedScroll) {
+                // Short delay to ensure DOM has painted the restaurant items
+                const timer = setTimeout(() => {
+                    window.scrollTo(0, parseInt(savedScroll));
+                    setHasRestoredScroll(true);
+                }, 400);
+                return () => clearTimeout(timer);
+            } else {
+                setHasRestoredScroll(true);
+            }
+        }
+    }, [loading, myRestaurants, hasRestoredScroll]);
 
     const userXP = useMemo(() => calculateXP(restaurants), [restaurants]);
     const currentLevel = useMemo(() => getLevelFromXP(userXP), [userXP]);
