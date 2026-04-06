@@ -13,7 +13,10 @@ export default function Visited() {
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState(() => localStorage.getItem('foodie_view_mode') || 'list');
-    const [userCoords, setUserCoords] = useState(null);
+    const [userCoords, setUserCoords] = useState(() => {
+        const saved = localStorage.getItem('foodie_last_coords');
+        return saved ? JSON.parse(saved) : null;
+    });
 
     const restaurants = useStore(state => state.restaurants);
     const fetchRestaurants = useStore(state => state.fetchRestaurants);
@@ -28,9 +31,26 @@ export default function Visited() {
     useEffect(() => {
         fetchRestaurants();
         navigator.geolocation.getCurrentPosition(
-            (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            (err) => console.log('Geolocation error', err)
+            (pos) => {
+                const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                setUserCoords(coords);
+                localStorage.setItem('foodie_last_coords', JSON.stringify(coords));
+            },
+            (err) => console.log('Geolocation error', err),
+            { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 } // 10 min cache
         );
+
+        // Restore scroll position
+        const savedScroll = sessionStorage.getItem('foodie_scroll_visited');
+        if (savedScroll) {
+            setTimeout(() => {
+                window.scrollTo(0, parseInt(savedScroll));
+            }, 100);
+        }
+
+        return () => {
+            sessionStorage.setItem('foodie_scroll_visited', window.scrollY.toString());
+        };
     }, []);
 
     useEffect(() => {

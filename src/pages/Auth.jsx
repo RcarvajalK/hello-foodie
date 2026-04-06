@@ -5,6 +5,7 @@ import { Mail, LogIn, AlertCircle, ChevronRight, Lock, UserPlus } from 'lucide-r
 import { useNavigate } from 'react-router-dom';
 import BrandLogo from '../components/BrandLogo';
 import clsx from 'clsx';
+import { getAndClearRedirectUrl } from '../lib/navUtils';
 
 export default function Auth() {
     const [loading, setLoading] = useState(false);
@@ -58,7 +59,7 @@ export default function Auth() {
                 } else {
                     const { error } = await supabase.auth.signInWithPassword({ email, password });
                     if (error) throw error;
-                    navigate('/');
+                    navigate(getAndClearRedirectUrl());
                 }
             } else {
                 const { error } = await supabase.auth.signInWithOtp({

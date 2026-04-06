@@ -9,6 +9,7 @@ import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE } 
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import ShareModal from '../components/ShareModal';
 
 const MILESTONES = [
     { count: 1, name: 'First Bite', icon: '🍴', rank: 'Newcomer' },
@@ -33,6 +34,7 @@ export default function RestaurantDetails() {
     const [showComparison, setShowComparison] = useState(false);
     const [levelUpData, setLevelUpData] = useState(null);
     const [showCopiedToast, setShowCopiedToast] = useState(false);
+    const [isShareOpen, setIsShareOpen] = useState(false);
 
     const restaurant = restaurants.find(r => r.id === id);
 
@@ -126,37 +128,8 @@ export default function RestaurantDetails() {
         }
     };
 
-    const handleShare = async () => {
-        const text = `Hey! Let's go to ${restaurant.name}! It's a ${restaurant.cuisine} place in ${restaurant.zone}. Check it out on Hello Foodie!`;
-        const shareUrl = window.location.href;
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: 'Hungry?',
-                    text: text,
-                    url: shareUrl,
-                });
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    console.error('Share error:', err);
-                }
-            }
-        } else {
-            // Desktop fallback: copy link to clipboard + toast
-            try {
-                await navigator.clipboard.writeText(shareUrl);
-            } catch {
-                // last resort fallback
-                const el = document.createElement('textarea');
-                el.value = shareUrl;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand('copy');
-                document.body.removeChild(el);
-            }
-            setShowCopiedToast(true);
-            setTimeout(() => setShowCopiedToast(false), 2500);
-        }
+    const handleShare = () => {
+        setIsShareOpen(true);
     };
 
     const [activeIdx, setActiveIdx] = useState(0);
@@ -720,6 +693,11 @@ export default function RestaurantDetails() {
                     </div>
                 )}
             </AnimatePresence>
+            <ShareModal
+                isVisible={isShareOpen}
+                onClose={() => setIsShareOpen(false)}
+                restaurant={restaurant}
+            />
         </div>
     );
 }

@@ -45,18 +45,20 @@ export default function AddRestaurant() {
     const addRestaurantToClub = useStore(state => state.addRestaurantToClub);
     const updateRestaurant = useStore(state => state.updateRestaurant);
     const clubs = useStore(state => state.clubs);
+    const fetchClubs = useStore(state => state.fetchClubs);
     const restaurants = useStore(state => state.restaurants);
     const [userLoc, setUserLoc] = useState(null);
     const [loading, setLoading] = useState(false);
     const [autocomplete, setAutocomplete] = useState(null);
 
     useEffect(() => {
+        fetchClubs();
         navigator.geolocation.getCurrentPosition(
             (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
             // If geolocation denied, fall back to CDMX center
             () => setUserLoc({ lat: 19.4326, lng: -99.1332 })
         );
-    }, []);
+    }, [fetchClubs]);
 
     // Build a ~50km bounding box around the user to strongly bias autocomplete results
     const autocompleteBounds = useMemo(() => {
@@ -189,9 +191,14 @@ export default function AddRestaurant() {
 
         // Step 4: Link to clubs if selected
         if (formData.group_ids.length > 0) {
-            await Promise.all(formData.group_ids.map(clubId =>
+            const clubResults = await Promise.all(formData.group_ids.map(clubId =>
                 addRestaurantToClub(clubId, realId)
             ));
+            
+            const failures = clubResults.filter(r => !r.success);
+            if (failures.length > 0) {
+                console.warn(`${failures.length} clubs failed to link:`, failures);
+            }
         }
 
         setLoading(false);

@@ -1,10 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Star, MapPin, Calendar, User, Users, CheckCircle, Edit3, X, Save, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, MapPin, Calendar, User, Users, CheckCircle, Edit3, X, Save, Trash2, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { useStore } from '../lib/store';
 import clsx from 'clsx';
 import BrandLogo from './BrandLogo';
+import ShareModal from './ShareModal';
 import { getRestaurantImage, filterRestaurantImages, DEFAULT_RESTAURANT_IMAGE, getDiverseFallbackImage, isVolatileImage } from '../lib/images';
 
 export default function RestaurantCard({ restaurant, variant = 'list-photos', onDelete }) {
@@ -14,6 +15,7 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
     const refreshRestaurantImages = useStore(state => state.refreshRestaurantImages);
     const [isEditing, setIsEditing] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isShareOpen, setIsShareOpen] = useState(false);
     const [editData, setEditData] = useState({ cuisine: restaurant.cuisine, price: restaurant.price });
 
     // Proactive healing: only trigger when the main image is a volatile Google URL
@@ -48,6 +50,15 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
             className="p-2 bg-slate-50 text-gray-400 rounded-xl hover:text-brand-orange transition-colors"
         >
             <Edit3 size={14} />
+        </button>
+    );
+
+    const ShareButton = () => (
+        <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsShareOpen(true); }}
+            className="p-2 bg-slate-50 text-gray-400 rounded-xl hover:text-brand-orange transition-colors"
+        >
+            <Share2 size={14} />
         </button>
     );
 
@@ -190,7 +201,7 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                             <span className="text-[10px] font-black tabular-nums leading-none mt-0.5">{restaurant.rating || '---'}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                            {!restaurant.is_sponsored && <EditButton />}
+                            {!restaurant.is_sponsored && <><ShareButton /><EditButton /></>}
                         </div>
                     </div>
                 </div>
@@ -227,6 +238,14 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                             <Star size={10} className="text-brand-orange fill-brand-orange mr-1" />
                             <span className="text-[10px] font-black text-brand-dark">{restaurant.rating || '---'}</span>
                         </div>
+                        {!restaurant.is_sponsored && (
+                            <button
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsShareOpen(true); }}
+                                className="bg-white/95 backdrop-blur-sm p-2.5 rounded-full shadow-lg text-brand-orange hover:bg-brand-orange hover:text-white transition-all active:scale-90"
+                            >
+                                <Share2 size={12} />
+                            </button>
+                        )}
                     </div>
                     {restaurant.is_sponsored && (
                         <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-brand-orange text-[7px] font-black px-2 py-0.5 rounded-lg uppercase tracking-[0.2em] shadow-lg border border-white/50">Sponsored</div>
@@ -293,7 +312,10 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                     {!restaurant.is_sponsored && (
                         <div className="flex flex-col items-end gap-2">
                             <span className="text-xl font-black text-brand-orange drop-shadow-sm">{restaurant.price}</span>
-                            <EditButton />
+                            <div className="flex gap-2">
+                                <ShareButton />
+                                <EditButton />
+                            </div>
                         </div>
                     )}
                 </div>
@@ -329,6 +351,11 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                 onSave={handleSave}
                 onDelete={() => onDelete(restaurant.id)}
                 restaurantName={restaurant.name}
+            />
+            <ShareModal
+                isVisible={isShareOpen}
+                onClose={() => setIsShareOpen(false)}
+                restaurant={restaurant}
             />
         </motion.div>
     );

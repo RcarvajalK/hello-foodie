@@ -659,19 +659,26 @@ export const useStore = create((set, get) => ({
     },
 
     addRestaurantToClub: async (clubId, restaurantId) => {
-        const { error } = await supabase
-            .from('club_restaurants')
-            .insert([{ club_id: clubId, restaurant_id: restaurantId }]);
+        try {
+            const { error } = await supabase
+                .from('club_restaurants')
+                .insert([{ club_id: clubId, restaurant_id: restaurantId }]);
 
-        if (error) return { success: false, error: error.message };
+            if (error) {
+                console.error(`[addRestaurantToClub] Error for club ${clubId}:`, error);
+                return { success: false, error: error.message };
+            }
 
-        // Refresh details local state if viewing this club
-        const currentDetails = get().clubDetails;
-        if (currentDetails && currentDetails.id === clubId) {
-            get().fetchClubDetails(clubId);
+            // Refresh details local state if viewing this club
+            const currentDetails = get().clubDetails;
+            if (currentDetails && currentDetails.id === clubId) {
+                get().fetchClubDetails(clubId);
+            }
+
+            return { success: true };
+        } catch (err) {
+            return { success: false, error: err.message };
         }
-
-        return { success: true };
     },
 
     removeRestaurantFromClub: async (clubId, restaurantId) => {
@@ -840,6 +847,94 @@ export const useStore = create((set, get) => ({
             console.error("fetchRankings Error:", error);
             set({ loading: false });
             return { success: false, error: error.message };
+        }
+    },
+
+    // --- Social & Activity ---
+    socialActivity: [],
+    friends: [],
+    fetchSocialActivity: async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
+
+        // 1. Get clubs where user is a member
+        const { data: memberships } = await supabase
+            .from('club_members')
+            .select('club_id')
+            .eq('user_id', session.user.id);
+
+        if (!memberships || memberships.length === 0) {
+            set({ socialActivity: [] });
+            return;
+        }
+
+        const clubIds = memberships.map(m => m.club_id);
+
+        // 2. Fetch recent additions in those clubs
+        const { data: activity, error } = await supabase
+            .from('club_restaurants')
+            .select(`
+                id,
+                created_at,
+                club_id,
+                club:clubs(name, image),
+                restaurant:restaurants(*)
+            `)
+            .in('club_id', clubIds)
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (error) {
+            console.error("fetchSocialActivity Error:", error);
+        } else {
+            set({ socialActivity: activity || [] });
+        }
+    },
+
+    fetchFriends: async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
+
+        // 1. Get clubs I am in
+        const { data: myClubs } = await supabase
+            .from('club_members')
+            .select('club_id')
+            .eq('user_id', session.user.id);
+
+        if (!myClubs || myClubs.length === 0) {
+            set({ friends: [] });
+            return;
+        }
+
+        const clubIds = myClubs.map(m => m.club_id);
+
+        // 2. Get all members of those clubs
+        const { data: members, error } = await supabase
+            .from('club_members')
+            .select(`
+                user_id,
+                role,
+                profile:profiles(id, full_name, avatar_url)
+            `)
+            .in('club_id', clubIds)
+            .neq('user_id', session.user.id); // Exclude self
+
+        if (error) {
+            console.error("fetchFriends Error:", error);
+        } else {
+            // Deduplicate members by user_id
+            const uniqueFriends = [];
+            const seenIds = new Set();
+            (members || []).forEach(m => {
+                if (m.profile && !seenIds.has(m.user_id)) {
+                    seenIds.add(m.user_id);
+                    uniqueFriends.push({
+                        ...m.profile,
+                        role: m.role
+                    });
+                }
+            });
+            set({ friends: uniqueFriends });
         }
     }
 }));

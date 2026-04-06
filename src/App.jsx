@@ -25,6 +25,17 @@ import Rankings from './pages/Rankings';
 import LevelUpModal from './components/LevelUpModal';
 import MigratePhotos from './pages/MigratePhotos';
 import FoodieWheel from './pages/FoodieWheel';
+import Social from './pages/Social';
+import { saveRedirectUrl } from './lib/navUtils';
+
+function ProtectedRoute({ session, children }) {
+  const { pathname, search } = window.location;
+  if (!session) {
+    saveRedirectUrl(pathname + search);
+    return <Navigate to="/auth" />;
+  }
+  return children;
+}
 
 const libraries = ['places'];
 
@@ -37,6 +48,8 @@ function OnboardingGuard({ children }) {
   const needsOnboarding = !profile.has_onboarded && (!profile.favorite_cuisines || profile.favorite_cuisines.length === 0);
 
   if (needsOnboarding) {
+    const { pathname, search } = window.location;
+    saveRedirectUrl(pathname + search);
     return <Navigate to="/onboarding" replace />;
   }
 
@@ -135,16 +148,16 @@ export default function App() {
             {/* Onboarding is outside the main Layout for fullscreen experience */}
             <Route
               path="/onboarding"
-              element={session ? <Onboarding /> : <Navigate to="/auth" />}
+              element={<ProtectedRoute session={session}><Onboarding /></ProtectedRoute>}
             />
 
             {/* Admin tools */}
             <Route
               path="/admin/migrate-photos"
-              element={session ? <MigratePhotos /> : <Navigate to="/auth" />}
+              element={<ProtectedRoute session={session}><MigratePhotos /></ProtectedRoute>}
             />
 
-            <Route path="/" element={session ? <Layout /> : <Navigate to="/auth" />}>
+            <Route path="/" element={<ProtectedRoute session={session}><Layout /></ProtectedRoute>}>
               <Route index element={
                 <OnboardingGuard>
                   <Home />
@@ -154,6 +167,7 @@ export default function App() {
               <Route path="add" element={<AddRestaurant />} />
               <Route path="clubs" element={<Clubs />} />
               <Route path="clubs/:id" element={<ClubDetails />} />
+              <Route path="social" element={<Social />} />
               <Route path="join/:token" element={<Clubs />} />
               <Route path="stats" element={<Stats />} />
               <Route path="visited" element={<Visited />} />

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Search, List, LayoutGrid, Image as ImageIcon, ChevronDown, Heart, Trophy, Sparkles } from 'lucide-react';
 import { useStore } from '../lib/store';
 import RestaurantCard from '../components/RestaurantCard';
+import MoreMenu from '../components/MoreMenu';
+import GuidedTour from '../components/GuidedTour';
 import BrandLogo from '../components/BrandLogo';
 import clsx from 'clsx';
 import { getRestaurantImage, DEFAULT_RESTAURANT_IMAGE } from '../lib/images';
@@ -14,6 +16,7 @@ export default function Home() {
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState(() => localStorage.getItem('foodie_view_mode') || 'list');
     const [sortBy, setSortBy] = useState('distance');
+    const [isMoreOpen, setIsMoreOpen] = useState(false);
 
     // Advanced Filters
     const [activeArea, setActiveArea] = useState('All');
@@ -23,7 +26,10 @@ export default function Home() {
     const [activeRecommender, setActiveRecommender] = useState('All');
     const [openFilter, setOpenFilter] = useState(null);
 
-    const [userCoords, setUserCoords] = useState(null);
+    const [userCoords, setUserCoords] = useState(() => {
+        const saved = localStorage.getItem('foodie_last_coords');
+        return saved ? JSON.parse(saved) : null;
+    });
     const [onlyFavorites, setOnlyFavorites] = useState(false);
     const navigate = useNavigate();
 
@@ -52,9 +58,27 @@ export default function Home() {
         fetchRankings();
 
         navigator.geolocation.getCurrentPosition(
-            (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            (err) => console.log('Geolocation error', err)
+            (pos) => {
+                const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                setUserCoords(coords);
+                localStorage.setItem('foodie_last_coords', JSON.stringify(coords));
+            },
+            (err) => console.log('Geolocation error', err),
+            { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 } // 10 min cache
         );
+
+        // Restore scroll position
+        const savedScroll = sessionStorage.getItem('foodie_scroll_home');
+        if (savedScroll) {
+            // Wait slightly for DOM to render
+            setTimeout(() => {
+                window.scrollTo(0, parseInt(savedScroll));
+            }, 100);
+        }
+
+        return () => {
+            sessionStorage.setItem('foodie_scroll_home', window.scrollY.toString());
+        };
     }, []);
 
     const calculateDistance = (r) => {
@@ -66,7 +90,12 @@ export default function Home() {
 
     const myRestaurants = useMemo(() => {
         let list = [...restaurants];
-        list = list.filter(r => !r.is_visited);
+        
+        // Normally we only show non-visited items, 
+        // BUT if filtering by favorites, we show ALL favorites as per user request
+        if (!onlyFavorites) {
+            list = list.filter(r => !r.is_visited);
+        }
 
         // Apply Search
         if (searchQuery) {
@@ -293,7 +322,7 @@ export default function Home() {
             </header>
 
             {/* Stats Cards */}
-            <div className="px-5 -mt-6 grid grid-cols-4 gap-2.5 mb-8 relative z-20">
+            <div id="tour-stats" className="px-5 -mt-6 grid grid-cols-4 gap-2.5 mb-8 relative z-20">
                 {stats.map((stat) => (
                     <motion.div
                         key={stat.label}
@@ -341,7 +370,7 @@ export default function Home() {
 
             {/* View Mode Switcher */}
             <div className="px-6 mb-6">
-                <div className="bg-[#EFEEF1] p-1.5 rounded-[2.5rem] flex items-center border border-gray-100/50 shadow-inner">
+                <div id="tour-view-modes" className="bg-[#EFEEF1] p-1.5 rounded-[2.5rem] flex items-center border border-gray-100/50 shadow-inner">
                     {[
                         { id: 'list', label: 'List', icon: List },
                         { id: 'gallery', label: 'Mosaic', icon: LayoutGrid },
@@ -363,7 +392,7 @@ export default function Home() {
             </div>
 
             {/* Filters */}
-            <div className="px-6 mb-6 relative z-50 flex gap-2.5 overflow-x-auto no-scrollbar py-1">
+            <div id="tour-filters" className="px-6 mb-6 relative z-50 flex gap-2.5 overflow-x-auto no-scrollbar py-1">
                 <FilterDropdown
                     label="Area"
                     current={activeArea}
@@ -466,6 +495,7 @@ export default function Home() {
                     )}
                 </AnimatePresence>
             </div>
+            <GuidedTour />
         </div>
     );
 }

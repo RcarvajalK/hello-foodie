@@ -30,7 +30,7 @@ export default function Navbar() {
         { path: '/', icon: List, label: 'My List' },
         { path: '/map', icon: MapIcon, label: 'Map' },
         { path: '/add', icon: Plus, label: 'Add', special: true },
-        { path: '/clubs', icon: Users, label: 'Clubs' },
+        { path: '/social', icon: Users, label: 'Social' },
         { path: 'more', icon: MoreHorizontal, label: 'More', isAction: true },
     ];
 
@@ -64,6 +64,7 @@ export default function Navbar() {
                         <NavLink
                             key={item.path}
                             to={item.path}
+                            id={item.special ? "tour-add" : item.path === "/social" ? "tour-social" : undefined}
                             className={({ isActive }) =>
                                 clsx(
                                     "flex flex-col items-center gap-1.5 transition-all duration-300 relative",

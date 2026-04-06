@@ -6,6 +6,7 @@ import { ChefHat, Bell, MapPin, Sparkles, ChevronRight, X, Search, Plus } from '
 import clsx from 'clsx';
 import BrandLogo from '../components/BrandLogo';
 import { Autocomplete } from '@react-google-maps/api';
+import { getAndClearRedirectUrl } from '../lib/navUtils';
 
 const CUISINES = ['Italian', 'Japanese', 'Mexican', 'French', 'Seafood', 'Steakhouse', 'Cafe', 'Street Food', 'Bakery', 'Healthy', 'Indian', 'Basque'];
 
@@ -31,7 +32,7 @@ export default function Onboarding() {
     const handleNext = () => setStep(s => s + 1);
     const handleSkip = async () => {
         await updateProfile({ has_onboarded: true });
-        navigate('/');
+        navigate(getAndClearRedirectUrl());
     };
 
     const handleFinish = async () => {
@@ -40,7 +41,7 @@ export default function Onboarding() {
             example_places: selectedPlaces.join(', '),
             has_onboarded: true
         });
-        navigate('/');
+        navigate(getAndClearRedirectUrl());
     };
 
     const toggleCuisine = (c) => {
