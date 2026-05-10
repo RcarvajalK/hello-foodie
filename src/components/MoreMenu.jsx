@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Settings, HelpCircle, LogOut, Info, Shield, Bell, Heart, CreditCard, Users, Share2, Star, Trash2, Trophy, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import { useStore } from '../lib/store';
 import { calculateXP, getLevelFromXP } from '../lib/badges';
 import { useMemo } from 'react';
@@ -25,11 +26,16 @@ export default function MoreMenu({ isOpen, onClose }) {
         { label: 'Privacy Control', icon: Shield, path: '/privacy', color: 'text-gray-500' },
         { label: 'Hello Foodie! Hub', icon: Info, path: '/hub', color: 'text-indigo-500' },
         { label: 'Support Center', icon: HelpCircle, path: '/support', color: 'text-cyan-500' },
-        { label: 'Log Out', icon: LogOut, path: '/profile', color: 'text-red-600', special: true },
+        { label: 'Log Out', icon: LogOut, path: '/logout', color: 'text-red-600', special: true },
     ];
 
-    const handleNavigate = (path) => {
+    const handleNavigate = async (path) => {
         onClose();
+        if (path === '/logout') {
+            await supabase.auth.signOut();
+            navigate('/auth');
+            return;
+        }
         navigate(path);
     };
 
