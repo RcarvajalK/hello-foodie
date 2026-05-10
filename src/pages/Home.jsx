@@ -237,13 +237,7 @@ export default function Home() {
             }
         }, [isOpen]);
 
-        useEffect(() => {
-            if (isOpen) {
-                const handleScroll = () => onToggle();
-                window.addEventListener('scroll', handleScroll, true);
-                return () => window.removeEventListener('scroll', handleScroll, true);
-            }
-        }, [isOpen, onToggle]);
+        // Removed scroll listener to allow scrolling inside the dropdown on mobile
 
         return (
             <div className="relative">

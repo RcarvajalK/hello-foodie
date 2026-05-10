@@ -27,6 +27,8 @@ import MigratePhotos from './pages/MigratePhotos';
 import FoodieWheel from './pages/FoodieWheel';
 import Social from './pages/Social';
 import { saveRedirectUrl } from './lib/navUtils';
+import MockPage from './components/MockPage';
+import { Bell, CreditCard, Shield, Info, HelpCircle } from 'lucide-react';
 
 function ProtectedRoute({ session, children }) {
   const { pathname, search } = window.location;
@@ -177,6 +179,11 @@ export default function App() {
               <Route path="profile" element={<Profile />} />
               <Route path="roulette" element={<FoodieWheel />} />
               <Route path="trash" element={<Trash />} />
+              <Route path="notifications" element={<MockPage title="Notifications" icon={Bell} description="Stay updated with the latest activity from your foodie network." />} />
+              <Route path="subscription" element={<MockPage title="Subscription" icon={CreditCard} description="Manage your Hello Foodie premium features and billing." />} />
+              <Route path="privacy" element={<MockPage title="Privacy Control" icon={Shield} description="Manage your account privacy and security settings." />} />
+              <Route path="hub" element={<MockPage title="Hello Foodie! Hub" icon={Info} description="Discover news, updates, and the community blog." />} />
+              <Route path="support" element={<MockPage title="Support Center" icon={HelpCircle} description="Get help, read FAQs, or contact our support team." />} />
             </Route>
           </Routes>
         </LoadScriptNext>

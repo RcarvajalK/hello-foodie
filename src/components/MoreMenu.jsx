@@ -20,11 +20,11 @@ export default function MoreMenu({ isOpen, onClose }) {
         { label: 'Hall of Fame', icon: Star, path: '/rankings', color: 'text-yellow-500' },
         { label: 'Foodie Roulette', icon: Sparkles, path: '/roulette', color: 'text-brand-orange' },
         { label: 'Trash Bin', icon: Trash2, path: '/trash', color: 'text-slate-400' },
-        { label: 'Notifications', icon: Bell, path: '/profile', color: 'text-orange-500' },
-        { label: 'Subscription', icon: CreditCard, path: '/profile', color: 'text-green-500' },
-        { label: 'Privacy Control', icon: Shield, path: '/profile', color: 'text-gray-500' },
-        { label: 'Hello Foodie! Hub', icon: Info, path: '/profile', color: 'text-indigo-500' },
-        { label: 'Support Center', icon: HelpCircle, path: '/profile', color: 'text-cyan-500' },
+        { label: 'Notifications', icon: Bell, path: '/notifications', color: 'text-orange-500' },
+        { label: 'Subscription', icon: CreditCard, path: '/subscription', color: 'text-green-500' },
+        { label: 'Privacy Control', icon: Shield, path: '/privacy', color: 'text-gray-500' },
+        { label: 'Hello Foodie! Hub', icon: Info, path: '/hub', color: 'text-indigo-500' },
+        { label: 'Support Center', icon: HelpCircle, path: '/support', color: 'text-cyan-500' },
         { label: 'Log Out', icon: LogOut, path: '/profile', color: 'text-red-600', special: true },
     ];
 
