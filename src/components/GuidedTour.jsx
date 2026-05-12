@@ -15,14 +15,14 @@ const TOUR_STEPS = [
     {
         id: 'add',
         title: "Add a Place ➕",
-        content: "This is where the magic starts. Add any restaurant from Google Places or manually. We'll handle the photos and details for you!",
+        content: "This is where the magic starts. Add any restaurant from Google Places or manually to your wish list of restaurants to visit, or directly to your favorites. We'll handle the photos and details for you!",
         icon: <Plus className="text-brand-orange" size={24} />,
         target: '#tour-add',
     },
     {
         id: 'stats',
         title: "Track your Progress 📈",
-        content: "See how many places you've conquered, which ones are pending, and your absolute favorites at a glance.",
+        content: "See how many places of your bucket list you've conquered, which ones are pending, and your absolute favorites at a glance.",
         icon: <BarChart3 className="text-brand-orange" size={24} />,
         target: '#tour-stats',
     },

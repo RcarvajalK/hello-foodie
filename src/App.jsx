@@ -20,6 +20,7 @@ import Visited from './pages/Visited';
 import Badges from './pages/Badges';
 import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
+import AlphaNDA from './pages/AlphaNDA';
 import Trash from './pages/Trash';
 import Rankings from './pages/Rankings';
 import LevelUpModal from './components/LevelUpModal';
@@ -55,6 +56,24 @@ function OnboardingGuard({ children }) {
     return <Navigate to="/onboarding" replace />;
   }
 
+  return children;
+}
+
+function NDAGuard({ children }) {
+  const profile = useStore(state => state.profile);
+  const loading = useStore(state => state.loading);
+
+  if (loading || !profile) return children;
+
+  const needsOnboarding = !profile.has_onboarded && (!profile.favorite_cuisines || profile.favorite_cuisines.length === 0);
+  if (needsOnboarding) {
+      return children; 
+  }
+
+  const ndaSigned = localStorage.getItem('foodie_nda_signed');
+  if (!ndaSigned) {
+    return <Navigate to="/nda" replace />;
+  }
   return children;
 }
 
@@ -152,6 +171,10 @@ export default function App() {
               path="/onboarding"
               element={<ProtectedRoute session={session}><Onboarding /></ProtectedRoute>}
             />
+            <Route
+              path="/nda"
+              element={<ProtectedRoute session={session}><AlphaNDA /></ProtectedRoute>}
+            />
 
             {/* Admin tools */}
             <Route
@@ -161,9 +184,11 @@ export default function App() {
 
             <Route path="/" element={<ProtectedRoute session={session}><Layout /></ProtectedRoute>}>
               <Route index element={
-                <OnboardingGuard>
-                  <Home />
-                </OnboardingGuard>
+                <NDAGuard>
+                  <OnboardingGuard>
+                    <Home />
+                  </OnboardingGuard>
+                </NDAGuard>
               } />
               <Route path="map" element={<MapPage />} />
               <Route path="add" element={<AddRestaurant />} />

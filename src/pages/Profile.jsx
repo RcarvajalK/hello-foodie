@@ -27,6 +27,7 @@ export default function Profile() {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [leaderboardTab, setLeaderboardTab] = useState('global');
+    const [newPassword, setNewPassword] = useState('');
 
     const [editData, setEditData] = useState({
         full_name: '',
@@ -100,6 +101,19 @@ export default function Profile() {
         const { error } = await updateProfile(editData);
         if (error) alert(`Error: ${error.message}`);
         else setIsSettingsOpen(false);
+    };
+
+    const handleUpdatePassword = async () => {
+        if (!newPassword || newPassword.length < 6) {
+            alert('Password must be at least 6 characters');
+            return;
+        }
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) alert(`Error setting password: ${error.message}`);
+        else {
+            alert('Password updated successfully! You can now use it to log in.');
+            setNewPassword('');
+        }
     };
 
 
@@ -384,6 +398,29 @@ export default function Profile() {
                                     className="w-full bg-brand-dark text-white font-black py-4 rounded-2xl uppercase tracking-widest text-xs shadow-xl"
                                 >
                                     Update Identity
+                                </button>
+                            </div>
+
+                            {/* Section: Security */}
+                            <div className="space-y-6 mb-12">
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-300">Security</h4>
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[8px] font-black uppercase text-slate-400 ml-4">Set Password</label>
+                                        <input
+                                            type="password"
+                                            className="w-full bg-slate-50 p-4 rounded-2xl font-bold text-brand-dark border-none"
+                                            placeholder="For next login"
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={handleUpdatePassword}
+                                    className="w-full bg-brand-dark text-white font-black py-4 rounded-2xl uppercase tracking-widest text-xs shadow-xl"
+                                >
+                                    Save Password
                                 </button>
                             </div>
 
