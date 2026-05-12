@@ -30,6 +30,7 @@ import Social from './pages/Social';
 import { saveRedirectUrl } from './lib/navUtils';
 import MockPage from './components/MockPage';
 import { Bell, CreditCard, Shield, Info, HelpCircle } from 'lucide-react';
+import InstallPrompt from './components/InstallPrompt';
 
 function ProtectedRoute({ session, children }) {
   const { pathname, search } = window.location;
@@ -156,6 +157,7 @@ export default function App() {
   return (
     <>
       <SplashScreen isVisible={showSplash} />
+      <InstallPrompt />
       <BrowserRouter>
         <LevelUpModal />
         <ScrollToTop />

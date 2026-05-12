@@ -50,7 +50,7 @@ export default function AlphaNDA() {
                         </li>
                         <li className="flex gap-4">
                             <CheckCircle2 size={18} className="text-brand-orange shrink-0 mt-0.5" />
-                            <span>You agree not to copy, reverse engineer, or steal the concepts presented.</span>
+                            <span>You agree not to reproduce, duplicate, or use any of the ideas or concepts presented in any form.</span>
                         </li>
                         <li className="flex gap-4">
                             <CheckCircle2 size={18} className="text-brand-orange shrink-0 mt-0.5" />

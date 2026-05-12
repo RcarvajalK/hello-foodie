@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Settings, HelpCircle, LogOut, Info, Shield, Bell, Heart, CreditCard, Users, Share2, Star, Trash2, Trophy, Sparkles } from 'lucide-react';
+import { X, Settings, HelpCircle, LogOut, Info, Shield, Bell, Heart, CreditCard, Users, Share2, Star, Trash2, Trophy, Sparkles, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../lib/store';
@@ -34,6 +34,10 @@ export default function MoreMenu({ isOpen, onClose }) {
         if (path === '/logout') {
             await supabase.auth.signOut();
             navigate('/auth');
+            return;
+        }
+        if (path.startsWith('mailto:')) {
+            window.location.href = path;
             return;
         }
         navigate(path);
@@ -80,6 +84,13 @@ export default function MoreMenu({ isOpen, onClose }) {
                                     <span className="text-[10px] font-black text-brand-dark uppercase tracking-widest leading-none">{item.label}</span>
                                 </motion.button>
                             ))}
+                        </div>
+
+                        <div className="mt-6 flex justify-center">
+                            <a href="mailto:contacto@hellofoodie.app" className="text-[10px] font-black text-slate-400 hover:text-brand-orange transition-colors uppercase tracking-widest flex items-center gap-2">
+                                <Mail size={12} />
+                                contacto@hellofoodie.app
+                            </a>
                         </div>
 
                         <div className="mt-8 pt-8 border-t border-gray-100">
