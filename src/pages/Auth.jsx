@@ -11,7 +11,7 @@ export default function Auth() {
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [isPasswordMode, setIsPasswordMode] = useState(false);
+    const [isPasswordMode, setIsPasswordMode] = useState(true);
     const [isSignUp, setIsSignUp] = useState(false);
     const [message, setMessage] = useState('');
     const [errorType, setErrorType] = useState('info');
@@ -98,27 +98,6 @@ export default function Auth() {
                 </div>
 
                 <div className="px-8 pb-12">
-                    <div className="flex bg-slate-100/50 p-1 rounded-2xl mb-6 border border-slate-50">
-                        <button
-                            onClick={() => { setIsPasswordMode(false); setMessage(''); }}
-                            className={clsx(
-                                "flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
-                                !isPasswordMode ? "bg-white text-brand-orange shadow-md" : "text-gray-400"
-                            )}
-                        >
-                            Magic Link
-                        </button>
-                        <button
-                            onClick={() => { setIsPasswordMode(true); setMessage(''); }}
-                            className={clsx(
-                                "flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
-                                isPasswordMode ? "bg-white text-brand-orange shadow-md" : "text-gray-400"
-                            )}
-                        >
-                            Password
-                        </button>
-                    </div>
-
                     <form onSubmit={handleEmailAuth} className="space-y-4">
                         <div className="relative">
                             <input
