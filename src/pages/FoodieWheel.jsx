@@ -207,8 +207,27 @@ export default function FoodieWheel() {
             </header>
 
             <main className="px-6 py-8">
-                {/* Roulette View */}
-                <div className="relative h-[400px] w-full flex flex-col items-center justify-center">
+                {/* Empty State */}
+                {restaurants.length === 0 && clubRestaurants.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center text-center py-20 px-6 mt-10">
+                        <div className="w-24 h-24 bg-white rounded-[2.5rem] flex items-center justify-center text-gray-200 mb-8 shadow-xl shadow-slate-200/50">
+                            <Sparkles size={48} className="text-brand-orange" />
+                        </div>
+                        <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight mb-4">You need a list!</h2>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest leading-relaxed mb-10 max-w-[250px]">
+                            Add some restaurants to your bucket list or join a club before you can spin the roulette.
+                        </p>
+                        <button 
+                            onClick={() => navigate('/add')}
+                            className="bg-brand-orange text-white px-8 py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] shadow-xl shadow-brand-orange/30 active:scale-95 transition-all w-full max-w-[250px] flex items-center justify-center gap-2"
+                        >
+                            <Plus size={16} /> Add a Place
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        {/* Roulette View */}
+                        <div className="relative h-[400px] w-full flex flex-col items-center justify-center">
                     {selectedRestaurants.length > 0 ? (
                         <div className="w-full max-w-sm relative">
                             {/* The Wheel/Slot Machine */}
@@ -458,6 +477,8 @@ export default function FoodieWheel() {
                             </AnimatePresence>
                         </div>
                     </div>
+                )}
+                </>
                 )}
             </main>
         </div>

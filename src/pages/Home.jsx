@@ -295,16 +295,8 @@ export default function Home() {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => setOnlyFavorites(!onlyFavorites)}
-                            className={clsx(
-                                "p-2.5 rounded-2xl shadow-xl border transition-all flex items-center justify-center h-10 w-10",
-                                onlyFavorites ? "bg-red-500 text-white border-red-500 shadow-red-200/50" : "bg-white text-red-500 border-gray-50 shadow-red-100/30"
-                            )}
-                        >
-                            <Heart size={18} fill={onlyFavorites ? "currentColor" : "none"} strokeWidth={onlyFavorites ? 0 : 2.5} />
-                        </button>
                         <div
+                            id="tour-profile"
                             className="w-10 h-10 bg-slate-100 rounded-2xl overflow-hidden border-2 border-white shadow-2xl cursor-pointer relative"
                             onClick={() => navigate('/profile')}
                         >

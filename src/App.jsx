@@ -27,6 +27,7 @@ import LevelUpModal from './components/LevelUpModal';
 import MigratePhotos from './pages/MigratePhotos';
 import FoodieWheel from './pages/FoodieWheel';
 import Social from './pages/Social';
+import Friends from './pages/Friends';
 import { saveRedirectUrl } from './lib/navUtils';
 import MockPage from './components/MockPage';
 import { Bell, CreditCard, Shield, Info, HelpCircle } from 'lucide-react';
@@ -71,8 +72,7 @@ function NDAGuard({ children }) {
       return children; 
   }
 
-  const ndaSigned = localStorage.getItem('foodie_nda_signed');
-  if (!ndaSigned) {
+  if (!profile.has_signed_nda) {
     return <Navigate to="/nda" replace />;
   }
   return children;
@@ -157,7 +157,6 @@ export default function App() {
   return (
     <>
       <SplashScreen isVisible={showSplash} />
-      <InstallPrompt />
       <BrowserRouter>
         <LevelUpModal />
         <ScrollToTop />
@@ -188,6 +187,7 @@ export default function App() {
               <Route index element={
                 <NDAGuard>
                   <OnboardingGuard>
+                    <InstallPrompt />
                     <Home />
                   </OnboardingGuard>
                 </NDAGuard>
@@ -197,6 +197,7 @@ export default function App() {
               <Route path="clubs" element={<Clubs />} />
               <Route path="clubs/:id" element={<ClubDetails />} />
               <Route path="social" element={<Social />} />
+              <Route path="friends" element={<Friends />} />
               <Route path="join/:token" element={<Clubs />} />
               <Route path="stats" element={<Stats />} />
               <Route path="visited" element={<Visited />} />

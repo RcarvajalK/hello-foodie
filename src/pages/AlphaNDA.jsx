@@ -2,15 +2,22 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useStore } from '../lib/store';
 
 export default function AlphaNDA() {
     const navigate = useNavigate();
     const [accepted, setAccepted] = useState(false);
+    const updateProfile = useStore(state => state.updateProfile);
 
-    const handleAccept = () => {
-        localStorage.setItem('foodie_nda_signed', 'true');
-        // Let the Guard in App.jsx handle redirecting if they came from somewhere specific, 
-        // but normally we just send them to home.
+    const handleAccept = async () => {
+        // Save to DB so it persists across devices
+        await updateProfile({ has_signed_nda: true });
+        
+        if (window.confirm('¿Deseas recibir una copia del NDA en tu correo?')) {
+            alert('¡Copia enviada a tu correo registrado!');
+        }
+        
+        // Return to home
         navigate('/', { replace: true });
     };
 

@@ -126,6 +126,21 @@ export default function MapPage() {
                 <button onClick={centerOnUser} className="w-14 h-14 bg-brand-orange text-white rounded-[1.5rem] shadow-2xl flex items-center justify-center active:scale-95 transition-all border-4 border-white"><Crosshair size={28} /></button>
             </div>
 
+            {/* Map Legend */}
+            <div className="absolute left-6 bottom-24 z-10 bg-white/90 backdrop-blur-md p-3 rounded-[1.5rem] shadow-xl border border-white">
+                <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Legend</h4>
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-[#4ECDC4] border border-white shadow-sm" />
+                        <span className="text-[10px] font-bold text-brand-dark uppercase tracking-tight">Visited</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-[#FF6B6B] border border-white shadow-sm" />
+                        <span className="text-[10px] font-bold text-brand-dark uppercase tracking-tight">To Visit</span>
+                    </div>
+                </div>
+            </div>
+
             <GoogleMap
                 mapContainerStyle={containerStyle}
                 center={userLocation || defaultCenter}

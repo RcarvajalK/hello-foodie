@@ -48,6 +48,7 @@ export default function Navbar() {
                         return (
                             <button
                                 key={item.label}
+                                id="tour-more"
                                 onClick={() => setIsMoreOpen(true)}
                                 className={clsx(
                                     "flex flex-col items-center gap-1.5 transition-all duration-300 relative",

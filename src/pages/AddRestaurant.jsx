@@ -191,9 +191,30 @@ export default function AddRestaurant() {
 
         // Step 4: Link to clubs if selected
         if (formData.group_ids.length > 0) {
-            const clubResults = await Promise.all(formData.group_ids.map(clubId =>
-                addRestaurantToClub(clubId, realId)
-            ));
+            const clubResults = [];
+            for (const clubId of formData.group_ids) {
+                const club = clubs.find(c => c.id === clubId);
+                let details = undefined;
+                if (club?.type === 'public') {
+                    const ratingStr = prompt(`Para la comunidad ${club.name}:\nCalificación (1-5):`);
+                    const spendStr = prompt(`Para la comunidad ${club.name}:\nGasto promedio por persona:`);
+                    const tipStr = prompt(`Para la comunidad ${club.name}:\nPro Tip / Comentario (Obligatorio):`);
+                    
+                    if (!ratingStr || isNaN(ratingStr) || ratingStr < 1 || ratingStr > 5 || 
+                        !spendStr || isNaN(spendStr) || 
+                        !tipStr || tipStr.trim() === '') {
+                        alert(`Datos inválidos para ${club.name}. No se añadirá a esta comunidad.`);
+                        continue;
+                    }
+                    details = {
+                        recommender_rating: parseFloat(ratingStr),
+                        average_spend: parseFloat(spendStr),
+                        pro_tip: tipStr.trim()
+                    };
+                }
+                const res = await addRestaurantToClub(clubId, realId, details);
+                clubResults.push(res);
+            }
             
             const failures = clubResults.filter(r => !r.success);
             if (failures.length > 0) {

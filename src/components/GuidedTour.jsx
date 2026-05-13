@@ -13,6 +13,13 @@ const TOUR_STEPS = [
         target: null, // Center of screen
     },
     {
+        id: 'profile',
+        title: "Set up your Profile 👤",
+        content: "Add a photo, update your name, and manage your preferences to personalize your foodie journey.",
+        icon: <Users className="text-brand-orange" size={24} />,
+        target: '#tour-profile',
+    },
+    {
         id: 'add',
         title: "Add a Place ➕",
         content: "This is where the magic starts. Add any restaurant from Google Places or manually to your wish list of restaurants to visit, or directly to your favorites. We'll handle the photos and details for you!",
@@ -22,7 +29,7 @@ const TOUR_STEPS = [
     {
         id: 'stats',
         title: "Track your Progress 📈",
-        content: "See how many places of your bucket list you've conquered, which ones are pending, and your absolute favorites at a glance.",
+        content: "Watch your XP grow as you conquer your bucket list! Unlock badges, climb levels, and see your stats at a glance.",
         icon: <BarChart3 className="text-brand-orange" size={24} />,
         target: '#tour-stats',
     },
@@ -46,6 +53,13 @@ const TOUR_STEPS = [
         content: "Connect with friends, join clubs, and see where everyone is eating today. Sharing is caring!",
         icon: <Users className="text-brand-orange" size={24} />,
         target: '#tour-social',
+    },
+    {
+        id: 'more',
+        title: "More Features ⚡",
+        content: "Find the Foodie Roulette, your badges, settings, and other cool tools right here.",
+        icon: <Sparkles className="text-brand-orange" size={24} />,
+        target: '#tour-more',
     }
 ];
 

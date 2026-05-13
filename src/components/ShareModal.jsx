@@ -19,8 +19,34 @@ export default function ShareModal({ isVisible, onClose, restaurant }) {
     }, [isVisible, clubs.length, fetchClubs]);
 
     const handleShareToClub = async (clubId) => {
+        const club = clubs.find(c => c.id === clubId);
+        let details = undefined;
+
+        if (club?.type === 'public') {
+            const ratingStr = prompt("Calificación para esta recomendación (1-5):");
+            if (!ratingStr || isNaN(ratingStr) || ratingStr < 1 || ratingStr > 5) {
+                alert("Calificación inválida. Debe ser del 1 al 5.");
+                return;
+            }
+            const spendStr = prompt("Gasto promedio por persona (ej. 500):");
+            if (!spendStr || isNaN(spendStr)) {
+                alert("Gasto inválido.");
+                return;
+            }
+            const tipStr = prompt("Pro Tip / Comentario (Obligatorio):");
+            if (!tipStr || tipStr.trim() === '') {
+                alert("El comentario es obligatorio para comunidades públicas.");
+                return;
+            }
+            details = {
+                recommender_rating: parseFloat(ratingStr),
+                average_spend: parseFloat(spendStr),
+                pro_tip: tipStr.trim()
+            };
+        }
+
         setLoadingClubId(clubId);
-        const result = await addRestaurantToClub(clubId, restaurant.id);
+        const result = await addRestaurantToClub(clubId, restaurant.id, details);
         setLoadingClubId(null);
         if (result.success) {
             setSuccessClubId(clubId);

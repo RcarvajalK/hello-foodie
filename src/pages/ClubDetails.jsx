@@ -16,13 +16,149 @@ import {
     X,
     Search,
     Edit3,
-    Trash2
+    Trash2,
+    Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Autocomplete } from '@react-google-maps/api';
 import RestaurantCard from '../components/RestaurantCard';
+import RecommendationModal from '../components/RecommendationModal';
 import clsx from 'clsx';
 import ImageUploader from '../components/ImageUploader';
+
+function CommunityRestaurantCard({ restaurant, club, isAdmin, onDelete, onMatizar }) {
+    const validateRecommendation = useStore(state => state.validateRecommendation);
+    const profile = useStore(state => state.profile);
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    const googleScore = restaurant.rating || 0;
+    const recommenderScore = restaurant.recommender_rating || 0;
+    
+    // Calculate consensus from validations
+    const validations = restaurant.validations || [];
+    let consensusScore = recommenderScore;
+    if (validations.length > 0) {
+        // simple average
+        const sum = validations.reduce((acc, val) => {
+            if (val.new_rating) return acc + val.new_rating;
+            if (val.validation_type === 'confirm') return acc + recommenderScore; // implicitly agrees
+            if (val.validation_type === 'report') return acc + 1; // penalties
+            return acc;
+        }, 0);
+        consensusScore = (sum + recommenderScore) / (validations.length + 1);
+    }
+    
+    // Check if current user has already validated
+    const hasValidated = validations.some(v => v.user_id === profile?.id);
+
+    const navigate = useNavigate();
+
+    const handleValidate = async (e, type) => {
+        e.stopPropagation();
+        if (hasValidated) return alert("You have already validated this place.");
+        if (type === 'matizar') {
+            onMatizar(restaurant.club_restaurant_id);
+            return;
+        }
+        setIsUpdating(true);
+        await validateRecommendation(restaurant.club_restaurant_id, type, {});
+        setIsUpdating(false);
+    };
+
+    const renderStars = (score) => {
+        return (
+            <div className="flex gap-0.5">
+                {[1, 2, 3, 4, 5].map(i => (
+                    <Star key={i} size={10} className={i <= Math.round(score) ? "text-yellow-400" : "text-slate-200"} fill="currentColor" />
+                ))}
+            </div>
+        );
+    };
+
+    return (
+        <div 
+            onClick={() => navigate(`/restaurant/${restaurant.id}?club=${club.id}`)}
+            className="bg-white rounded-[2rem] border border-brand-green/20 shadow-xl shadow-slate-200/20 overflow-hidden mb-4 relative p-5 cursor-pointer hover:border-brand-green/40 transition-colors"
+        >
+            {isAdmin && (
+                <button
+                    onClick={(e) => { e.stopPropagation(); onDelete(restaurant.id); }}
+                    className="absolute top-4 right-4 w-8 h-8 bg-red-50 text-red-500 rounded-xl flex items-center justify-center active:scale-90 transition-transform z-10"
+                >
+                    <Trash2 size={14} />
+                </button>
+            )}
+            <div className="flex gap-4 items-start">
+                <img 
+                    src={restaurant.image_url || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400'} 
+                    alt={restaurant.name} 
+                    className="w-24 h-24 rounded-[1.5rem] object-cover bg-slate-100 shadow-md"
+                />
+                <div className="flex-1 min-w-0 pr-8 flex flex-col">
+                    <h3 className="font-black text-brand-dark text-lg uppercase tracking-tight leading-none mb-1">{restaurant.name}</h3>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate mb-2">
+                        {restaurant.cuisine} • {restaurant.zone} {restaurant.average_spend ? `• $${restaurant.average_spend}` : ''}
+                    </p>
+                    
+                    {restaurant.recommender_name && (
+                        <div className="flex items-center gap-1.5 mb-2 bg-slate-50 p-1.5 pr-3 rounded-full self-start inline-flex border border-slate-100">
+                            {restaurant.recommender_avatar ? (
+                                <img src={restaurant.recommender_avatar} className="w-4 h-4 rounded-full object-cover" />
+                            ) : (
+                                <div className="w-4 h-4 rounded-full bg-brand-orange text-white flex items-center justify-center text-[8px] font-black">{restaurant.recommender_name.charAt(0)}</div>
+                            )}
+                            <span className="text-[8px] font-black text-brand-dark uppercase tracking-widest">Added by {restaurant.recommender_name.split(' ')[0]}</span>
+                        </div>
+                    )}
+
+                    {restaurant.pro_tip && (
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 mb-1">
+                            <span className="text-[9px] font-black text-brand-orange uppercase tracking-widest block mb-0.5">Pro Tip:</span>
+                            <p className="text-xs font-medium text-brand-dark italic leading-tight">"{restaurant.pro_tip}"</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between">
+                <div className="flex flex-col gap-2 flex-1">
+                    <div className="flex justify-between items-center pr-4">
+                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Google Score</span>
+                        {renderStars(googleScore)}
+                    </div>
+                    <div className="flex justify-between items-center pr-4">
+                        <span className="text-[9px] font-black text-brand-orange uppercase tracking-widest">Recommender</span>
+                        {renderStars(recommenderScore)}
+                    </div>
+                    <div className="flex justify-between items-center pr-4">
+                        <span className="text-[9px] font-black text-brand-green uppercase tracking-widest">Consensus</span>
+                        {renderStars(consensusScore)}
+                    </div>
+                </div>
+
+                <div className="w-[1px] bg-slate-100 mx-2"></div>
+
+                <div className="flex flex-col gap-2 justify-center pl-2 flex-shrink-0 w-32">
+                    <button 
+                        disabled={isUpdating || hasValidated}
+                        onClick={(e) => handleValidate(e, 'confirm')}
+                        className={clsx("py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-colors", hasValidated ? "bg-slate-50 text-gray-300 border-transparent" : "bg-brand-green/10 text-brand-green border-brand-green/20 hover:bg-brand-green hover:text-white")}
+                    >Confirm</button>
+                    <button 
+                        disabled={isUpdating || hasValidated}
+                        onClick={(e) => handleValidate(e, 'matizar')}
+                        className={clsx("py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-colors", hasValidated ? "bg-slate-50 text-gray-300 border-transparent" : "bg-slate-50 text-gray-600 border-slate-200 hover:bg-gray-200")}
+                    >Adjust</button>
+                    <button 
+                        disabled={isUpdating || hasValidated}
+                        onClick={(e) => handleValidate(e, 'report')}
+                        className={clsx("py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-colors", hasValidated ? "bg-slate-50 text-gray-300 border-transparent" : "bg-red-50 text-red-500 border-red-100 hover:bg-red-500 hover:text-white")}
+                    >Flag</button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function ClubDetails() {
     const { id } = useParams();
@@ -42,6 +178,8 @@ export default function ClubDetails() {
     const [addSource, setAddSource] = useState('personal'); // 'personal' or 'google'
     const [error, setError] = useState(null);
     const [autocomplete, setAutocomplete] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [recModal, setRecModal] = useState({ isOpen: false, mode: 'add', context: null });
     const [isLoadingPlace, setIsLoadingPlace] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
     const [editForm, setEditForm] = useState(null);
@@ -107,7 +245,7 @@ export default function ClubDetails() {
                 <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight mb-2">Club not found</h2>
                 <p className="text-gray-400 text-sm mb-8">{error || "The club you're looking for doesn't exist or you don't have access."}</p>
                 <button
-                    onClick={() => navigate('/clubs')}
+                    onClick={() => navigate('/social')}
                     className="bg-brand-orange text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-orange/30 active:scale-95 transition-all"
                 >
                     Back to Clubs
@@ -117,10 +255,14 @@ export default function ClubDetails() {
     }
 
     const handleAddRestaurant = async (resId) => {
+        if (club?.type === 'public') {
+            setRecModal({ isOpen: true, mode: 'add', context: { type: 'existing', resId } });
+            return;
+        }
+
         const result = await addRestaurantToClub(id, resId);
         if (result.success) {
             setIsAddOpen(false);
-            alert('Restaurante añadido al club');
         } else {
             alert(`Error: ${result.error}`);
         }
@@ -131,15 +273,54 @@ export default function ClubDetails() {
             const place = autocomplete.getPlace();
             if (!place.geometry) return;
 
+            if (club?.type === 'public') {
+                setRecModal({ isOpen: true, mode: 'add', context: { type: 'google', place } });
+                return;
+            }
+
             setIsLoadingPlace(true);
             const result = await addGooglePlaceToClub(id, place);
             setIsLoadingPlace(false);
-
             if (result.success) {
+                setSearchQuery('');
                 setIsAddOpen(false);
-                alert('¡Lugar añadido exitosamente!');
             } else {
                 alert(`Error: ${result.error}`);
+            }
+        }
+    };
+
+    const handleModalSubmit = async (details) => {
+        const { mode, context } = recModal;
+        setRecModal({ isOpen: false, mode: 'add', context: null });
+        
+        if (mode === 'matizar') {
+            await useStore.getState().validateRecommendation(context.club_restaurant_id, 'matizar', { new_rating: details.rating });
+            fetchClubDetails(id);
+            return;
+        }
+
+        if (mode === 'add') {
+            let result;
+            if (context.type === 'existing') {
+                result = await addRestaurantToClub(id, context.resId, {
+                    recommender_rating: details.rating,
+                    average_spend: details.average_spend,
+                    pro_tip: details.pro_tip
+                });
+            } else if (context.type === 'google') {
+                result = await useStore.getState().addGooglePlaceToClub(id, context.place, {
+                    recommender_rating: details.rating,
+                    average_spend: details.average_spend,
+                    pro_tip: details.pro_tip
+                });
+            }
+
+            if (result?.success) {
+                setIsAddOpen(false);
+                setSearchQuery('');
+            } else {
+                alert(`Error: ${result?.error}`);
             }
         }
     };
@@ -156,10 +337,10 @@ export default function ClubDetails() {
     };
 
     const handleDelete = async () => {
-        if (window.confirm('¿Estás seguro de que quieres eliminar este club? Esta acción no se puede deshacer.')) {
+        if (window.confirm('Are you sure you want to delete this club? This action cannot be undone.')) {
             const result = await deleteClub(id);
             if (result.success) {
-                navigate('/clubs');
+                navigate('/social');
             } else {
                 alert(`Error: ${result.error}`);
             }
@@ -205,7 +386,7 @@ export default function ClubDetails() {
 
                 <div className="absolute top-0 left-0 right-0 p-4 pt-12 flex justify-between items-start bg-gradient-to-b from-black/50 to-transparent z-20">
                     <button
-                        onClick={() => navigate('/clubs')}
+                        onClick={() => navigate('/social')}
                         className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-90 transition-transform"
                     >
                         <ChevronLeft size={24} />
@@ -286,7 +467,7 @@ export default function ClubDetails() {
                             className="space-y-4"
                         >
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Collaborative List</h2>
+                                <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">{club.type === 'public' ? 'Community List' : 'Collaborative List'}</h2>
                                 <button
                                     onClick={() => setIsAddOpen(true)}
                                     className="flex items-center gap-2 text-brand-orange text-[10px] font-black uppercase tracking-widest py-2 px-4 bg-brand-orange/5 rounded-full border border-brand-orange/10 active:scale-95 transition-all"
@@ -296,14 +477,18 @@ export default function ClubDetails() {
                             </div>
 
                             {(sortedClubRestaurants || []).length > 0 ? (
-                                sortedClubRestaurants.map((res) => (
-                                    <RestaurantCard
-                                        key={res.id}
-                                        restaurant={res}
-                                        variant="list"
-                                        onDelete={isAdmin ? handleRemoveRestaurant : undefined}
-                                    />
-                                ))
+                                sortedClubRestaurants.map((res) => {
+                                    return (
+                                        <CommunityRestaurantCard 
+                                            key={res.club_restaurant_id} 
+                                            restaurant={res} 
+                                            club={club} 
+                                            isAdmin={isAdmin} 
+                                            onDelete={handleRemoveRestaurant}
+                                            onMatizar={(club_restaurant_id) => setRecModal({ isOpen: true, mode: 'matizar', context: { club_restaurant_id } })}
+                                        />
+                                    );
+                                })
                             ) : (
                                 <div className="py-16 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
                                     <MapPin size={40} className="mx-auto text-slate-100 mb-4" />
@@ -331,7 +516,6 @@ export default function ClubDetails() {
                             <div className="space-y-3">
                                 {(club.members || []).map((member, index) => {
                                     const isCurrentUser = member.user_id === profile?.id;
-                                    // Simplified logic: only the current user shows their real level/XP for now
                                     return (
                                         <div key={member.user_id} className={clsx(
                                             "bg-white p-4 rounded-[2.5rem] flex items-center gap-4 transition-all shadow-xl shadow-slate-200/20 border-2",
@@ -349,10 +533,6 @@ export default function ClubDetails() {
                                                     className="w-full h-full object-cover"
                                                     alt={member.profile?.full_name}
                                                 />
-                                                {/* Representing the level badge in the leaderboard */}
-                                                <div className="absolute -bottom-1 -right-1 bg-brand-dark text-white text-[7px] font-black w-5 h-5 rounded-lg flex items-center justify-center border-2 border-white">
-                                                    {isCurrentUser ? currentLevel.level : '?'}
-                                                </div>
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h4 className="font-black text-brand-dark text-[11px] uppercase truncate tracking-tight">
@@ -360,14 +540,14 @@ export default function ClubDetails() {
                                                     {isCurrentUser && <span className="ml-2 text-[8px] text-brand-orange">(You)</span>}
                                                 </h4>
                                                 <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
-                                                    {isCurrentUser ? currentLevel.name : 'Vibing Member'}
+                                                    Vibing Member
                                                 </p>
                                             </div>
                                             <div className="text-right flex-shrink-0">
                                                 <p className="text-sm font-black text-brand-dark leading-none">
-                                                    {isCurrentUser ? visitedCount : '0'}
+                                                    {member.contribution_count || 0}
                                                 </p>
-                                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mt-1">Visits</p>
+                                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mt-1">Contribs</p>
                                             </div>
                                         </div>
                                     );
@@ -418,6 +598,14 @@ export default function ClubDetails() {
                 </AnimatePresence>
             </div>
 
+            {/* Modals */}
+            <RecommendationModal 
+                isOpen={recModal.isOpen} 
+                mode={recModal.mode} 
+                onClose={() => setRecModal({ isOpen: false, mode: 'add', context: null })}
+                onSubmit={handleModalSubmit}
+            />
+
             {/* Add Restaurant Modal */}
             <AnimatePresence>
                 {isAddOpen && (
@@ -448,7 +636,7 @@ export default function ClubDetails() {
                             {/* Source Selection Tabs */}
                             <div className="flex gap-2 mb-6 bg-slate-50 p-1.5 rounded-2xl">
                                 {[
-                                    { id: 'personal', label: 'From My List', icon: MapPin },
+                                    { id: 'personal', label: club?.type === 'public' ? 'My Favorites' : 'From My List', icon: MapPin },
                                     { id: 'google', label: 'Find on Google', icon: Search }
                                 ].map(source => (
                                     <button
@@ -466,36 +654,44 @@ export default function ClubDetails() {
                             </div>
 
                             <div className="flex-1 overflow-y-auto pr-2 space-y-4 no-scrollbar min-h-[300px]">
-                                {addSource === 'personal' ? (
-                                    myRestaurants.filter(r => !club.restaurants.some(cr => cr.id === r.id)).length > 0 ? (
-                                        myRestaurants
-                                            .filter(r => !club.restaurants.some(cr => cr.id === r.id))
-                                            .map(res => (
-                                                <div key={res.id} className="bg-slate-50 p-4 rounded-[2rem] flex items-center gap-4 group hover:bg-white hover:shadow-xl transition-all border border-transparent hover:border-slate-100">
-                                                    <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-200">
-                                                        {res.image_url && <img src={res.image_url} className="w-full h-full object-cover" />}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h4 className="font-black text-brand-dark text-xs uppercase truncate">{res.name}</h4>
-                                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">{res.cuisine || 'Restaurant'}</p>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => handleAddRestaurant(res.id)}
-                                                        className="bg-brand-orange text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-orange/20 active:scale-95 transition-all outline-none"
-                                                    >
-                                                        Add
-                                                    </button>
+                                {addSource === 'personal' ? (() => {
+                                    const availableRestaurants = myRestaurants.filter(r => {
+                                        if (club?.restaurants?.some(cr => cr.id === r.id)) return false;
+                                        if (club?.type === 'public') return r.is_favorite === true || r.is_favorite === 'true';
+                                        return true;
+                                    });
+
+                                    return availableRestaurants.length > 0 ? (
+                                        availableRestaurants.map(res => (
+                                            <div key={res.id} className="bg-slate-50 p-4 rounded-[2rem] flex items-center gap-4 group hover:bg-white hover:shadow-xl transition-all border border-transparent hover:border-slate-100">
+                                                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-200">
+                                                    {res.image_url && <img src={res.image_url} className="w-full h-full object-cover" />}
                                                 </div>
-                                            ))
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="font-black text-brand-dark text-xs uppercase truncate">{res.name}</h4>
+                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">{res.cuisine || 'Restaurant'}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleAddRestaurant(res.id)}
+                                                    className="bg-brand-orange text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-orange/20 active:scale-95 transition-all outline-none"
+                                                >
+                                                    Add
+                                                </button>
+                                            </div>
+                                        ))
                                     ) : (
                                         <div className="py-20 text-center flex flex-col items-center">
                                             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-4">
                                                 <MapPin size={32} />
                                             </div>
-                                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest max-w-[180px]">No more restaurants from your list to add!</p>
+                                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest max-w-[180px]">
+                                                {club?.type === 'public' 
+                                                    ? "You don't have any favorites available to recommend to this community." 
+                                                    : "No more restaurants from your list to add!"}
+                                            </p>
                                         </div>
-                                    )
-                                ) : (
+                                    );
+                                })() : (
                                     <div className="space-y-6">
                                         <div className="relative">
                                             {typeof google !== 'undefined' ? (

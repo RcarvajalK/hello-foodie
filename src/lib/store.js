@@ -619,7 +619,8 @@ export const useStore = create((set, get) => ({
                 .from('club_restaurants')
                 .select(`
                     *,
-                    restaurant:restaurants(*)
+                    restaurant:restaurants(*),
+                    validations:community_validations(*)
                 `)
                 .eq('club_id', clubId);
 
@@ -646,7 +647,21 @@ export const useStore = create((set, get) => ({
             const details = {
                 ...club,
                 members: rankings,
-                restaurants: (clubRestaurants || []).map(r => r.restaurant).filter(Boolean)
+                restaurants: (clubRestaurants || []).map(r => {
+                    if (!r.restaurant) return null;
+                    const recommender = (members || []).find(m => m.user_id === r.added_by)?.profile || { full_name: 'Unknown Explorer' };
+                    return {
+                        ...r.restaurant,
+                        club_restaurant_id: r.id,
+                        recommender_rating: r.recommender_rating,
+                        average_spend: r.average_spend,
+                        pro_tip: r.pro_tip,
+                        added_by: r.added_by,
+                        recommender_name: recommender.full_name,
+                        recommender_avatar: recommender.avatar_url,
+                        validations: r.validations || []
+                    };
+                }).filter(Boolean)
             };
 
             set({ clubDetails: details, loading: false });
@@ -658,11 +673,24 @@ export const useStore = create((set, get) => ({
         }
     },
 
-    addRestaurantToClub: async (clubId, restaurantId) => {
+    addRestaurantToClub: async (clubId, restaurantId, details = null) => {
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const payload = { 
+                club_id: clubId, 
+                restaurant_id: restaurantId,
+                added_by: session?.user?.id || null
+            };
+            
+            if (details) {
+                payload.recommender_rating = details.recommender_rating;
+                payload.average_spend = details.average_spend;
+                payload.pro_tip = details.pro_tip;
+            }
+
             const { error } = await supabase
                 .from('club_restaurants')
-                .insert([{ club_id: clubId, restaurant_id: restaurantId }]);
+                .insert([payload]);
 
             if (error) {
                 console.error(`[addRestaurantToClub] Error for club ${clubId}:`, error);
@@ -698,7 +726,7 @@ export const useStore = create((set, get) => ({
         return { success: true };
     },
 
-    addGooglePlaceToClub: async (clubId, place) => {
+    addGooglePlaceToClub: async (clubId, place, details = null) => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) return { success: false, error: 'No session' };
 
@@ -724,9 +752,8 @@ export const useStore = create((set, get) => ({
                     zone: place.vicinity || place.formatted_address,
                     coordinates: formattedCoords,
                     image_url: place.photos?.[0]?.getUrl() || null,
-                    rating: place.rating || null,
-                    is_visited: false,
-                    date_added: new Date().toISOString()
+                    google_rating: place.rating || null,
+                    is_visited: true // Assuming adding to a public club means they've visited it
                 }])
                 .select()
                 .single();
@@ -748,7 +775,26 @@ export const useStore = create((set, get) => ({
         }
 
         // 3. Link to club
-        return get().addRestaurantToClub(clubId, restaurant.id);
+        return get().addRestaurantToClub(clubId, restaurant.id, details);
+    },
+
+    fetchCommunityComments: async (clubRestaurantId) => {
+        const { data, error } = await supabase
+            .from('community_comments')
+            .select(`id, content, created_at, user_id, profile:profiles(full_name, avatar_url)`)
+            .eq('club_restaurant_id', clubRestaurantId)
+            .order('created_at', { ascending: true });
+        return { success: !error, data, error: error?.message };
+    },
+
+    addCommunityComment: async (clubRestaurantId, content) => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return { success: false, error: 'No session' };
+        
+        const { error } = await supabase
+            .from('community_comments')
+            .insert([{ club_restaurant_id: clubRestaurantId, user_id: session.user.id, content }]);
+        return { success: !error, error: error?.message };
     },
 
     updateClub: async (clubId, updates) => {

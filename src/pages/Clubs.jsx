@@ -100,8 +100,8 @@ export default function Clubs() {
         <div className="pb-24 bg-brand-light min-h-screen">
             <header className="bg-white p-6 pt-12 rounded-b-[3rem] shadow-xl shadow-slate-200/40 relative z-10 border-b border-gray-100 flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-black text-brand-dark uppercase tracking-tight">Foodie Clubs</h1>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Connect with foodies</p>
+                    <h1 className="text-2xl font-black text-brand-dark uppercase tracking-tight">Circles & Communities</h1>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Comparte y descubre</p>
                 </div>
                 <button
                     onClick={() => {
@@ -115,16 +115,17 @@ export default function Clubs() {
             </header>
 
             <div className="p-6 space-y-10">
-                {/* My Clubs (Real Data) */}
+                {/* Circles (Private) */}
                 <section>
-                    <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-4 ml-2">Active Clubs</h2>
+                    <h2 className="text-[10px] font-black text-brand-orange uppercase tracking-[0.3em] mb-4 ml-2">Circles (Privados)</h2>
+                    <p className="text-xs text-gray-400 font-medium mb-6 ml-2 max-w-[280px]">Tus espacios íntimos. El plan del viernes, listas compartidas y antojos con tu círculo cercano.</p>
                     <div className="space-y-4">
-                        {clubs.length > 0 ? clubs.map(club => {
+                        {clubs.filter(c => c.type === 'private').length > 0 ? clubs.filter(c => c.type === 'private').map(club => {
                             const isAdmin = club.created_by === profile?.id;
-
                             return (
                                 <motion.div
                                     layout
+                                    key={club.id}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     onClick={() => navigate(`/clubs/${club.id}`)}
@@ -134,27 +135,11 @@ export default function Clubs() {
                                     <div className="flex-1 min-w-0 pointer-events-none">
                                         <div className="flex items-center gap-2 mb-1">
                                             <h3 className="font-black text-brand-dark truncate text-sm uppercase tracking-tight">{club.name}</h3>
-                                            {club.type === 'private' ? <Lock size={12} className="text-brand-orange" /> : <Globe size={12} className="text-brand-green" />}
+                                            <Lock size={12} className="text-brand-orange" />
                                         </div>
                                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                             <Users size={12} /> {club.club_members?.[0]?.count || 0} Members
                                         </p>
-                                        {club.is_member ? (
-                                            <div className="mt-3 inline-flex items-center gap-1.5 bg-brand-green/10 px-4 py-1.5 rounded-full text-[9px] font-black uppercase text-brand-green border border-brand-green/20 font-black">
-                                                <Star size={10} fill="currentColor" />
-                                                Member
-                                            </div>
-                                        ) : (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleJoin(club.id);
-                                                }}
-                                                className="mt-3 bg-slate-50 px-4 py-1.5 rounded-full text-[9px] font-black uppercase text-brand-orange border border-slate-100 pointer-events-auto"
-                                            >
-                                                Join Community
-                                            </button>
-                                        )}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {isAdmin && (
@@ -173,9 +158,76 @@ export default function Clubs() {
                                 </motion.div>
                             );
                         }) : (
-                            <div className="py-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
-                                <Users size={40} className="mx-auto text-slate-100 mb-4" />
-                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No clubs found. Create the first one!</p>
+                            <div className="py-12 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
+                                <Users size={32} className="mx-auto text-slate-100 mb-3" />
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Aún no tienes círculos.</p>
+                            </div>
+                        )}
+                    </div>
+                </section>
+
+                {/* Communities (Public) */}
+                <section>
+                    <h2 className="text-[10px] font-black text-brand-green uppercase tracking-[0.3em] mb-4 ml-2">Communities (Públicas)</h2>
+                    <p className="text-xs text-gray-400 font-medium mb-6 ml-2 max-w-[280px]">La autoridad en gastronomía. Rankings curados por expertos con el Triple Rating System.</p>
+                    <div className="space-y-4">
+                        {clubs.filter(c => c.type === 'public').length > 0 ? clubs.filter(c => c.type === 'public').map(club => {
+                            const isAdmin = club.created_by === profile?.id;
+                            return (
+                                <motion.div
+                                    layout
+                                    key={club.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    onClick={() => navigate(`/clubs/${club.id}`)}
+                                    className="bg-white rounded-[2.5rem] overflow-hidden shadow-xl shadow-slate-200/20 border border-brand-green/10 flex items-center p-4 gap-5 cursor-pointer relative z-10"
+                                >
+                                    <img src={club.image || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400'} alt={club.name} className="w-20 h-20 rounded-[1.5rem] object-cover shadow-md bg-slate-100" />
+                                    <div className="flex-1 min-w-0 pointer-events-none">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <h3 className="font-black text-brand-dark truncate text-sm uppercase tracking-tight">{club.name}</h3>
+                                            <Globe size={12} className="text-brand-green" />
+                                        </div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                            <Users size={12} /> {club.club_members?.[0]?.count || 0} Members
+                                        </p>
+                                        {club.is_member ? (
+                                            <div className="mt-3 inline-flex items-center gap-1.5 bg-brand-green/10 px-4 py-1.5 rounded-full text-[9px] font-black uppercase text-brand-green border border-brand-green/20">
+                                                <Star size={10} fill="currentColor" />
+                                                Member
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleJoin(club.id);
+                                                }}
+                                                className="mt-3 bg-slate-50 px-4 py-1.5 rounded-full text-[9px] font-black uppercase text-brand-green border border-slate-100 pointer-events-auto"
+                                            >
+                                                Join Community
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {isAdmin && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDelete(club.id);
+                                                }}
+                                                className="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center active:scale-90 transition-transform pointer-events-auto"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        )}
+                                        <ChevronRight className="text-slate-200" size={24} />
+                                    </div>
+                                </motion.div>
+                            );
+                        }) : (
+                            <div className="py-12 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
+                                <Globe size={32} className="mx-auto text-slate-100 mb-3" />
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No hay comunidades públicas.</p>
                             </div>
                         )}
                     </div>
@@ -246,18 +298,26 @@ export default function Clubs() {
                                     <div className="space-y-2">
                                         <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">Type</label>
                                         <div className="flex gap-2">
-                                            {['public', 'private'].map(t => (
-                                                <button
-                                                    key={t} type="button"
-                                                    onClick={() => setNewClub({ ...newClub, type: t })}
-                                                    className={clsx(
-                                                        "flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
-                                                        newClub.type === t ? "bg-brand-dark text-white shadow-lg" : "bg-slate-50 text-gray-400"
-                                                    )}
-                                                >
-                                                    {t}
-                                                </button>
-                                            ))}
+                                            <button
+                                                key="private" type="button"
+                                                onClick={() => setNewClub({ ...newClub, type: 'private' })}
+                                                className={clsx(
+                                                    "flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                                                    newClub.type === 'private' ? "bg-brand-orange text-white shadow-lg" : "bg-slate-50 text-gray-400"
+                                                )}
+                                            >
+                                                Circle (Privado)
+                                            </button>
+                                            <button
+                                                key="public" type="button"
+                                                onClick={() => setNewClub({ ...newClub, type: 'public' })}
+                                                className={clsx(
+                                                    "flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                                                    newClub.type === 'public' ? "bg-brand-green text-white shadow-lg" : "bg-slate-50 text-gray-400"
+                                                )}
+                                            >
+                                                Community (Pública)
+                                            </button>
                                         </div>
                                     </div>
 

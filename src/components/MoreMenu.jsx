@@ -20,6 +20,7 @@ export default function MoreMenu({ isOpen, onClose }) {
         { label: 'Badges', icon: Trophy, path: '/badges', color: 'text-brand-orange' },
         { label: 'Hall of Fame', icon: Star, path: '/rankings', color: 'text-yellow-500' },
         { label: 'Foodie Roulette', icon: Sparkles, path: '/roulette', color: 'text-brand-orange' },
+        { label: 'Replay Tour', icon: Sparkles, path: '/replay-tour', color: 'text-green-500' },
         { label: 'Trash Bin', icon: Trash2, path: '/trash', color: 'text-slate-400' },
         { label: 'Notifications', icon: Bell, path: '/notifications', color: 'text-orange-500' },
         { label: 'Subscription', icon: CreditCard, path: '/subscription', color: 'text-green-500' },
@@ -34,6 +35,13 @@ export default function MoreMenu({ isOpen, onClose }) {
         if (path === '/logout') {
             await supabase.auth.signOut();
             navigate('/auth');
+            return;
+        }
+        if (path === '/replay-tour') {
+            const updateProfile = useStore.getState().updateProfile;
+            await updateProfile({ has_seen_tour: false });
+            localStorage.removeItem('foodie_seen_tour');
+            navigate('/');
             return;
         }
         if (path.startsWith('mailto:')) {

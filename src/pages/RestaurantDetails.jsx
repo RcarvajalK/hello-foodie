@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
     ArrowLeft, Star, Clock, MapPin, Heart, Share2, Trash2, Edit3,
     MessageCircle, ChevronLeft, ChevronRight, Globe, Phone, CheckCircle, Save, X, Link
@@ -10,6 +10,7 @@ import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import ShareModal from '../components/ShareModal';
+import RecommendationModal from '../components/RecommendationModal';
 
 const MILESTONES = [
     { count: 1, name: 'First Bite', icon: '🍴', rank: 'Newcomer' },
@@ -36,7 +37,85 @@ export default function RestaurantDetails() {
     const [showCopiedToast, setShowCopiedToast] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
 
-    const restaurant = restaurants.find(r => r.id === id);
+    const [searchParams] = useSearchParams();
+    const clubId = searchParams.get('club');
+    
+    const clubDetails = useStore(state => state.clubDetails);
+    const fetchClubDetails = useStore(state => state.fetchClubDetails);
+    const fetchCommunityComments = useStore(state => state.fetchCommunityComments);
+    const addCommunityComment = useStore(state => state.addCommunityComment);
+    const validateRecommendation = useStore(state => state.validateRecommendation);
+    const profile = useStore(state => state.profile);
+
+    useEffect(() => {
+        if (clubId && (!clubDetails || clubDetails.id !== clubId)) {
+            fetchClubDetails(clubId);
+        }
+    }, [clubId, clubDetails, fetchClubDetails]);
+
+    const clubRestaurantContext = useMemo(() => {
+        if (!clubId || !clubDetails || clubDetails.id !== clubId) return null;
+        return clubDetails.restaurants?.find(r => r.id === id);
+    }, [clubId, clubDetails, id]);
+
+    let restaurant = restaurants.find(r => r.id === id);
+    const isInMyList = !!restaurant;
+    
+    if (!restaurant && clubRestaurantContext) {
+        restaurant = clubRestaurantContext;
+    }
+
+    const [comments, setComments] = useState([]);
+    const [newComment, setNewComment] = useState('');
+    const [isCommentsLoading, setIsCommentsLoading] = useState(false);
+
+    useEffect(() => {
+        if (clubRestaurantContext?.club_restaurant_id) {
+            setIsCommentsLoading(true);
+            fetchCommunityComments(clubRestaurantContext.club_restaurant_id).then(res => {
+                if (res.success) setComments(res.data);
+                setIsCommentsLoading(false);
+            });
+        }
+    }, [clubRestaurantContext?.club_restaurant_id]);
+
+    const handleAddComment = async () => {
+        if (!newComment.trim()) return;
+        const res = await addCommunityComment(clubRestaurantContext.club_restaurant_id, newComment);
+        if (res.success) {
+            setNewComment('');
+            const commentsRes = await fetchCommunityComments(clubRestaurantContext.club_restaurant_id);
+            if (commentsRes.success) setComments(commentsRes.data);
+        } else {
+            alert('Failed to post comment');
+        }
+    };
+
+    const [recModal, setRecModal] = useState({ isOpen: false });
+
+    const handleValidate = async (type) => {
+        if (clubRestaurantContext.validations?.some(v => v.user_id === profile?.id)) return alert("You have already validated this place.");
+        if (type === 'matizar') {
+            setRecModal({ isOpen: true });
+            return;
+        }
+        await validateRecommendation(clubRestaurantContext.club_restaurant_id, type, {});
+        fetchClubDetails(clubId);
+    };
+
+    const handleModalSubmit = async (details) => {
+        setRecModal({ isOpen: false });
+        await validateRecommendation(clubRestaurantContext.club_restaurant_id, 'matizar', { new_rating: details.rating });
+        fetchClubDetails(clubId);
+    };
+
+    const handleAddToMyList = async () => {
+        // Simple function to add restaurant to personal list via store
+        // We'll just call updateRestaurant on a new copy maybe? 
+        // Actually, store doesn't have addRestaurantFromExisting. 
+        // We can just add it to 'restaurants' table for this user.
+        alert("This feature is coming soon!");
+    };
 
     const [review, setReview] = useState({
         rating: 5,
@@ -268,40 +347,78 @@ export default function RestaurantDetails() {
                     {/* Quick Tools Header */}
                     <div className="flex justify-between items-center py-4 mt-4 border-t border-slate-50">
                         <div className="flex gap-2">
-                            <button onClick={handleShare} className="w-11 h-11 bg-slate-50 text-slate-500 rounded-2xl flex items-center justify-center hover:bg-brand-orange/5 hover:text-brand-orange transition-all">
-                                <Share2 size={20} />
-                            </button>
-                            <button onClick={handleDelete} className="w-11 h-11 bg-slate-50 text-slate-500 rounded-2xl flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all">
-                                <Trash2 size={20} />
-                            </button>
-                            <button onClick={() => setIsEditing(true)} className="w-11 h-11 bg-slate-50 text-slate-500 rounded-2xl flex items-center justify-center hover:bg-blue-50 hover:text-blue-500 transition-all">
-                                <Edit3 size={20} />
-                            </button>
-                            {/* Favorite */}
-                            <button
-                                onClick={() => toggleFavorite(restaurant.id, restaurant.is_favorite)}
-                                className={clsx(
-                                    "w-11 h-11 rounded-2xl flex items-center justify-center transition-all",
-                                    restaurant.is_favorite ? "bg-red-500 text-white shadow-md shadow-red-200" : "bg-slate-50 text-red-400"
-                                )}
-                            >
-                                <Heart size={20} fill={restaurant.is_favorite ? "currentColor" : "none"} />
-                            </button>
+                            {isInMyList ? (
+                                <>
+                                    <button onClick={handleShare} className="w-11 h-11 bg-slate-50 text-slate-500 rounded-2xl flex items-center justify-center hover:bg-brand-orange/5 hover:text-brand-orange transition-all">
+                                        <Share2 size={20} />
+                                    </button>
+                                    <button onClick={handleDelete} className="w-11 h-11 bg-slate-50 text-slate-500 rounded-2xl flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all">
+                                        <Trash2 size={20} />
+                                    </button>
+                                    <button onClick={() => setIsEditing(true)} className="w-11 h-11 bg-slate-50 text-slate-500 rounded-2xl flex items-center justify-center hover:bg-blue-50 hover:text-blue-500 transition-all">
+                                        <Edit3 size={20} />
+                                    </button>
+                                    <button
+                                        onClick={() => toggleFavorite(restaurant.id, restaurant.is_favorite)}
+                                        className={clsx(
+                                            "w-11 h-11 rounded-2xl flex items-center justify-center transition-all",
+                                            restaurant.is_favorite ? "bg-red-500 text-white shadow-md shadow-red-200" : "bg-slate-50 text-red-400"
+                                        )}
+                                    >
+                                        <Heart size={20} fill={restaurant.is_favorite ? "currentColor" : "none"} />
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    onClick={handleAddToMyList}
+                                    className="px-5 h-11 bg-brand-dark text-white rounded-2xl flex items-center justify-center font-black text-[10px] uppercase tracking-widest gap-2 shadow-lg transition-all active:scale-95"
+                                >
+                                    <Save size={16} /> Add to My List
+                                </button>
+                            )}
                         </div>
                         {/* Mark as Visited — prominent CTA in toolbar */}
-                        <button
-                            onClick={handleToggleVisited}
-                            className={clsx(
-                                "h-11 px-5 rounded-2xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95",
-                                restaurant.is_visited
-                                    ? "bg-brand-green/15 text-brand-green border border-brand-green/20"
-                                    : "bg-brand-orange text-white shadow-lg shadow-brand-orange/30"
-                            )}
-                        >
-                            <CheckCircle size={16} fill={restaurant.is_visited ? "currentColor" : "none"} />
-                            {restaurant.is_visited ? 'Visited' : 'Mark Visited'}
-                        </button>
+                        {isInMyList && (
+                            <button
+                                onClick={handleToggleVisited}
+                                className={clsx(
+                                    "h-11 px-5 rounded-2xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95",
+                                    restaurant.is_visited
+                                        ? "bg-brand-green/15 text-brand-green border border-brand-green/20"
+                                        : "bg-brand-orange text-white shadow-lg shadow-brand-orange/30"
+                                )}
+                            >
+                                <CheckCircle size={16} fill={restaurant.is_visited ? "currentColor" : "none"} />
+                                {restaurant.is_visited ? 'Visited' : 'Mark Visited'}
+                            </button>
+                        )}
                     </div>
+
+                    {/* Community Actions */}
+                    {clubRestaurantContext && (
+                        <div className="mt-2 pt-4 border-t border-slate-100 flex justify-between bg-slate-50 -mx-6 -mb-6 px-6 py-4 rounded-b-[2.5rem]">
+                            <div className="flex flex-col gap-2 flex-1">
+                                <div className="flex justify-between items-center pr-4">
+                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Recommender</span>
+                                    <div className="flex items-center gap-1 font-black text-sm text-brand-orange">
+                                        <Star size={12} fill="currentColor" /> {Number(clubRestaurantContext.recommender_rating || 0).toFixed(1)}
+                                    </div>
+                                </div>
+                                {clubRestaurantContext.average_spend && (
+                                    <div className="flex justify-between items-center pr-4">
+                                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Avg Spend</span>
+                                        <div className="font-black text-sm text-brand-dark">${clubRestaurantContext.average_spend}</div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="w-[1px] bg-slate-200 mx-2"></div>
+                            <div className="flex flex-col gap-2 justify-center pl-2 flex-shrink-0 w-32">
+                                <button onClick={() => handleValidate('confirm')} className="py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-colors bg-brand-green/10 text-brand-green border-brand-green/20 hover:bg-brand-green hover:text-white">Confirm</button>
+                                <button onClick={() => handleValidate('matizar')} className="py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-colors bg-slate-50 text-gray-600 border-slate-200 hover:bg-gray-200">Adjust</button>
+                                <button onClick={() => handleValidate('report')} className="py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-colors bg-red-50 text-red-500 border-red-100 hover:bg-red-500 hover:text-white">Flag</button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Contact & Info Grid */}
@@ -451,14 +568,63 @@ export default function RestaurantDetails() {
                 )}
 
                 {/* Secondary visited prompt — only shown when not yet visited, softer style */}
-                {!restaurant.is_visited && (
+                {isInMyList && !restaurant.is_visited && (
                     <button
                         onClick={handleToggleVisited}
-                        className="w-full font-black py-5 rounded-[2rem] bg-brand-orange text-white shadow-xl shadow-brand-orange/30 transition-all flex items-center justify-center gap-3 active:scale-[0.98] text-sm uppercase tracking-widest"
+                        className="w-full font-black py-5 rounded-[2rem] bg-brand-orange text-white shadow-xl shadow-brand-orange/30 transition-all flex items-center justify-center gap-3 active:scale-[0.98] text-sm uppercase tracking-widest mb-6"
                     >
                         <CheckCircle size={22} />
                         I visited this place!
                     </button>
+                )}
+
+                {/* Community Comments Thread */}
+                {clubRestaurantContext && (
+                    <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100">
+                        <h3 className="font-black text-brand-dark uppercase text-xs tracking-widest mb-4 flex items-center gap-2">
+                            <MessageCircle size={16} className="text-brand-orange" /> Community Thread
+                        </h3>
+                        
+                        <div className="space-y-4 mb-4">
+                            {isCommentsLoading ? (
+                                <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">Loading...</p>
+                            ) : comments.length === 0 ? (
+                                <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest py-4">No comments yet. Be the first!</p>
+                            ) : (
+                                comments.map(comment => (
+                                    <div key={comment.id} className="bg-slate-50 p-4 rounded-[1.5rem]">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            {comment.profile?.avatar_url ? (
+                                                <img src={comment.profile.avatar_url} className="w-5 h-5 rounded-full" />
+                                            ) : (
+                                                <div className="w-5 h-5 rounded-full bg-brand-dark text-white flex items-center justify-center text-[8px] font-black">
+                                                    {comment.profile?.full_name?.charAt(0) || '?'}
+                                                </div>
+                                            )}
+                                            <span className="text-[10px] font-black text-brand-dark">{comment.profile?.full_name}</span>
+                                            <span className="text-[8px] font-bold text-gray-400">{new Date(comment.created_at).toLocaleDateString()}</span>
+                                        </div>
+                                        <p className="text-sm font-medium text-gray-700">{comment.content}</p>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        <div className="flex gap-2">
+                            <input 
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                placeholder="Add your thought..."
+                                className="flex-1 bg-slate-50 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+                            />
+                            <button 
+                                onClick={handleAddComment}
+                                className="bg-brand-orange text-white px-5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-dark transition-colors"
+                            >
+                                Post
+                            </button>
+                        </div>
+                    </div>
                 )}
             </div>
 
@@ -693,6 +859,14 @@ export default function RestaurantDetails() {
                     </div>
                 )}
             </AnimatePresence>
+            {/* Modals */}
+            <RecommendationModal 
+                isOpen={recModal.isOpen} 
+                mode="matizar"
+                onClose={() => setRecModal({ isOpen: false })}
+                onSubmit={handleModalSubmit}
+            />
+
             <ShareModal
                 isVisible={isShareOpen}
                 onClose={() => setIsShareOpen(false)}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, X } from 'lucide-react';
 import BrandLogo from './BrandLogo';
+import { useStore } from '../lib/store';
 
 // Store the prompt globally in case the component mounts after the event
 let globalDeferredPrompt = null;
@@ -17,8 +18,16 @@ window.addEventListener('beforeinstallprompt', (e) => {
 export default function InstallPrompt() {
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const [showPrompt, setShowPrompt] = useState(false);
+    const profile = useStore(state => state.profile);
 
     useEffect(() => {
+        // Only target mobile browsers
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (!isMobile) return;
+        
+        // Only show if user has finished the tour
+        if (!profile || !profile.has_seen_tour) return;
+
         const hasDismissed = localStorage.getItem('foodie_install_dismissed');
         globalHasDismissed = !!hasDismissed;
 
