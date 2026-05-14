@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useStore } from '../lib/store';
 import { BADGE_LEVELS, getLevelFromXP, getNextLevelFromXP, calculateXP, SPECIAL_BADGES } from '../lib/badges';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Trophy, MapPin, Star, Settings, Plus, ChevronRight, Heart, Bell, X, Share2, Users, Globe, Camera } from 'lucide-react';
+import { LogOut, Trophy, MapPin, Star, Settings, Plus, ChevronRight, Heart, Bell, X, Share2, Users, Globe, Camera, AtSign, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import BrandLogo from '../components/BrandLogo';
@@ -29,6 +29,39 @@ export default function Profile() {
     const [leaderboardTab, setLeaderboardTab] = useState('global');
     const [newPassword, setNewPassword] = useState('');
 
+    // Username editing state
+    const checkUsernameAvailable = useStore(state => state.checkUsernameAvailable);
+    const [usernameEdit, setUsernameEdit] = useState('');
+    const [usernameStatus, setUsernameStatus] = useState('idle'); // 'idle'|'checking'|'available'|'taken'|'invalid'|'same'
+    const [usernameTimer, setUsernameTimer] = useState(null);
+
+    const USERNAME_REGEX = /^[a-z0-9_]{3,30}$/;
+
+    const handleUsernameEditChange = useCallback((e) => {
+        const raw = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+        setUsernameEdit(raw);
+        setUsernameStatus('idle');
+        if (usernameTimer) clearTimeout(usernameTimer);
+        if (raw.length < 3) return;
+        if (raw === profile?.username) { setUsernameStatus('same'); return; }
+        if (!USERNAME_REGEX.test(raw)) { setUsernameStatus('invalid'); return; }
+        setUsernameStatus('checking');
+        const id = setTimeout(async () => {
+            const result = await checkUsernameAvailable(raw);
+            setUsernameStatus(result.available ? 'available' : 'taken');
+        }, 500);
+        setUsernameTimer(id);
+    }, [profile, usernameTimer, checkUsernameAvailable]);
+
+    const usernameHelperText = {
+        idle: 'Letters, numbers, underscores (3–30 chars)',
+        checking: 'Checking…',
+        available: `@${usernameEdit} is available!`,
+        taken: `@${usernameEdit} is already taken.`,
+        invalid: 'Only lowercase letters, numbers, and underscores',
+        same: 'This is your current username',
+    };
+
     const [editData, setEditData] = useState({
         full_name: '',
         instagram: '',
@@ -49,6 +82,7 @@ export default function Profile() {
                 phone: profile.phone || '',
                 favorite_cuisines: profile.favorite_cuisines || []
             });
+            setUsernameEdit(profile.username || '');
         }
     }, [profile]);
 
@@ -98,7 +132,12 @@ export default function Profile() {
     };
 
     const handleSave = async () => {
-        const { error } = await updateProfile(editData);
+        // If username was changed and it's valid, save it too
+        const updates = { ...editData };
+        if (usernameEdit && usernameEdit !== profile?.username && usernameStatus === 'available') {
+            updates.username = usernameEdit.toLowerCase();
+        }
+        const { error } = await updateProfile(updates);
         if (error) alert(`Error: ${error.message}`);
         else setIsSettingsOpen(false);
     };
@@ -173,13 +212,24 @@ export default function Profile() {
                 </div>
 
                 <h1 className="text-3xl font-black text-brand-dark mb-1 tracking-tight">{profile?.full_name || 'The Connoisseur'}</h1>
-                <p className="text-sm font-bold text-slate-400 tracking-tight">@{profile?.instagram || 'foodie_expert'}</p>
+                {profile?.username ? (
+                    <p className="text-sm font-bold text-brand-orange tracking-tight">@{profile.username}</p>
+                ) : (
+                    <button
+                        onClick={() => setIsSettingsOpen(true)}
+                        className="mt-1 px-4 py-1.5 bg-brand-orange/10 border border-brand-orange/20 rounded-full flex items-center gap-1.5 text-brand-orange hover:bg-brand-orange/20 transition-colors"
+                    >
+                        <AtSign size={12} />
+                        <span className="text-[9px] font-black uppercase tracking-widest">Choose your username</span>
+                        <ChevronRight size={10} />
+                    </button>
+                )}
 
                 {/* Stats Row */}
                 <div className="grid grid-cols-4 gap-3 w-full max-w-sm mt-10">
                     {stats.map((stat) => (
                         <div key={stat.label} className="bg-slate-50/50 p-4 rounded-[2rem] flex flex-col items-center border border-slate-50">
-                            <div className={clsx("w-1.5 h-1.5 rounded-full mb-3", stat.color.replace('text', 'bg'))}></div>
+                            <div className={clsx("w-1.5 h-1.5 rounded-full mb-3", stat.color.replace('text', 'bg'))} />
                             <span className="text-2xl font-black text-brand-dark leading-none mb-1">{stat.count}</span>
                             <span className="text-[7px] font-black uppercase tracking-[0.15em] text-slate-400">{stat.label}</span>
                         </div>
@@ -368,6 +418,48 @@ export default function Profile() {
                             <div className="space-y-6 mb-12">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-300">Personal Info</h4>
                                 <div className="space-y-4">
+                                    {/* Username field with live validation */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-[8px] font-black uppercase text-slate-400 ml-4">Username</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-orange font-black text-base select-none">@</span>
+                                            <input
+                                                id="profile-username-input"
+                                                className={clsx(
+                                                    "w-full bg-slate-50 p-4 pl-9 pr-10 rounded-2xl font-bold text-brand-dark border transition-all",
+                                                    usernameStatus === 'available' && "border-emerald-200",
+                                                    usernameStatus === 'taken' && "border-red-200",
+                                                    usernameStatus === 'invalid' && "border-red-200",
+                                                    !['available', 'taken', 'invalid'].includes(usernameStatus) && "border-transparent"
+                                                )}
+                                                value={usernameEdit}
+                                                onChange={handleUsernameEditChange}
+                                                maxLength={30}
+                                                autoComplete="off"
+                                                autoCorrect="off"
+                                                autoCapitalize="off"
+                                                spellCheck={false}
+                                            />
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                                {usernameStatus === 'checking' && <Loader2 size={14} className="animate-spin text-brand-orange/50" />}
+                                                {usernameStatus === 'available' && <CheckCircle2 size={14} className="text-emerald-500" />}
+                                                {usernameStatus === 'taken' && <XCircle size={14} className="text-red-400" />}
+                                                {usernameStatus === 'invalid' && <XCircle size={14} className="text-red-400" />}
+                                                {usernameStatus === 'same' && <CheckCircle2 size={14} className="text-slate-300" />}
+                                            </div>
+                                        </div>
+                                        <p className={clsx(
+                                            "text-[9px] font-bold ml-4",
+                                            usernameStatus === 'available' && "text-emerald-500",
+                                            usernameStatus === 'taken' && "text-red-400",
+                                            usernameStatus === 'invalid' && "text-red-400",
+                                            usernameStatus === 'same' && "text-slate-300",
+                                            usernameStatus === 'idle' && "text-slate-400",
+                                        )}>
+                                            {usernameHelperText[usernameStatus]}
+                                        </p>
+                                    </div>
+
                                     <div className="space-y-2">
                                         <label className="text-[8px] font-black uppercase text-slate-400 ml-4">Full Name</label>
                                         <input

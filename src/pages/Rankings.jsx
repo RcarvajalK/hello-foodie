@@ -144,6 +144,12 @@ export default function Rankings() {
                                                 {isCurrentUser && <span className="bg-brand-orange/10 text-brand-orange text-[7px] font-black px-1.5 py-0.5 rounded-md uppercase">You</span>}
                                             </div>
                                             <div className="flex items-center gap-1.5 mt-0.5">
+                                                {user.username ? (
+                                                    <>
+                                                        <span className="text-[8px] font-black text-brand-orange tracking-wide">@{user.username}</span>
+                                                        <span className="w-1 h-1 bg-gray-200 rounded-full" />
+                                                    </>
+                                                ) : null}
                                                 <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">{userLevel.name}</span>
                                                 <span className="w-1 h-1 bg-gray-200 rounded-full" />
                                                 <span className="text-[8px] font-black text-brand-orange uppercase tabular-nums">{user.visit_count} Visited</span>

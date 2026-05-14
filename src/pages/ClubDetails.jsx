@@ -105,9 +105,16 @@ function CommunityRestaurantCard({ restaurant, club, isAdmin, onDelete, onMatiza
                             {restaurant.recommender_avatar ? (
                                 <img src={restaurant.recommender_avatar} className="w-4 h-4 rounded-full object-cover" />
                             ) : (
-                                <div className="w-4 h-4 rounded-full bg-brand-orange text-white flex items-center justify-center text-[8px] font-black">{restaurant.recommender_name.charAt(0)}</div>
+                                <div className="w-4 h-4 rounded-full bg-brand-orange text-white flex items-center justify-center text-[8px] font-black">
+                                    {(restaurant.recommender_display_name || restaurant.recommender_name).charAt(0)}
+                                </div>
                             )}
-                            <span className="text-[8px] font-black text-brand-dark uppercase tracking-widest">Added by {restaurant.recommender_name.split(' ')[0]}</span>
+                            <span className="text-[8px] font-black text-brand-dark uppercase tracking-widest">
+                                {restaurant.recommender_username
+                                    ? <>Added by <span className="text-brand-orange">@{restaurant.recommender_username}</span></>
+                                    : <>Added by {(restaurant.recommender_display_name || restaurant.recommender_name).split(' ')[0]}</>
+                                }
+                            </span>
                         </div>
                     )}
 
@@ -539,9 +546,15 @@ export default function ClubDetails() {
                                                     {member.profile?.full_name || 'Incognito Foodie'}
                                                     {isCurrentUser && <span className="ml-2 text-[8px] text-brand-orange">(You)</span>}
                                                 </h4>
-                                                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
-                                                    Vibing Member
-                                                </p>
+                                                {member.profile?.username ? (
+                                                    <p className="text-[8px] font-black text-brand-orange uppercase tracking-widest mt-0.5">
+                                                        @{member.profile.username}
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
+                                                        Vibing Member
+                                                    </p>
+                                                )}
                                             </div>
                                             <div className="text-right flex-shrink-0">
                                                 <p className="text-sm font-black text-brand-dark leading-none">

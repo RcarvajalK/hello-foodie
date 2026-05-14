@@ -173,6 +173,58 @@ export const useStore = create((set, get) => ({
         if (!error) set({ profile: data });
     },
 
+    // ── Username System ──
+    // Check if a username is available via DB RPC function
+    checkUsernameAvailable: async (username) => {
+        try {
+            const { data, error } = await supabase.rpc('is_username_available', { p_username: username.toLowerCase() });
+            if (error) throw error;
+            return { available: data };
+        } catch (err) {
+            console.error('[checkUsernameAvailable]', err.message);
+            return { available: false, error: err.message };
+        }
+    },
+
+    // Search profiles by username prefix
+    searchUserByUsername: async (query) => {
+        if (!query || query.length < 2) return { success: true, data: [] };
+        try {
+            const { data, error } = await supabase.rpc('search_profiles_by_username', {
+                p_query: query.toLowerCase().replace('@', ''),
+                p_limit: 10
+            });
+            if (error) throw error;
+            return { success: true, data: data || [] };
+        } catch (err) {
+            console.error('[searchUserByUsername]', err.message);
+            return { success: false, data: [], error: err.message };
+        }
+    },
+
+    // Update the current user's username
+    updateUsername: async (username) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { success: false, error: 'No session' };
+        const clean = username.toLowerCase().trim();
+        // Client-side format validation
+        if (!/^[a-z0-9_]{3,30}$/.test(clean)) {
+            return { success: false, error: 'Invalid username format.' };
+        }
+        const { data, error } = await supabase
+            .from('profiles')
+            .update({ username: clean })
+            .eq('id', user.id)
+            .select()
+            .single();
+        if (error) {
+            console.error('[updateUsername]', error);
+            return { success: false, error: error.message };
+        }
+        set({ profile: data });
+        return { success: true, data };
+    },
+
     // Add new restaurant to Supabase
     addRestaurant: async (restaurantData) => {
         set({ loading: true });
@@ -610,7 +662,7 @@ export const useStore = create((set, get) => ({
                 .select(`
                     user_id,
                     role,
-                    profile:profiles!inner(id, full_name, avatar_url)
+                    profile:profiles!inner(id, full_name, avatar_url, username)
                 `)
                 .eq('club_id', clubId);
 
@@ -657,7 +709,9 @@ export const useStore = create((set, get) => ({
                         average_spend: r.average_spend,
                         pro_tip: r.pro_tip,
                         added_by: r.added_by,
-                        recommender_name: recommender.full_name,
+                        recommender_name: recommender.username ? `@${recommender.username}` : (recommender.full_name || 'Unknown Explorer'),
+                        recommender_display_name: recommender.full_name || 'Unknown Explorer',
+                        recommender_username: recommender.username || null,
                         recommender_avatar: recommender.avatar_url,
                         validations: r.validations || []
                     };
@@ -853,7 +907,7 @@ export const useStore = create((set, get) => ({
             // 1. Fetch all profiles
             const { data: profiles, error: pError } = await supabase
                 .from('profiles')
-                .select('id, full_name, avatar_url');
+                .select('id, full_name, avatar_url, username');
 
             if (pError) throw pError;
 
@@ -960,7 +1014,7 @@ export const useStore = create((set, get) => ({
             .select(`
                 user_id,
                 role,
-                profile:profiles(id, full_name, avatar_url)
+                profile:profiles(id, full_name, avatar_url, username)
             `)
             .in('club_id', clubIds)
             .neq('user_id', session.user.id); // Exclude self
@@ -976,7 +1030,8 @@ export const useStore = create((set, get) => ({
                     seenIds.add(m.user_id);
                     uniqueFriends.push({
                         ...m.profile,
-                        role: m.role
+                        role: m.role,
+                        username: m.profile.username || null
                     });
                 }
             });
