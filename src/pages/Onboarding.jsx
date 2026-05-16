@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../lib/store';
 import { useNavigate } from 'react-router-dom';
-import { ChefHat, Bell, MapPin, Sparkles, ChevronRight, X, Search, Plus } from 'lucide-react';
+import { ChefHat, Bell, MapPin, Sparkles, ChevronRight, X, Search, PartyPopper } from 'lucide-react';
 import clsx from 'clsx';
 import BrandLogo from '../components/BrandLogo';
 import { Autocomplete } from '@react-google-maps/api';
@@ -12,6 +12,7 @@ const CUISINES = ['Italian', 'Japanese', 'Mexican', 'French', 'Seafood', 'Steakh
 
 export default function Onboarding() {
     const [step, setStep] = useState(0);
+    const [showWelcome, setShowWelcome] = useState(false);
     const profile = useStore(state => state.profile);
     const updateProfile = useStore(state => state.updateProfile);
     const prefs = useStore(state => state.notificationPreferences);
@@ -41,7 +42,10 @@ export default function Onboarding() {
             example_places: selectedPlaces.join(', '),
             has_onboarded: true
         });
-        navigate(getAndClearRedirectUrl());
+        // Show the final welcome step before navigating
+        setStep(steps.length - 1 + 1); // will be handled below
+        setShowWelcome(true);
+        setTimeout(() => navigate(getAndClearRedirectUrl()), 2800);
     };
 
     const toggleCuisine = (c) => {
@@ -206,6 +210,42 @@ export default function Onboarding() {
     ];
 
     const currentStep = steps[step];
+
+    // Final welcome overlay
+    if (showWelcome) {
+        return (
+            <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8 text-center">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: 'spring', duration: 0.7 }}
+                    className="space-y-6"
+                >
+                    <div className="text-7xl">🎉</div>
+                    <h1 className="text-4xl font-black text-brand-dark uppercase tracking-tight">
+                        ¡Todo listo{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}!
+                    </h1>
+                    <p className="text-[13px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+                        Tu aventura foodie comienza ahora 🍽️
+                    </p>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="flex gap-2 justify-center"
+                    >
+                        {[0,1,2].map(i => (
+                            <motion.div key={i}
+                                animate={{ y: [0, -12, 0] }}
+                                transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }}
+                                className="w-3 h-3 bg-brand-orange rounded-full"
+                            />
+                        ))}
+                    </motion.div>
+                </motion.div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-white p-6 pb-32 flex flex-col justify-center relative overflow-hidden">

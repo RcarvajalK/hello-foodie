@@ -61,6 +61,20 @@ function OnboardingGuard({ children }) {
   return children;
 }
 
+// Redirects users who haven't set a username yet to the auth username-setup step
+function UsernameGuard({ children }) {
+  const profile = useStore(state => state.profile);
+  const loading = useStore(state => state.loading);
+
+  if (loading || !profile) return children;
+
+  if (!profile.username) {
+    return <Navigate to="/auth?step=username" replace />;
+  }
+
+  return children;
+}
+
 function NDAGuard({ children }) {
   const profile = useStore(state => state.profile);
   const loading = useStore(state => state.loading);
@@ -186,10 +200,12 @@ export default function App() {
             <Route path="/" element={<ProtectedRoute session={session}><Layout /></ProtectedRoute>}>
               <Route index element={
                 <NDAGuard>
-                  <OnboardingGuard>
-                    <InstallPrompt />
-                    <Home />
-                  </OnboardingGuard>
+                  <UsernameGuard>
+                    <OnboardingGuard>
+                      <InstallPrompt />
+                      <Home />
+                    </OnboardingGuard>
+                  </UsernameGuard>
                 </NDAGuard>
               } />
               <Route path="map" element={<MapPage />} />
