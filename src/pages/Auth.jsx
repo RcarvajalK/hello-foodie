@@ -89,8 +89,8 @@ export default function Auth() {
     const msg = (text, type = 'error') => setMessage({ text, type });
 
     const validateEmail = (e) => {
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return 'Ese email no se ve bien. Revísalo.';
-        if (['test.com','example.com','fake.com'].includes(e.split('@')[1])) return 'Usa un email real.';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return 'That email doesn\'t look right. Please check it.';
+        if (['test.com','example.com','fake.com'].includes(e.split('@')[1])) return 'Please use a real email address.';
         return null;
     };
 
@@ -127,7 +127,7 @@ export default function Auth() {
         if (err) { msg(err); setLoading(false); return; }
         const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}/auth?step=check` } });
         if (error) msg(error.message);
-        else msg('¡Enlace enviado! Revisa tu bandeja de entrada 📬', 'info');
+        else msg('Link sent! Check your inbox 📬', 'info');
         setLoading(false);
     };
 
@@ -135,13 +135,13 @@ export default function Auth() {
         e.preventDefault(); setLoading(true); setMessage({ text: '', type: 'info' });
         const err = validateEmail(email);
         if (err) { msg(err); setLoading(false); return; }
-        if (password.length < 6) { msg('La contraseña debe tener al menos 6 caracteres.'); setLoading(false); return; }
+        if (password.length < 6) { msg('Password must be at least 6 characters.'); setLoading(false); return; }
         try {
             if (isSignUp) {
                 const { data, error } = await supabase.auth.signUp({ email, password });
                 if (error) throw error;
                 if (data?.user) { setPendingUserId(data.user.id); setView('username'); }
-                else msg('Revisa tu email para confirmar tu cuenta.', 'info');
+                else msg('Check your email to confirm your account.', 'info');
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
@@ -153,13 +153,13 @@ export default function Auth() {
 
     const handleUsernameSubmit = async (e) => {
         e.preventDefault();
-        if (usernameStatus !== 'available') { msg('Elige un username válido y disponible.'); return; }
+        if (usernameStatus !== 'available') { msg('Please choose a valid and available username.'); return; }
         setView('profile');
     };
 
     const handleProfileSubmit = async (e) => {
         e.preventDefault();
-        if (!displayName.trim()) { msg('¿Cómo te llamamos?'); return; }
+        if (!displayName.trim()) { msg('Please enter your display name.'); return; }
         setLoading(true);
         try {
             const userId = pendingUserId || (await supabase.auth.getUser()).data.user?.id;
@@ -176,11 +176,11 @@ export default function Auth() {
     };
 
     const usernameHint = {
-        idle: username.length > 0 && username.length < 3 ? 'Al menos 3 caracteres' : 'Solo letras, números y _ (3–20 chars)',
-        checking: 'Verificando disponibilidad…',
-        available: `✓ @${username} está disponible`,
-        taken: `@${username} ya está en uso. Prueba con otro.`,
-        invalid: 'Solo letras minúsculas, números y guiones bajos',
+        idle: username.length > 0 && username.length < 3 ? 'At least 3 characters' : 'Letters, numbers, and underscores only (3–20 chars)',
+        checking: 'Checking availability…',
+        available: `✓ @${username} is available`,
+        taken: `@${username} is already taken. Try another.`,
+        invalid: 'Lowercase letters, numbers, and underscores only',
     };
 
     const steps = { welcome: 0, magic: 1, password: 1, username: 2, profile: 3 };
@@ -214,7 +214,7 @@ export default function Auth() {
                                 <div className="flex flex-col items-center gap-3 pt-4">
                                     <BrandLogo size={72} />
                                     <h1 className="text-4xl font-black tracking-tighter text-brand-dark uppercase italic">Hello Foodie!</h1>
-                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.25em]">Tu diario gastronómico personal</p>
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.25em]">Your personal culinary journal</p>
                                 </div>
 
                                 {/* Tab selector: Login vs Signup */}
@@ -223,13 +223,13 @@ export default function Auth() {
                                         onClick={() => setIsSignUp(false)}
                                         className={clsx('flex-1 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all',
                                             !isSignUp ? 'bg-white text-brand-dark shadow-sm' : 'text-slate-400 hover:text-slate-600')}>
-                                        Ya tengo cuenta
+                                        I have an account
                                     </button>
                                     <button id="tab-signup"
                                         onClick={() => setIsSignUp(true)}
                                         className={clsx('flex-1 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all',
                                             isSignUp ? 'bg-white text-brand-dark shadow-sm' : 'text-slate-400 hover:text-slate-600')}>
-                                        Soy nuevo
+                                        I'm new here
                                     </button>
                                 </div>
 
@@ -240,13 +240,13 @@ export default function Auth() {
                                         className="w-full flex items-center justify-center gap-3 bg-brand-orange text-white py-4 rounded-2xl font-black text-sm shadow-lg shadow-brand-orange/30 hover:shadow-brand-orange/40 active:scale-[0.97] transition-all relative overflow-hidden group">
                                         <div className="absolute inset-0 bg-white/15 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
                                         <Mail size={18} />
-                                        {isSignUp ? 'Crear cuenta con email ✨' : 'Entrar con enlace mágico ✨'}
+                                        {isSignUp ? 'Sign up with email ✨' : 'Sign in with magic link ✨'}
                                     </button>
 
                                     {/* Divider */}
                                     <div className="flex items-center gap-3">
                                         <div className="flex-1 h-px bg-slate-100" />
-                                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">o</span>
+                                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">or</span>
                                         <div className="flex-1 h-px bg-slate-100" />
                                     </div>
 
@@ -255,14 +255,14 @@ export default function Auth() {
                                         onClick={() => { setView('password'); setMessage({ text: '', type: 'info' }); }}
                                         className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-100 py-3.5 rounded-2xl font-black text-sm text-slate-500 hover:border-brand-orange/30 hover:text-brand-orange active:scale-[0.97] transition-all">
                                         <Lock size={16} />
-                                        {isSignUp ? 'Registrarme con contraseña' : 'Iniciar sesión con contraseña'}
+                                        {isSignUp ? 'Sign up with password' : 'Sign in with password'}
                                     </button>
                                 </div>
 
                                 <p className="text-[9px] text-slate-300 font-bold uppercase tracking-wider leading-relaxed">
-                                    Al continuar aceptas nuestros{' '}
-                                    <span className="text-brand-orange underline">Términos</span> y{' '}
-                                    <span className="text-brand-orange underline">Privacidad</span>
+                                    By continuing you agree to our{' '}
+                                    <span className="text-brand-orange underline">Terms</span> &{' '}
+                                    <span className="text-brand-orange underline">Privacy Policy</span>
                                 </p>
                             </motion.div>
 
@@ -272,29 +272,29 @@ export default function Auth() {
                         {view === 'magic' && (
                             <motion.form key="magic" {...slide} onSubmit={handleMagicLink} className="space-y-5">
                                 <button type="button" onClick={() => setView('welcome')} className="flex items-center gap-1 text-[11px] font-black text-slate-400 uppercase tracking-widest hover:text-brand-orange transition-colors">
-                                    <ArrowLeft size={14} /> Volver
+                                    <ArrowLeft size={14} /> Back
                                 </button>
                                 <div className="text-center space-y-1 py-2">
                                     <div className="w-14 h-14 bg-brand-orange/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <Sparkles className="text-brand-orange" size={28} />
                                     </div>
-                                    <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">Enlace mágico</h2>
-                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sin contraseñas, sin complicaciones ✨</p>
+                                    <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">Magic Link</h2>
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">No passwords, no hassle ✨</p>
                                 </div>
                                 <div className="relative">
                                     <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-orange/50" />
-                                    <input id="magic-email" type="email" placeholder="tu@email.com" value={email}
+                                    <input id="magic-email" type="email" placeholder="you@email.com" value={email}
                                         onChange={e => setEmail(e.target.value)} required
                                         className="w-full bg-slate-50 border border-slate-100 p-4 pl-11 rounded-2xl text-sm font-bold text-brand-dark focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all" />
                                 </div>
                                 {message.text && <MsgBanner message={message} />}
                                 <button id="btn-send-magic" type="submit" disabled={loading}
                                     className="w-full bg-brand-orange text-white font-black py-4 rounded-2xl shadow-lg shadow-brand-orange/30 active:scale-[0.97] transition-all flex items-center justify-center gap-2 disabled:opacity-60">
-                                    {loading ? <Loader2 size={18} className="animate-spin" /> : 'Enviar enlace mágico ✉️'}
+                                    {loading ? <Loader2 size={18} className="animate-spin" /> : 'Send magic link ✉️'}
                                 </button>
                                 <button type="button" onClick={() => setView('password')}
                                     className="w-full text-[11px] font-black text-slate-400 uppercase tracking-widest hover:text-brand-orange transition-colors py-1">
-                                    Usar contraseña en su lugar
+                                    Use password instead
                                 </button>
                             </motion.form>
                         )}
@@ -303,19 +303,19 @@ export default function Auth() {
                         {view === 'password' && (
                             <motion.form key="password" {...slide} onSubmit={handlePassword} className="space-y-4">
                                 <button type="button" onClick={() => setView('welcome')} className="flex items-center gap-1 text-[11px] font-black text-slate-400 uppercase tracking-widest hover:text-brand-orange transition-colors">
-                                    <ArrowLeft size={14} /> Volver
+                                    <ArrowLeft size={14} /> Back
                                 </button>
                                 <div className="text-center py-2">
                                     <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">
-                                        {isSignUp ? 'Crear cuenta' : 'Bienvenido de vuelta'}
+                                        {isSignUp ? 'Create account' : 'Welcome back'}
                                     </h2>
                                     <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1">
-                                        {isSignUp ? 'Regístrate con email y contraseña' : 'Ingresa con tu email y contraseña'}
+                                        {isSignUp ? 'Sign up with your email and password' : 'Sign in with your email and password'}
                                     </p>
                                 </div>
                                 <div className="relative">
                                     <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-orange/50" />
-                                    <input id="pw-email" type="email" placeholder="tu@email.com" value={email}
+                                    <input id="pw-email" type="email" placeholder="you@email.com" value={email}
                                         onChange={e => setEmail(e.target.value)} required
                                         className="w-full bg-slate-50 border border-slate-100 p-4 pl-11 rounded-2xl text-sm font-bold text-brand-dark focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all" />
                                 </div>
@@ -328,21 +328,21 @@ export default function Auth() {
                                 {message.text && <MsgBanner message={message} />}
                                 <button id="btn-pw-submit" type="submit" disabled={loading}
                                     className="w-full bg-brand-orange text-white font-black py-4 rounded-2xl shadow-lg shadow-brand-orange/30 active:scale-[0.97] transition-all flex items-center justify-center gap-2 disabled:opacity-60">
-                                    {loading ? <Loader2 size={18} className="animate-spin" /> : isSignUp ? 'Crear cuenta →' : 'Iniciar sesión →'}
+                                    {loading ? <Loader2 size={18} className="animate-spin" /> : isSignUp ? 'Create account →' : 'Sign in →'}
                                 </button>
                                 <div className="flex items-center justify-between">
                                     <button type="button" onClick={() => { setIsSignUp(!isSignUp); setMessage({ text: '', type: 'info' }); }}
                                         className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-brand-orange transition-colors">
-                                        {isSignUp ? '¿Ya tienes cuenta?' : '¿Sin cuenta? Regístrate'}
+                                        {isSignUp ? 'Already have an account?' : 'No account? Sign up'}
                                     </button>
                                     {!isSignUp && (
                                         <button type="button" onClick={async () => {
-                                            if (!email) { msg('Ingresa tu email primero.'); return; }
+                                            if (!email) { msg('Enter your email first.'); return; }
                                             const { error } = await supabase.auth.resetPasswordForEmail(email);
                                             if (error) msg(error.message);
-                                            else msg('Enlace de recuperación enviado 📬', 'info');
+                                            else msg('Recovery link sent 📬', 'info');
                                         }} className="text-[10px] font-black text-brand-orange uppercase tracking-widest hover:underline transition-colors">
-                                            ¿Olvidaste tu contraseña?
+                                            Forgot your password?
                                         </button>
                                     )}
                                 </div>
@@ -356,13 +356,13 @@ export default function Auth() {
                                     <div className="w-14 h-14 bg-brand-orange/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <AtSign className="text-brand-orange" size={28} />
                                     </div>
-                                    <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">Elige tu handle</h2>
-                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Así te encontrarán tus amigos</p>
+                                    <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">Pick your handle</h2>
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">This is how your friends will find you</p>
                                 </div>
                                 <div className="space-y-2">
                                     <div className="relative">
                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-orange font-black text-base select-none">@</span>
-                                        <input id="username-input" type="text" placeholder="tu_handle" value={username}
+                                        <input id="username-input" type="text" placeholder="your_handle" value={username}
                                             onChange={handleUsernameChange} maxLength={20} autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} required
                                             className={clsx('w-full bg-slate-50 border p-4 pl-9 pr-10 rounded-2xl text-sm font-bold text-brand-dark focus:outline-none focus:ring-4 transition-all',
                                                 usernameStatus === 'available' && 'border-emerald-200 focus:ring-emerald-100',
@@ -384,9 +384,9 @@ export default function Auth() {
                                 {message.text && <MsgBanner message={message} />}
                                 <button id="btn-username-submit" type="submit" disabled={usernameStatus !== 'available'}
                                     className="w-full bg-brand-orange text-white font-black py-4 rounded-2xl shadow-lg shadow-brand-orange/30 active:scale-[0.97] transition-all disabled:opacity-40 disabled:pointer-events-none">
-                                    Este es el mío →
+                                    This is mine →
                                 </button>
-                                <p className="text-[9px] text-center text-slate-300 uppercase font-bold tracking-widest">Puedes cambiarlo después en Configuración</p>
+                                <p className="text-[9px] text-center text-slate-300 uppercase font-bold tracking-widest">You can change this later in Settings</p>
                             </motion.form>
                         )}
 
@@ -397,27 +397,27 @@ export default function Auth() {
                                     <div className="w-14 h-14 bg-brand-green/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <User className="text-brand-green" size={28} />
                                     </div>
-                                    <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">Casi listos...</h2>
-                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">¿Cómo quieres que te vean?</p>
+                                    <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">Almost there...</h2>
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">How do you want to appear to others?</p>
                                 </div>
                                 <div className="space-y-3">
                                     <div className="relative">
                                         <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-orange/50" />
-                                        <input id="profile-displayname" type="text" placeholder="Tu nombre público *" value={displayName}
+                                        <input id="profile-displayname" type="text" placeholder="Your display name *" value={displayName}
                                             onChange={e => setDisplayName(e.target.value)} required maxLength={60}
                                             className="w-full bg-slate-50 border border-slate-100 p-4 pl-11 rounded-2xl text-sm font-bold text-brand-dark focus:outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all" />
                                     </div>
                                     <p className="text-[10px] text-slate-400 font-bold text-center">
-                                        🖼️ Foto de perfil — puedes agregarla después desde tu perfil
+                                        🖼️ Profile photo — you can add one later from your profile
                                     </p>
                                 </div>
                                 {message.text && <MsgBanner message={message} />}
                                 <button id="btn-profile-submit" type="submit" disabled={loading}
                                     className="w-full bg-brand-orange text-white font-black py-4 rounded-2xl shadow-lg shadow-brand-orange/30 active:scale-[0.97] transition-all flex items-center justify-center gap-2 disabled:opacity-60 relative overflow-hidden group">
                                     <div className="absolute inset-0 bg-white/15 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
-                                    {loading ? <Loader2 size={18} className="animate-spin" /> : '¡Listo! Empecemos 🍽️'}
+                                    {loading ? <Loader2 size={18} className="animate-spin" /> : "Let's go! 🍽️"}
                                 </button>
-                                <p className="text-[9px] text-center text-slate-300 uppercase font-bold tracking-widest">Puedes editar tu perfil en cualquier momento</p>
+                                <p className="text-[9px] text-center text-slate-300 uppercase font-bold tracking-widest">You can edit your profile anytime</p>
                             </motion.form>
                         )}
 

@@ -223,10 +223,10 @@ export default function Onboarding() {
                 >
                     <div className="text-7xl">🎉</div>
                     <h1 className="text-4xl font-black text-brand-dark uppercase tracking-tight">
-                        ¡Todo listo{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}!
+                        You're all set{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}!
                     </h1>
                     <p className="text-[13px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-                        Tu aventura foodie comienza ahora 🍽️
+                        Your foodie adventure starts now 🍽️
                     </p>
                     <motion.div
                         initial={{ opacity: 0 }}
