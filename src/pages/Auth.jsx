@@ -39,21 +39,52 @@ export default function Auth() {
         const step = searchParams.get('step');
         if (!step) return;
 
-        const checkAndRoute = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-            const { data: profile } = await supabase.from('profiles').select('username, display_name').eq('id', user.id).single();
+        // Listen for auth state change — this fires once the session is
+        // established from the URL hash (magic link / OAuth callback)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (!session?.user) return;
+
+            // Unsubscribe immediately — we only need this once
+            subscription.unsubscribe();
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('username, display_name')
+                .eq('id', session.user.id)
+                .single();
+
             if (profile?.username) {
                 navigate(getAndClearRedirectUrl());
             } else {
-                setPendingUserId(user.id);
+                setPendingUserId(session.user.id);
                 if (profile?.display_name) setDisplayName(profile.display_name);
                 setView('username');
             }
-        };
+        });
 
-        checkAndRoute();
+        // Also try immediately in case the session is already established
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (!session?.user) return;
+            subscription.unsubscribe();
+
+            supabase.from('profiles')
+                .select('username, display_name')
+                .eq('id', session.user.id)
+                .single()
+                .then(({ data: profile }) => {
+                    if (profile?.username) {
+                        navigate(getAndClearRedirectUrl());
+                    } else {
+                        setPendingUserId(session.user.id);
+                        if (profile?.display_name) setDisplayName(profile.display_name);
+                        setView('username');
+                    }
+                });
+        });
+
+        return () => subscription.unsubscribe();
     }, [searchParams, navigate]);
+
 
     const msg = (text, type = 'error') => setMessage({ text, type });
 

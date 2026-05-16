@@ -179,7 +179,11 @@ export default function App() {
           libraries={libraries}
         >
           <Routes>
-            <Route path="/auth" element={!session ? <Auth /> : <Navigate to="/" />} />
+            <Route path="/auth" element={
+              !session || new URLSearchParams(window.location.search).get('step')
+                ? <Auth />
+                : <Navigate to="/" />
+            } />
 
             {/* Onboarding is outside the main Layout for fullscreen experience */}
             <Route
