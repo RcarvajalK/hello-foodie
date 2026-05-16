@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Star, MapPin, Calendar, User, Users, CheckCircle, Edit3, X, Save, Trash2, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
+import { Star, MapPin, Calendar, User, Users, CheckCircle, Edit3, X, Save, Trash2, ChevronLeft, ChevronRight, Share2, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { useStore } from '../lib/store';
@@ -196,9 +196,14 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                         </p>
                     </div>
                     <div className="flex flex-col items-end gap-1.5 px-1.5">
-                        <div className="flex items-center gap-1 text-brand-orange bg-brand-orange/5 px-2 py-1 rounded-full border border-brand-orange/10">
-                            <Star size={9} fill="currentColor" />
-                            <span className="text-[10px] font-black tabular-nums leading-none mt-0.5">{restaurant.rating || '---'}</span>
+                        <div className="flex items-center gap-1.5">
+                            {restaurant.is_favorite && (
+                                <Heart size={13} className="text-rose-400 fill-rose-400" />
+                            )}
+                            <div className="flex items-center gap-1 text-brand-orange bg-brand-orange/5 px-2 py-1 rounded-full border border-brand-orange/10">
+                                <Star size={9} fill="currentColor" />
+                                <span className="text-[10px] font-black tabular-nums leading-none mt-0.5">{restaurant.rating || '---'}</span>
+                            </div>
                         </div>
                         <div className="flex items-center gap-1">
                             {!restaurant.is_sponsored && <><ShareButton /><EditButton /></>}
@@ -234,6 +239,11 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                         <p className="text-[8px] text-brand-orange-light font-black uppercase tracking-[0.2em]">{restaurant.cuisine}</p>
                     </div>
                     <div className="absolute top-4 right-4 flex gap-1.5">
+                        {restaurant.is_favorite && (
+                            <div className="bg-white/95 backdrop-blur-sm p-2 rounded-full shadow-lg pointer-events-none">
+                                <Heart size={11} className="text-rose-400 fill-rose-400" />
+                            </div>
+                        )}
                         <div className="bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full flex items-center shadow-lg pointer-events-none">
                             <Star size={10} className="text-brand-orange fill-brand-orange mr-1" />
                             <span className="text-[10px] font-black text-brand-dark">{restaurant.rating || '---'}</span>
@@ -303,6 +313,9 @@ export default function RestaurantCard({ restaurant, variant = 'list-photos', on
                                 <div className="bg-brand-orange/10 p-1.5 rounded-xl border border-brand-orange/5">
                                     <BrandLogo size={18} animate={false} />
                                 </div>
+                            )}
+                            {restaurant.is_favorite && (
+                                <Heart size={18} className="text-rose-400 fill-rose-400 shrink-0" />
                             )}
                         </div>
                         <div className="flex items-center text-gray-400 text-[10px] gap-4 font-black uppercase tracking-widest">

@@ -1,23 +1,18 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../lib/store';
 
 export default function AlphaNDA() {
     const navigate = useNavigate();
     const [accepted, setAccepted] = useState(false);
+    const [wantsCopy, setWantsCopy] = useState(false);
     const updateProfile = useStore(state => state.updateProfile);
 
     const handleAccept = async () => {
-        // Save to DB so it persists across devices
         await updateProfile({ has_signed_nda: true });
-        
-        if (window.confirm('¿Deseas recibir una copia del NDA en tu correo?')) {
-            alert('¡Copia enviada a tu correo registrado!');
-        }
-        
-        // Return to home
+        // wantsCopy is noted — email delivery can be wired in a future sprint
         navigate('/', { replace: true });
     };
 
@@ -71,10 +66,11 @@ export default function AlphaNDA() {
                 initial={{ y: 40, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="pt-8 pb-6 max-w-sm mx-auto w-full"
+                className="pt-8 pb-6 max-w-sm mx-auto w-full space-y-3"
             >
-                <label className="flex items-center gap-4 mb-6 p-5 bg-white/5 rounded-2xl border border-white/10 cursor-pointer active:scale-[0.98] transition-transform">
-                    <div className="relative flex items-center">
+                {/* Accept terms checkbox */}
+                <label className="flex items-center gap-4 p-5 bg-white/5 rounded-2xl border border-white/10 cursor-pointer active:scale-[0.98] transition-transform">
+                    <div className="relative flex items-center shrink-0">
                         <input 
                             type="checkbox" 
                             className="peer appearance-none w-7 h-7 border-2 border-white/20 rounded-xl checked:bg-brand-orange checked:border-brand-orange transition-all"
@@ -85,8 +81,26 @@ export default function AlphaNDA() {
                     </div>
                     <span className="text-[9px] font-black uppercase text-white/80 tracking-widest leading-tight">I accept the terms and<br/>conditions</span>
                 </label>
+
+                {/* Optional copy checkbox */}
+                <label className="flex items-center gap-4 p-4 bg-white/3 rounded-2xl border border-white/5 cursor-pointer active:scale-[0.98] transition-transform">
+                    <div className="relative flex items-center shrink-0">
+                        <input 
+                            type="checkbox"
+                            className="peer appearance-none w-6 h-6 border-2 border-white/15 rounded-lg checked:bg-brand-orange/80 checked:border-brand-orange/80 transition-all"
+                            checked={wantsCopy}
+                            onChange={(e) => setWantsCopy(e.target.checked)}
+                        />
+                        <CheckCircle2 size={14} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" strokeWidth={3} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Mail size={13} className="text-white/40 shrink-0" />
+                        <span className="text-[9px] font-black uppercase text-white/50 tracking-widest leading-tight">Send me a copy via email</span>
+                    </div>
+                </label>
                 
                 <button
+                    id="btn-enter-alpha"
                     onClick={handleAccept}
                     disabled={!accepted}
                     className="w-full bg-white text-brand-dark disabled:bg-white/20 disabled:text-white/40 font-black py-5 rounded-[2rem] shadow-xl shadow-brand-dark/50 active:scale-95 transition-all text-[11px] uppercase tracking-widest"

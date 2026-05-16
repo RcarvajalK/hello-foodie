@@ -25,7 +25,7 @@ export default function Visited() {
     const [hasRestoredScroll, setHasRestoredScroll] = useState(false);
 
     const handleDelete = async (id) => {
-        if (window.confirm('¿Borrar este restaurante de tu historial?')) {
+        if (window.confirm('Remove this restaurant from your history?')) {
             await deleteRestaurant(id);
         }
     };

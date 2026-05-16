@@ -547,6 +547,34 @@ export default function Profile() {
                                 </div>
                             </div>
 
+                            {/* Section: Favorites Privacy */}
+                            <div className="space-y-4 mb-12">
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-300">Favorites Privacy</h4>
+                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-relaxed">
+                                    Who can see your favorites list?
+                                </p>
+                                <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
+                                    {[
+                                        { value: 'private', label: '🔒 Only me' },
+                                        { value: 'circles', label: '👥 My Circles' },
+                                        { value: 'public',  label: '🌐 Everyone' },
+                                    ].map(opt => (
+                                        <button
+                                            key={opt.value}
+                                            onClick={() => updateProfile({ favorites_visibility: opt.value })}
+                                            className={clsx(
+                                                'flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all',
+                                                (profile?.favorites_visibility ?? 'private') === opt.value
+                                                    ? 'bg-white text-brand-dark shadow-sm'
+                                                    : 'text-slate-400 hover:text-slate-600'
+                                            )}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
 
                             {/* Section: Danger Zone */}
                             <div className="space-y-4">
