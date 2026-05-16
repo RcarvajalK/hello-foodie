@@ -210,25 +210,52 @@ export default function Auth() {
 
                         {/* ── WELCOME ── */}
                         {view === 'welcome' && (
-                            <motion.div key="welcome" {...slide} className="space-y-6 text-center">
+                            <motion.div key="welcome" {...slide} className="space-y-5 text-center">
                                 <div className="flex flex-col items-center gap-3 pt-4">
                                     <BrandLogo size={72} />
                                     <h1 className="text-4xl font-black tracking-tighter text-brand-dark uppercase italic">Hello Foodie!</h1>
                                     <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.25em]">Tu diario gastronómico personal</p>
                                 </div>
 
-                                <div className="space-y-3 pt-2">
-                                    {/* Magic Link — CTA principal */}
-                                    <button id="btn-magic" onClick={() => { setView('magic'); setMessage({ text: '', type: 'info' }); }}
+                                {/* Tab selector: Login vs Signup */}
+                                <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
+                                    <button id="tab-login"
+                                        onClick={() => setIsSignUp(false)}
+                                        className={clsx('flex-1 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all',
+                                            !isSignUp ? 'bg-white text-brand-dark shadow-sm' : 'text-slate-400 hover:text-slate-600')}>
+                                        Ya tengo cuenta
+                                    </button>
+                                    <button id="tab-signup"
+                                        onClick={() => setIsSignUp(true)}
+                                        className={clsx('flex-1 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all',
+                                            isSignUp ? 'bg-white text-brand-dark shadow-sm' : 'text-slate-400 hover:text-slate-600')}>
+                                        Soy nuevo
+                                    </button>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {/* Magic Link — funciona para login y signup */}
+                                    <button id="btn-magic"
+                                        onClick={() => { setView('magic'); setMessage({ text: '', type: 'info' }); }}
                                         className="w-full flex items-center justify-center gap-3 bg-brand-orange text-white py-4 rounded-2xl font-black text-sm shadow-lg shadow-brand-orange/30 hover:shadow-brand-orange/40 active:scale-[0.97] transition-all relative overflow-hidden group">
                                         <div className="absolute inset-0 bg-white/15 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
-                                        <Mail size={18} /> Continuar con email
+                                        <Mail size={18} />
+                                        {isSignUp ? 'Crear cuenta con email ✨' : 'Entrar con enlace mágico ✨'}
                                     </button>
 
-                                    {/* Password link */}
-                                    <button id="btn-to-password" onClick={() => { setView('password'); setMessage({ text: '', type: 'info' }); }}
-                                        className="w-full text-[11px] font-black text-slate-400 uppercase tracking-widest hover:text-brand-orange transition-colors py-2">
-                                        ¿Prefieres contraseña? →
+                                    {/* Divider */}
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex-1 h-px bg-slate-100" />
+                                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">o</span>
+                                        <div className="flex-1 h-px bg-slate-100" />
+                                    </div>
+
+                                    {/* Password option */}
+                                    <button id="btn-to-password"
+                                        onClick={() => { setView('password'); setMessage({ text: '', type: 'info' }); }}
+                                        className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-100 py-3.5 rounded-2xl font-black text-sm text-slate-500 hover:border-brand-orange/30 hover:text-brand-orange active:scale-[0.97] transition-all">
+                                        <Lock size={16} />
+                                        {isSignUp ? 'Registrarme con contraseña' : 'Iniciar sesión con contraseña'}
                                     </button>
                                 </div>
 
@@ -238,6 +265,7 @@ export default function Auth() {
                                     <span className="text-brand-orange underline">Privacidad</span>
                                 </p>
                             </motion.div>
+
                         )}
 
                         {/* ── MAGIC LINK ── */}
