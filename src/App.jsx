@@ -108,26 +108,46 @@ export default function App() {
     }
 
     // Splash screen timer
-    const timer = setTimeout(() => {
+    const splashTimer = setTimeout(() => {
       setShowSplash(false);
     }, 2500);
+
+    const loadData = async (userSession) => {
+      if (userSession?.user) {
+        try {
+          await useStore.getState().fetchProfile();
+          await useStore.getState().fetchRestaurants();
+          await useStore.getState().fetchRankings();
+        } catch (err) {
+          console.error("Error loading initial user data:", err);
+        }
+      }
+      setLoading(false);
+    };
 
     // Check active session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
-      setLoading(false);
+      loadData(currentSession);
     }).catch(err => {
       console.error("Supabase Session Error:", err);
       setLoading(false);
     });
 
     // Listen for changes on auth state
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       setSession(currentSession);
+      if (event === 'SIGNED_IN' && currentSession?.user) {
+        setLoading(true);
+        await loadData(currentSession);
+      } else if (event === 'SIGNED_OUT') {
+        // Clear store data on logout
+        useStore.setState({ profile: null, restaurants: [], rankings: [], userRank: null });
+      }
     });
 
     return () => {
-      clearTimeout(timer);
+      clearTimeout(splashTimer);
       if (authListener?.subscription) {
         authListener.subscription.unsubscribe();
       }

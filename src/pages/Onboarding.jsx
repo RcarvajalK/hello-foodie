@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../lib/store';
 import { useNavigate } from 'react-router-dom';
@@ -29,6 +29,20 @@ export default function Onboarding() {
     );
     const [autocomplete, setAutocomplete] = useState(null);
     const autocompleteInputRef = useRef(null);
+
+    // Sync profile data dynamically if it loads after component mount
+    useEffect(() => {
+        if (profile) {
+            setData(prev => ({
+                full_name: prev.full_name || profile.full_name || '',
+                favorite_cuisines: prev.favorite_cuisines.length > 0 ? prev.favorite_cuisines : (profile.favorite_cuisines || []),
+                example_places: prev.example_places || profile.example_places || ''
+            }));
+            if (profile.example_places && selectedPlaces.length === 0) {
+                setSelectedPlaces(profile.example_places.split(',').map(s => s.trim()).filter(Boolean));
+            }
+        }
+    }, [profile]);
 
     const handleNext = () => setStep(s => s + 1);
     const handleSkip = async () => {

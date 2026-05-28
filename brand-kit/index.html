@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello Foodie! | Brand Identity Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,700;0,900;1,900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-orange: #FB923C;
+            --brand-rose: #F43F5E;
+            --brand-green: #4ECDC4;
+            --brand-yellow: #FFE66D;
+            --brand-dark: #111827;
+            --brand-light: #F9FAFB;
+            --brand-gray: #9CA3AF;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--brand-light); color: var(--brand-dark); line-height: 1.6; }
+        
+        header { 
+            background: white; 
+            padding: 5rem 2rem; 
+            text-align: center; 
+            border-bottom: 1px solid rgba(0,0,0,0.05); 
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; }
+        
+        section { margin-bottom: 8rem; }
+        
+        h1 { 
+            font-size: 4rem; 
+            font-weight: 800; 
+            background: linear-gradient(135deg, var(--brand-orange), var(--brand-rose)); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            letter-spacing: -0.02em;
+        }
+
+        h2 { 
+            font-size: 2.2rem; 
+            font-weight: 800; 
+            margin-bottom: 3rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 1.5rem; 
+        }
+
+        h2::after { content: ""; flex: 1; height: 2px; background: rgba(0,0,0,0.08); }
+
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); 
+            gap: 2.5rem; 
+        }
+
+        .card { 
+            background: white; 
+            border-radius: 2.5rem; 
+            padding: 3.5rem; 
+            border: 1px solid rgba(0,0,0,0.05); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        }
+
+        .card.dark { background: var(--brand-dark); color: white; border: none; }
+
+        .label { 
+            font-size: 0.8rem; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 0.15em; 
+            color: var(--brand-gray); 
+            margin-bottom: 2.5rem; 
+        }
+
+        .download-btn { 
+            margin-top: 2.5rem; 
+            padding: 0.8rem 1.8rem; 
+            background: var(--brand-light); 
+            border-radius: 1.2rem; 
+            font-size: 0.9rem; 
+            font-weight: 700; 
+            color: var(--brand-dark); 
+            text-decoration: none; 
+            transition: all 0.2s; 
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .download-btn:hover { background: var(--brand-orange); color: white; border-color: var(--brand-orange); }
+
+        .color-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; }
+        .color-card { background: white; border-radius: 2rem; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); }
+        .color-swatch { height: 120px; }
+        .color-info { padding: 1.5rem; }
+        .color-hex { font-family: monospace; color: var(--brand-gray); font-size: 1.1rem; }
+
+        .typo-display { 
+            font-size: 4.5rem; 
+            font-weight: 800; 
+            line-height: 1.1; 
+            margin-bottom: 2rem; 
+            color: var(--brand-dark);
+        }
+
+        .subsection-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 2.5rem;
+            color: var(--brand-dark);
+            border-left: 4px solid var(--brand-orange);
+            padding-left: 1.5rem;
+        }
+
+        footer { text-align: center; padding: 8rem 2rem; color: var(--brand-gray); font-size: 1rem; border-top: 1px solid rgba(0,0,0,0.05); }
+        
+        svg { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+
+    <!-- Global SVG Definitions for Gradients -->
+    <svg style="width:0; height:0; position:absolute;" aria-hidden="true">
+        <defs>
+            <linearGradient id="brandGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#FB923C" />
+                <stop offset="100%" stop-color="#F43F5E" />
+            </linearGradient>
+            <!-- Mobile App Icon Split Gradient -->
+            <linearGradient id="splitLeft" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#FB923C" />
+                <stop offset="100%" stop-color="#F43F5E" />
+            </linearGradient>
+            <linearGradient id="splitRight" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#FFB347" />
+                <stop offset="100%" stop-color="#FF6B6B" />
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <header>
+        <p style="text-transform: uppercase; letter-spacing: 0.4em; color: var(--brand-gray); margin-bottom: 0.8rem; font-weight: 700; font-size: 0.9rem;">Guía Maestra de Marca</p>
+        <h1>Hello Foodie!</h1>
+    </header>
+
+    <div class="container">
+        
+        <!-- Identity Section -->
+        <section>
+            <h2>Identidad Corporativa</h2>
+            <div class="grid">
+                <div class="card" style="grid-column: span 2;">
+                    <div class="label">Logotipo Principal (In-App)</div>
+                    <img src="assets/logo-horizontal.svg" alt="Logo Principal Horizontal" style="max-width: 80%;" />
+                    <p style="font-size: 0.9rem; color: var(--brand-gray); margin-top: 1rem;">Uso recomendado: Header de la app, pantallas de login y comunicaciones corporativas.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Monochrome Section -->
+        <section>
+            <h2>Versiones Monocromáticas</h2>
+            <div class="grid">
+                <div class="card">
+                    <div class="label">Negro (Light Mode)</div>
+                    <svg width="400" height="120" viewBox="0 0 600 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g transform="translate(20, 15)">
+                            <path d="M50 5C27.9 5 10 22.9 10 45C10 75 50 115 50 115C50 115 90 75 90 45C90 22.9 72.1 5 50 5Z" fill="#111827" />
+                            <g transform="translate(28, 32) scale(0.9)">
+                                <path d="M12 25V42H16V25C20 25 22 22 22 18V5H19V18H17V5H14V18H12V5H9V18H7V5H4V18C4 22 6 25 10 25H12Z" fill="white" />
+                                <g transform="translate(28, 0)">
+                                    <ellipse cx="8" cy="14" rx="8" ry="11" fill="white" />
+                                    <rect x="6" y="24" width="4" height="18" rx="2" fill="white" />
+                                </g>
+                            </g>
+                        </g>
+                        <text x="140" y="90" fill="#111827" style="font-family: 'Inter', sans-serif; font-weight: 900; font-size: 56px; font-style: italic;">HELLO FOODIE!</text>
+                    </svg>
+                </div>
+                <div class="card dark">
+                    <div class="label">Blanco (Dark Mode)</div>
+                    <svg width="400" height="120" viewBox="0 0 600 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g transform="translate(20, 15)">
+                            <path d="M50 5C27.9 5 10 22.9 10 45C10 75 50 115 50 115C50 115 90 75 90 45C90 22.9 72.1 5 50 5Z" fill="white" />
+                            <g transform="translate(28, 32) scale(0.9)">
+                                <path d="M12 25V42H16V25C20 25 22 22 22 18V5H19V18H17V5H14V18H12V5H9V18H7V5H4V18C4 22 6 25 10 25H12Z" fill="#111827" />
+                                <g transform="translate(28, 0)">
+                                    <ellipse cx="8" cy="14" rx="8" ry="11" fill="#111827" />
+                                    <rect x="6" y="24" width="4" height="18" rx="2" fill="#111827" />
+                                </g>
+                            </g>
+                        </g>
+                        <text x="140" y="90" fill="white" style="font-family: 'Inter', sans-serif; font-weight: 900; font-size: 56px; font-style: italic;">HELLO FOODIE!</text>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- Color Palette -->
+        <section id="palette">
+            <h2>Paleta de Colores</h2>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--brand-orange);"></div>
+                    <div class="color-info">
+                        <div style="font-weight: 800;">Orange Primary</div>
+                        <div class="color-hex">#FB923C</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--brand-rose);"></div>
+                    <div class="color-info">
+                        <div style="font-weight: 800;">Rose Primary</div>
+                        <div class="color-hex">#F43F5E</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--brand-green);"></div>
+                    <div class="color-info">
+                        <div style="font-weight: 800;">Minty Accent</div>
+                        <div class="color-hex">#4ECDC4</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--brand-yellow);"></div>
+                    <div class="color-info">
+                        <div style="font-weight: 800;">Warning Yellow</div>
+                        <div class="color-hex">#FFE66D</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--brand-dark);"></div>
+                    <div class="color-info">
+                        <div style="font-weight: 800;">Deep Navy</div>
+                        <div class="color-hex">#111827</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography Section -->
+        <section id="typography">
+            <h2>Tipografía</h2>
+            <div class="typo-box">
+                <p class="label">Fuente: Inter / ExtraBold</p>
+                <div class="typo-display">Hello Foodie!</div>
+                <div style="font-size: 1.5rem; margin-bottom: 2rem; color: var(--brand-gray); font-weight: 700;">
+                    ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890<br>
+                    abcdefghijklmnopqrstuvwxyz
+                </div>
+                <div style="display: flex; gap: 3rem; font-weight: 800; text-transform: uppercase; font-size: 0.9rem; color: var(--brand-gray);">
+                    <span>Style: Normal</span>
+                    <span>Weight: 800</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Logos Section -->
+        <section id="logos">
+            <h2>Sistema de Logos</h2>
+
+            <div style="margin-bottom: 4rem;">
+                <h3 class="subsection-title">Logos Principales</h3>
+                <div class="grid">
+                    <div class="card">
+                        <div class="label">Logo Principal - Horizontal</div>
+                        <img src="assets/logo-horizontal.svg" alt="Logo Horizontal Gradiente" />
+                    </div>
+                    <div class="card">
+                        <div class="label">Logo Principal - Full Gradient</div>
+                        <img src="assets/logo-full-gradient.svg" alt="Logo Full Gradient" />
+                    </div>
+                    <div class="card">
+                        <div class="label">Logo Principal - Icono</div>
+                        <img src="assets/logo-primary.svg" alt="Logo Primary" />
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 4rem;">
+                <h3 class="subsection-title">Variantes de Color</h3>
+                <div class="grid">
+                    <div class="card">
+                        <div class="label">Versión Naranja</div>
+                        <img src="assets/logo-orange.svg" alt="Logo Naranja" />
+                    </div>
+                    <div class="card">
+                        <div class="label">Versión Rosa</div>
+                        <img src="assets/logo-rose.svg" alt="Logo Rosa" />
+                    </div>
+                    <div class="card">
+                        <div class="label">Icono Gradiente</div>
+                        <img src="assets/logo-icon.svg" alt="Icono Gradiente" />
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 4rem;">
+                <h3 class="subsection-title">Iconos para App</h3>
+                <div class="grid">
+                    <div class="card">
+                        <div class="label">App Icon / Instalación</div>
+                        <img src="assets/logo-app-icon.svg" alt="App Icon" />
+                        <p style="font-size: 0.9rem; color: var(--brand-gray); margin-top: 1rem;">Icono oficial para instalación y pantalla de inicio.</p>
+                    </div>
+                    <div class="card">
+                        <div class="label">Icono Instalado - Redondo</div>
+                        <img src="assets/logo-installed-icon.svg" alt="Installed App Icon" />
+                        <p style="font-size: 0.9rem; color: var(--brand-gray); margin-top: 1rem;">Versión redondeada para iconos de aplicación instalados.</p>
+                    </div>
+                    <div class="card" style="background: var(--brand-light);">
+                        <div class="label">Icono de Instalación (Escritorio / Móvil)</div>
+                        <img src="assets/logo-app-mobile-icon.svg" alt="Icono App Móvil" style="width: 150px; border-radius: 20%; box-shadow: 0 10px 30px rgba(0,0,0,0.1);" />
+                        <p style="font-size: 0.9rem; color: var(--brand-gray); margin-top: 1rem;">Isotipo de gota/pin invertido para iconos de aplicación instalados en pantallas de inicio y escritorio. Se omite la tipografía para optimizar legibilidad en tamaños pequeños.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="subsection-title">Versiones Monocromáticas</h3>
+                <div class="grid">
+                    <div class="card">
+                        <div class="label">Monocromo - Negro</div>
+                        <img src="assets/logo-monochrome-dark.svg" alt="Logo Monocromo Negro" />
+                    </div>
+                    <div class="card dark">
+                        <div class="label">Monocromo - Blanco</div>
+                        <img src="assets/logo-monochrome-light.svg" alt="Logo Monocromo Blanco" />
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer>
+        &copy; 2026 Hello Foodie! App. Propiedad de Production Technology.
+    </footer>
+
+</body>
+</html>

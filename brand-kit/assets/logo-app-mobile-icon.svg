@@ -1,0 +1,27 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pinGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#FFB547"/>
+      <stop offset="40%" stop-color="#FB923C"/>
+      <stop offset="100%" stop-color="#E11D48"/>
+    </linearGradient>
+    <mask id="iconMask">
+      <rect width="512" height="512" fill="white"/>
+      
+      <!-- Fork -->
+      <path d="M 129 120 Q 129 110 136 110 Q 143 110 143 120 L 143 180 L 149 180 L 149 120 Q 149 110 156 110 Q 163 110 163 120 L 163 180 L 169 180 L 169 120 Q 169 110 176 110 Q 183 110 183 120 L 183 180 L 189 180 L 189 120 Q 189 110 196 110 Q 203 110 203 120 L 203 200 C 203 230 176 250 176 260 L 176 500 L 156 500 L 156 260 C 156 250 129 230 129 200 Z" fill="black"/>
+      
+      <!-- Spoon -->
+      <path d="M 346 110 C 316 110 300 135 300 170 C 300 210 330 240 336 250 L 336 500 L 356 500 L 356 250 C 362 240 392 210 392 170 C 392 135 376 110 346 110 Z" fill="black"/>
+    </mask>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="15" flood-color="#E11D48" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <!-- Pin Drop shape -->
+    <path d="M 256 460 C 380 340 436 280 436 200 A 180 180 0 0 0 76 200 C 76 280 132 340 256 460 Z" 
+          fill="url(#pinGrad)" mask="url(#iconMask)"/>
+  </g>
+</svg>

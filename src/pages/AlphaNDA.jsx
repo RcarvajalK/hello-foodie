@@ -8,12 +8,25 @@ export default function AlphaNDA() {
     const navigate = useNavigate();
     const [accepted, setAccepted] = useState(false);
     const [wantsCopy, setWantsCopy] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
     const updateProfile = useStore(state => state.updateProfile);
 
     const handleAccept = async () => {
-        await updateProfile({ has_signed_nda: true });
-        // wantsCopy is noted — email delivery can be wired in a future sprint
-        navigate('/', { replace: true });
+        setIsSaving(true);
+        setErrorMsg('');
+        try {
+            const { error } = await updateProfile({ has_signed_nda: true });
+            if (error) {
+                setErrorMsg(error.message);
+                setIsSaving(false);
+            } else {
+                navigate('/', { replace: true });
+            }
+        } catch (err) {
+            setErrorMsg(err.message || 'An unexpected error occurred.');
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -99,13 +112,19 @@ export default function AlphaNDA() {
                     </div>
                 </label>
                 
+                {errorMsg && (
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl text-[10px] font-black uppercase tracking-wider text-center leading-relaxed">
+                        {errorMsg}
+                    </div>
+                )}
+                
                 <button
                     id="btn-enter-alpha"
                     onClick={handleAccept}
-                    disabled={!accepted}
-                    className="w-full bg-white text-brand-dark disabled:bg-white/20 disabled:text-white/40 font-black py-5 rounded-[2rem] shadow-xl shadow-brand-dark/50 active:scale-95 transition-all text-[11px] uppercase tracking-widest"
+                    disabled={!accepted || isSaving}
+                    className="w-full bg-white text-brand-dark disabled:bg-white/20 disabled:text-white/40 font-black py-5 rounded-[2rem] shadow-xl shadow-brand-dark/50 active:scale-95 transition-all text-[11px] uppercase tracking-widest flex items-center justify-center gap-2"
                 >
-                    Enter Alpha
+                    {isSaving ? 'Processing...' : 'Enter Alpha'}
                 </button>
             </motion.div>
         </div>

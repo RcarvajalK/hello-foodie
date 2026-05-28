@@ -21,7 +21,7 @@ function useDebouncedCallback(fn, delay) {
 const slide = { initial: { opacity: 0, x: 30 }, animate: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -30 } };
 
 export default function Auth() {
-    const [view, setView] = useState('welcome'); // welcome | magic | password | username | profile
+    const [view, setView] = useState('welcome'); // welcome | magic | password | check-email | username | profile
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -140,8 +140,16 @@ export default function Auth() {
             if (isSignUp) {
                 const { data, error } = await supabase.auth.signUp({ email, password });
                 if (error) throw error;
-                if (data?.user) { setPendingUserId(data.user.id); setView('username'); }
-                else msg('Check your email to confirm your account.', 'info');
+                if (data?.user) {
+                    if (data.session) {
+                        setPendingUserId(data.user.id);
+                        setView('username');
+                    } else {
+                        setView('check-email');
+                    }
+                } else {
+                    msg('Check your email to confirm your account.', 'info');
+                }
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
@@ -183,7 +191,7 @@ export default function Auth() {
         invalid: 'Lowercase letters, numbers, and underscores only',
     };
 
-    const steps = { welcome: 0, magic: 1, password: 1, username: 2, profile: 3 };
+    const steps = { welcome: 0, magic: 1, password: 1, 'check-email': 1, username: 2, profile: 3 };
     const totalSteps = 4;
 
     return (
@@ -347,6 +355,39 @@ export default function Auth() {
                                     )}
                                 </div>
                             </motion.form>
+                        )}
+
+                        {/* ── CHECK EMAIL ── */}
+                        {view === 'check-email' && (
+                            <motion.div key="check-email" {...slide} className="space-y-5 text-center">
+                                <div className="flex flex-col items-center gap-3 pt-4">
+                                    <div className="w-16 h-16 bg-brand-orange/10 rounded-[1.5rem] flex items-center justify-center mb-2">
+                                        <Mail size={32} className="text-brand-orange" />
+                                    </div>
+                                    <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">Check your email!</h2>
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-relaxed">
+                                        We sent a confirmation link to:<br/>
+                                        <span className="text-brand-orange lowercase font-black select-all">{email}</span>
+                                    </p>
+                                </div>
+                                <div className="bg-[#FAFAFA] border border-slate-100 p-6 rounded-2xl text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-relaxed text-left space-y-3">
+                                    <p className="flex gap-2">
+                                        <span className="text-brand-orange">1.</span>
+                                        <span>Click the link in the email to activate your account.</span>
+                                    </p>
+                                    <p className="flex gap-2">
+                                        <span className="text-brand-orange">2.</span>
+                                        <span>Once confirmed, return here to choose your foodie handle and set up your profile.</span>
+                                    </p>
+                                </div>
+                                <button
+                                    id="btn-back-login"
+                                    onClick={() => setView('welcome')}
+                                    className="w-full bg-brand-orange text-white font-black py-4 rounded-2xl shadow-lg shadow-brand-orange/30 active:scale-95 transition-all text-xs uppercase tracking-widest"
+                                >
+                                    Back to Login
+                                </button>
+                            </motion.div>
                         )}
 
                         {/* ── USERNAME ── */}

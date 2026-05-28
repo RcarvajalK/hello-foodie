@@ -1,0 +1,22 @@
+{
+  "brand": {
+    "primary": {
+      "gradient": ["#FB923C", "#F43F5E"],
+      "orange": "#FB923C",
+      "rose": "#F43F5E"
+    },
+    "accents": {
+      "green": "#4ECDC4",
+      "yellow": "#FFE66D"
+    },
+    "neutrals": {
+      "dark": "#111827",
+      "light": "#F9FAFB",
+      "gray": "#9CA3AF"
+    }
+  },
+  "typography": {
+    "primary": "Inter",
+    "weights": [400, 500, 600, 700, 800, 900]
+  }
+}

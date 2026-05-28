@@ -1,0 +1,14 @@
+<svg width="400" height="120" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Icon -->
+  <path d="M45 10C27.32 10 13 24.32 13 42C13 66 45 98 45 98C45 98 77 66 77 42C77 24.32 62.68 10 45 10Z" fill="#F43F5E" />
+  <g transform="translate(28, 30) scale(0.7)">
+    <path d="M12 25V42H16V25C20 25 22 22 22 18V5H19V18H17V5H14V18H12V5H9V18H7V5H4V18C4 22 6 25 10 25H12Z" fill="white" />
+  </g>
+  <g transform="translate(50, 30) scale(0.7)">
+    <ellipse cx="8" cy="14" rx="8" ry="11" fill="white" />
+    <rect x="6" y="24" width="4" height="18" rx="2" fill="white" />
+  </g>
+
+  <!-- Text -->
+  <text x="100" y="75" fill="#F43F5E" style="font-family: 'Inter', sans-serif; font-weight: 900; font-size: 48px; letter-spacing: -0.05em;">Hello Foodie!</text>
+</svg>

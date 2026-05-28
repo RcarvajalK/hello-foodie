@@ -1,0 +1,17 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="60" y1="10" x2="60" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#FB923C" />
+      <stop offset="100%" stopColor="#F43F5E" />
+    </linearGradient>
+  </defs>
+  <path d="M60 10C42.32 10 28 24.32 28 42C28 66 60 98 60 98C60 98 92 66 92 42C92 24.32 77.68 10 60 10Z" fill="url(#logoGradient)" />
+  <path d="M60 10C74.4 10 88 22 88 42C88 60.4 60 90 60 90C60 90 61.6 66 61.6 42C61.6 26 60 10 60 10Z" fill="white" fill-opacity="0.12" />
+  <g transform="translate(43, 30) scale(0.7)">
+    <path d="M12 25V42H16V25C20 25 22 22 22 18V5H19V18H17V5H14V18H12V5H9V18H7V5H4V18C4 22 6 25 10 25H12Z" fill="white" />
+  </g>
+  <g transform="translate(65, 30) scale(0.7)">
+    <ellipse cx="8" cy="14" rx="8" ry="11" fill="white" />
+    <rect x="6" y="24" width="4" height="18" rx="2" fill="white" />
+  </g>
+</svg>

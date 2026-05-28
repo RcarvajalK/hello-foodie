@@ -2,10 +2,10 @@
 
 @theme {
   /* Official Hello Foodie! Brand Palette */
-  --color-brand-orange: #FF6B6B;
-  /* Main Reddish-Orange */
-  --color-brand-orange-light: #FFB347;
-  /* Yellowish-Orange Highlight */
+  --color-brand-orange: #FB923C;
+  /* Primary Orange */
+  --color-brand-rose: #F43F5E;
+  /* Primary Rose */
   --color-brand-green: #4ECDC4;
   /* Minty Accent */
   --color-brand-yellow: #FFE66D;
@@ -14,6 +14,9 @@
   /* Deep Slate for text */
   --color-brand-light: #F9FAFB;
   /* Light Slate for backgrounds */
+
+  /* Gradient Utility */
+  --background-image-brand-gradient: linear-gradient(135deg, #FB923C, #F43F5E);
 
   --font-sans: "Inter", system-ui, sans-serif;
 }
