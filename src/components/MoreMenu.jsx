@@ -31,12 +31,18 @@ export default function MoreMenu({ isOpen, onClose }) {
     ];
 
     const handleNavigate = async (path) => {
-        onClose();
         if (path === '/logout') {
-            await supabase.auth.signOut();
+            try {
+                await supabase.auth.signOut();
+            } catch (err) {
+                console.error('Logout error:', err);
+            }
             navigate('/auth');
+            onClose();
             return;
         }
+        
+        onClose();
         if (path === '/replay-tour') {
             const updateProfile = useStore.getState().updateProfile;
             await updateProfile({ has_seen_tour: false });
