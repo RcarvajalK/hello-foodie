@@ -1,5 +1,5 @@
 // Service Worker for Hello Foodie!
-const CACHE_NAME = 'hello-foodie-v8';
+const CACHE_NAME = 'hello-foodie-v9';
 const ASSETS = [
     '/',
     '/index.html',
@@ -10,6 +10,7 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+    self.skipWaiting(); // Force immediate takeover of the new service worker
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(ASSETS);
@@ -24,6 +25,8 @@ self.addEventListener('activate', (event) => {
                 keys.filter(key => key !== CACHE_NAME)
                     .map(key => caches.delete(key))
             );
+        }).then(() => {
+            return self.clients.claim(); // Claim control of all pages immediately
         })
     );
 });
