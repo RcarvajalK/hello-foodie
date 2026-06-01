@@ -6,6 +6,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import BrandLogo from '../components/BrandLogo';
 import clsx from 'clsx';
 import { getAndClearRedirectUrl } from '../lib/navUtils';
+import logoCompleto from '../assets/logo-completo.png';
+
 
 const USERNAME_REGEX = /^[a-z0-9_]{3,20}$/;
 
@@ -219,10 +221,13 @@ export default function Auth() {
                         {/* ── WELCOME ── */}
                         {view === 'welcome' && (
                             <motion.div key="welcome" {...slide} className="space-y-5 text-center">
-                                <div className="flex flex-col items-center gap-3 pt-4">
-                                    <BrandLogo size={72} />
-                                    <h1 className="text-4xl font-black tracking-tighter text-brand-dark uppercase italic">Hello Foodie!</h1>
-                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.25em]">Your personal culinary journal</p>
+                                <div className="flex flex-col items-center gap-2 pt-4">
+                                    <img
+                                        src={logoCompleto}
+                                        alt="Hello Foodie!"
+                                        className="w-[180px] h-auto object-contain mx-auto"
+                                    />
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.25em] mt-1">Your personal culinary journal</p>
                                 </div>
 
                                 {/* Tab selector: Login vs Signup */}

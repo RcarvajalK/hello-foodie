@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import BrandLogo from './BrandLogo';
+import logoCompleto from '../assets/logo-completo.png';
 
 export default function SplashScreen({ isVisible }) {
     return (
@@ -24,9 +24,13 @@ export default function SplashScreen({ isVisible }) {
                                 damping: 20,
                                 duration: 1
                             }}
-                            className="relative z-10"
+                            className="relative z-10 flex flex-col items-center"
                         >
-                            <BrandLogo size={120} />
+                            <img
+                                src={logoCompleto}
+                                alt="Hello Foodie!"
+                                className="w-[220px] h-auto object-contain mx-auto"
+                            />
                         </motion.div>
 
                         <motion.div
@@ -35,7 +39,6 @@ export default function SplashScreen({ isVisible }) {
                             transition={{ delay: 0.4 }}
                             className="mt-8 text-center relative z-10"
                         >
-                            <h1 className="text-[32px] font-black tracking-tighter text-brand-dark mb-4 drop-shadow-sm">Hello Foodie!</h1>
                             <div className="flex gap-2 justify-center">
                                 <div className="w-2 h-2 bg-brand-orange rounded-full animate-bounce"></div>
                                 <div className="w-2 h-2 bg-brand-orange rounded-full animate-bounce [animation-delay:-0.15s]"></div>
