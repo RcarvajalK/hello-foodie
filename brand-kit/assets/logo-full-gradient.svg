@@ -1,36 +1,23 @@
 <svg width="400" height="120" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="logoGradient" x1="45" y1="10" x2="45" y2="110" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stopColor="#FB923C" />
-      <stop offset="100%" stopColor="#F43F5E" />
+    <linearGradient id="logoGradient" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#FFB547"/>
+      <stop offset="40%" stop-color="#FB923C"/>
+      <stop offset="100%" stop-color="#E11D48"/>
     </linearGradient>
+    <mask id="logoMask">
+      <rect width="512" height="512" fill="white" />
+      <path d="M 129 120 Q 129 110 136 110 Q 143 110 143 120 L 143 180 L 149 180 L 149 120 Q 149 110 156 110 Q 163 110 163 120 L 163 180 L 169 180 L 169 120 Q 169 110 176 110 Q 183 110 183 120 L 183 180 L 189 180 L 189 120 Q 189 110 196 110 Q 203 110 203 120 L 203 200 C 203 230 176 250 176 260 L 176 500 L 156 500 L 156 260 C 156 250 129 230 129 200 Z" fill="black" />
+      <path d="M 346 110 C 316 110 300 135 300 170 C 300 210 330 240 336 250 L 336 500 L 356 500 L 356 250 C 362 240 392 210 392 170 C 392 135 376 110 346 110 Z" fill="black" />
+    </mask>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-      <feOffset dx="0" dy="2" result="offsetblur" />
-      <feComponentTransfer>
-        <feFuncA type="linear" slope="0.2" />
-      </feComponentTransfer>
-      <feMerge>
-        <feMergeNode />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#E11D48" flood-opacity="0.2"/>
     </filter>
   </defs>
   
   <!-- Icon -->
-  <g filter="url(#shadow)">
-    <path d="M45 10C27.32 10 13 24.32 13 42C13 66 45 98 45 98C45 98 77 66 77 42C77 24.32 62.68 10 45 10Z" fill="url(#logoGradient)" />
-    <path d="M45 10C59.4 10 73 22 73 42C73 60.4 45 90 45 90C45 90 46.6 66 46.6 42C46.6 26 45 10 45 10Z" fill="white" fill-opacity="0.12" />
-    
-    <!-- Fork -->
-    <g transform="translate(28, 30) scale(0.7)">
-      <path d="M12 25V42H16V25C20 25 22 22 22 18V5H19V18H17V5H14V18H12V5H9V18H7V5H4V18C4 22 6 25 10 25H12Z" fill="white" />
-    </g>
-    <!-- Spoon -->
-    <g transform="translate(50, 30) scale(0.7)">
-      <ellipse cx="8" cy="14" rx="8" ry="11" fill="white" />
-      <rect x="6" y="24" width="4" height="18" rx="2" fill="white" />
-    </g>
+  <g filter="url(#shadow)" transform="translate(-6.2, 6) scale(0.2)">
+    <path d="M 256 460 C 380 340 436 280 436 200 A 180 180 0 0 0 76 200 C 76 280 132 340 256 460 Z" fill="url(#logoGradient)" mask="url(#logoMask)" />
   </g>
 
   <!-- Text with Gradient -->

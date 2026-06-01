@@ -1,13 +1,14 @@
 <svg width="600" height="200" viewBox="0 0 600 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <g transform="translate(250, 20)">
-    <path d="M50 5C27.9 5 10 22.9 10 45C10 75 50 115 50 115C50 115 90 75 90 45C90 22.9 72.1 5 50 5Z" fill="white" />
-    <g transform="translate(28, 32) scale(0.9)">
-      <path d="M12 25V42H16V25C20 25 22 22 22 18V5H19V18H17V5H14V18H12V5H9V18H7V5H4V18C4 22 6 25 10 25H12Z" fill="#111827" />
-    </g>
-    <g transform="translate(56, 32) scale(0.9)">
-      <ellipse cx="8" cy="14" rx="8" ry="11" fill="#111827" />
-      <rect x="6" y="24" width="4" height="18" rx="2" fill="#111827" />
-    </g>
+  <defs>
+    <mask id="logoMask">
+      <rect width="512" height="512" fill="white" />
+      <path d="M 129 120 Q 129 110 136 110 Q 143 110 143 120 L 143 180 L 149 180 L 149 120 Q 149 110 156 110 Q 163 110 163 120 L 163 180 L 169 180 L 169 120 Q 169 110 176 110 Q 183 110 183 120 L 183 180 L 189 180 L 189 120 Q 189 110 196 110 Q 203 110 203 120 L 203 200 C 203 230 176 250 176 260 L 176 500 L 156 500 L 156 260 C 156 250 129 230 129 200 Z" fill="black" />
+      <path d="M 346 110 C 316 110 300 135 300 170 C 300 210 330 240 336 250 L 336 500 L 356 500 L 356 250 C 362 240 392 210 392 170 C 392 135 376 110 346 110 Z" fill="black" />
+    </mask>
+  </defs>
+  
+  <g transform="translate(236, 15) scale(0.25)">
+    <path d="M 256 460 C 380 340 436 280 436 200 A 180 180 0 0 0 76 200 C 76 280 132 340 256 460 Z" fill="white" mask="url(#logoMask)" />
   </g>
   <text x="300" y="175" text-anchor="middle" fill="white" style="font-family: 'Inter', sans-serif; font-weight: 900; font-size: 52px; font-style: italic; letter-spacing: -0.02em;">HELLO FOODIE!</text>
 </svg>
