@@ -37,8 +37,19 @@ export default function MoreMenu({ isOpen, onClose }) {
             } catch (err) {
                 console.error('Logout error:', err);
             }
-            navigate('/auth');
+            
+            // Clear all Supabase keys from localStorage to guarantee session destruction
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('sb-') || key.includes('supabase')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            // Clear Zustand store state
+            useStore.setState({ profile: null, restaurants: [], rankings: [], userRank: null });
+            
             onClose();
+            window.location.href = '/auth';
             return;
         }
         
